@@ -310,7 +310,7 @@ class User < ApplicationRecord
   end
 
   def setting_default_privacy
-    settings.default_privacy || (account.locked? ? 'private' : 'public')
+    settings.default_privacy || (account.locked? ? 'private' : 'unlisted')
   end
 
   def allows_report_emails?
