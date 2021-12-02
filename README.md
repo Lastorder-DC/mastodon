@@ -4,17 +4,13 @@
   <img alt="Mastodon" src="./lib/assets/wordmark.light.png?raw=true" height="34">
 </picture></h1>
 
-[![GitHub release](https://img.shields.io/github/release/mastodon/mastodon.svg)][releases]
-[![Build Status](https://img.shields.io/circleci/project/github/mastodon/mastodon.svg)][circleci]
-[![Code Climate](https://img.shields.io/codeclimate/maintainability/mastodon/mastodon.svg)][code_climate]
-[![Crowdin](https://d322cqt584bo4o.cloudfront.net/mastodon/localized.svg)][crowdin]
+[![GitHub release](https://img.shields.io/github/release/Lastorder-DC/mastodon.svg)][releases]
 
-[releases]: https://github.com/mastodon/mastodon/releases
-[circleci]: https://circleci.com/gh/mastodon/mastodon
-[code_climate]: https://codeclimate.com/github/mastodon/mastodon
-[crowdin]: https://crowdin.com/project/mastodon
+[releases]: https://github.com/Lastorder-DC/mastodon/releases
 
-Mastodon is a **free, open-source social network server** based on ActivityPub where users can follow friends and discover new ones. On Mastodon, users can publish anything they want: links, pictures, text, video. All Mastodon servers are interoperable as a federated network (users on one server can seamlessly communicate with users from another one, including non-Mastodon software that implements ActivityPub!)
+OCCM Mastodon is fork of Mastodon, which is **free, open-source social network server** based on ActivityPub where users can follow friends and discover new ones. On Mastodon, users can publish anything they want: links, pictures, text, video. All Mastodon servers are interoperable as a federated network (users on one server can seamlessly communicate with users from another one, including non-Mastodon software that implements ActivityPub)!
+
+While installing OCCM Mastodon is possible, it's recommended to install original Mastodon instead, since OCCM Mastodon is focused to not expose any toot to other server by default.
 
 Click below to **learn more** in a video:
 
