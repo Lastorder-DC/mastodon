@@ -1,4 +1,4 @@
-![OCCM Mastodon](https://user-images.githubusercontent.com/18280396/144345399-732e7482-5713-4522-a978-e0dca25edd7a.png)
+![OCCM Mastodon](https://user-images.githubusercontent.com/18280396/144345816-59b050eb-bf33-40e8-9e93-da9413d03c9b.png)
 ========
 
 [![GitHub release](https://img.shields.io/github/release/Lastorder-DC/mastodon.svg)][releases]
