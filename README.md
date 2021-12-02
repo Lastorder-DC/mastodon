@@ -1,19 +1,13 @@
-![Mastodon](https://i.imgur.com/NhZc40l.png)
+![OCCM Mastodon](https://user-images.githubusercontent.com/18280396/144345816-59b050eb-bf33-40e8-9e93-da9413d03c9b.png)
 ========
 
-[![GitHub release](https://img.shields.io/github/release/mastodon/mastodon.svg)][releases]
-[![Build Status](https://img.shields.io/circleci/project/github/mastodon/mastodon.svg)][circleci]
-[![Code Climate](https://img.shields.io/codeclimate/maintainability/mastodon/mastodon.svg)][code_climate]
-[![Crowdin](https://d322cqt584bo4o.cloudfront.net/mastodon/localized.svg)][crowdin]
-[![Docker Pulls](https://img.shields.io/docker/pulls/tootsuite/mastodon.svg)][docker]
+[![GitHub release](https://img.shields.io/github/release/Lastorder-DC/mastodon.svg)][releases]
 
-[releases]: https://github.com/mastodon/mastodon/releases
-[circleci]: https://circleci.com/gh/mastodon/mastodon
-[code_climate]: https://codeclimate.com/github/mastodon/mastodon
-[crowdin]: https://crowdin.com/project/mastodon
-[docker]: https://hub.docker.com/r/tootsuite/mastodon/
+[releases]: https://github.com/Lastorder-DC/mastodon/releases
 
-Mastodon is a **free, open-source social network server** based on ActivityPub where users can follow friends and discover new ones. On Mastodon, users can publish anything they want: links, pictures, text, video. All Mastodon servers are interoperable as a federated network (users on one server can seamlessly communicate with users from another one, including non-Mastodon software that implements ActivityPub)!
+OCCM Mastodon is fork of Mastodon, which is **free, open-source social network server** based on ActivityPub where users can follow friends and discover new ones. On Mastodon, users can publish anything they want: links, pictures, text, video. All Mastodon servers are interoperable as a federated network (users on one server can seamlessly communicate with users from another one, including non-Mastodon software that implements ActivityPub)!
+
+While installing OCCM Mastodon is possible, it's recommended to install original Mastodon instead, since OCCM Mastodon is focused to not expose any toot to other server by default.
 
 Click below to **learn more** in a video:
 
