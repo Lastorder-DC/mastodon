@@ -47,12 +47,12 @@ jobs:
         id: meta
         with:
           images: |
-            tootsuite/mastodon
-            ghcr.io/mastodon/mastodon
+            lastorderdc/mastodon
+            ghcr.io/Lastorder-DC/mastodon
           flavor: |
             latest=auto
           tags: |
-            type=edge,branch=main
+            type=edge,branch=occm
             type=pep440,pattern={{raw}}
             type=pep440,pattern=v{{major}}.{{minor}}
             type=ref,event=pr
