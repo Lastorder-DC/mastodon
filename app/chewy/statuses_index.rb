@@ -4,6 +4,12 @@ class StatusesIndex < Chewy::Index
   include FormattingHelper
 
   settings index: { refresh_interval: '30s' }, analysis: {
+    tokenizer: {
+      nori_mixed: {
+        type: 'nori_tokenizer',
+        decompound_mode: 'mixed',
+      },
+    },
     filter: {
       english_stop: {
         type: 'stop',
@@ -20,7 +26,7 @@ class StatusesIndex < Chewy::Index
     },
     analyzer: {
       content: {
-        tokenizer: 'nori_tokenizer',
+        tokenizer: 'nori_mixed',
         filter: %w(
           english_possessive_stemmer
           lowercase
