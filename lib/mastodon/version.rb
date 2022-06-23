@@ -17,7 +17,7 @@ module Mastodon
     end
 
     def flags
-      ''
+      '-occm1'
     end
 
     def suffix
