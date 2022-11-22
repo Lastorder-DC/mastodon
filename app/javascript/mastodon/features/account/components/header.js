@@ -298,6 +298,11 @@ class Header extends ImmutablePureComponent {
       badge = null;
     }
 
+    let role = null;
+    if (account.get('role')) {
+      role = (<div key='role' className={`account-role user-role-${account.getIn(['role', 'id'])}`}>{account.getIn(['role', 'name'])}</div>);
+    }
+
     return (
       <div className={classNames('account__header', { inactive: !!account.get('moved') })} onMouseEnter={this.handleMouseEnter} onMouseLeave={this.handleMouseLeave}>
         <div className='account__header__image'>
@@ -312,6 +317,7 @@ class Header extends ImmutablePureComponent {
           <div className='account__header__tabs'>
             <a className='avatar' href={account.get('avatar')} rel='noopener noreferrer' target='_blank' onClick={this.handleAvatarClick}>
               <Avatar account={suspended || hidden ? undefined : account} size={90} />
+              {role}
             </a>
 
             {!suspended && (
