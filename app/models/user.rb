@@ -237,6 +237,11 @@ class User < ApplicationRecord
   end
 
   def functional?
+
+    functional_or_moved?
+  end
+
+  def functional_or_moved?
     confirmed? && approved? && !disabled? && !account.suspended? && !account.memorial?
   end
 
@@ -381,6 +386,15 @@ class User < ApplicationRecord
     super
   end
 
+  def revoke_access!
+    Doorkeeper::AccessGrant.by_resource_owner(self).update_all(revoked_at: Time.now.utc)
+
+    Doorkeeper::AccessToken.by_resource_owner(self).in_batches do |batch|
+      batch.update_all(revoked_at: Time.now.utc)
+      Web::PushSubscription.where(access_token_id: batch).delete_all
+    end
+  end
+
   def reset_password!
     # First, change password to something random and deactivate all sessions
     transaction do
@@ -389,12 +403,7 @@ class User < ApplicationRecord
     end
 
     # Then, remove all authorized applications and connected push subscriptions
-    Doorkeeper::AccessGrant.by_resource_owner(self).in_batches.update_all(revoked_at: Time.now.utc)
-
-    Doorkeeper::AccessToken.by_resource_owner(self).in_batches do |batch|
-      batch.update_all(revoked_at: Time.now.utc)
-      Web::PushSubscription.where(access_token_id: batch).delete_all
-    end
+    revoke_access!
 
     # Finally, send a reset password prompt to the user
     send_reset_password_instructions
@@ -489,6 +498,7 @@ class User < ApplicationRecord
     BootstrapTimelineWorker.perform_async(account_id)
     ActivityTracker.increment('activity:accounts:local')
     UserMailer.welcome(self).deliver_later
+    TriggerWebhookWorker.perform_async('account.approved', 'Account', account_id)
   end
 
   def prepare_returning_user!
@@ -520,7 +530,7 @@ class User < ApplicationRecord
   end
 
   def invite_text_required?
-    Setting.require_invite_text && !invited? && !external? && !bypass_invite_request_check?
+    Setting.require_invite_text && !open_registrations? && !invited? && !external? && !bypass_invite_request_check?
   end
 
   def trigger_webhooks

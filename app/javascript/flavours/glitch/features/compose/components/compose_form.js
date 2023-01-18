@@ -310,7 +310,7 @@ class ComposeForm extends ImmutablePureComponent {
 
         <ReplyIndicatorContainer />
 
-        <div className={`spoiler-input ${spoiler ? 'spoiler-input--visible' : ''}`} ref={this.setRef}>
+        <div className={`spoiler-input ${spoiler ? 'spoiler-input--visible' : ''}`} ref={this.setRef} aria-hidden={!this.props.spoiler}>
           <AutosuggestInput
             placeholder={intl.formatMessage(messages.spoiler_placeholder)}
             value={spoilerText}
@@ -356,10 +356,8 @@ class ComposeForm extends ImmutablePureComponent {
           <OptionsContainer
             advancedOptions={advancedOptions}
             disabled={isSubmitting}
-            onChangeVisibility={onChangeVisibility}
             onToggleSpoiler={spoilersAlwaysOn ? null : onChangeSpoilerness}
             onUpload={onPaste}
-            privacy={privacy}
             isEditing={isEditing}
             sensitive={sensitive || (spoilersAlwaysOn && spoilerText && spoilerText.length > 0)}
             spoiler={spoilersAlwaysOn ? (spoilerText && spoilerText.length > 0) : spoiler}
