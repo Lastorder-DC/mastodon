@@ -48,7 +48,7 @@ jobs:
         with:
           images: |
             lastorderdc/mastodon
-            ghcr.io/Lastorder-DC/mastodon
+            ghcr.io/lastorder-dc/mastodon
           flavor: |
             latest=auto
           tags: |
