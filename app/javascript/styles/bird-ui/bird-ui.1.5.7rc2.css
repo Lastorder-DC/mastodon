@@ -1968,8 +1968,9 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
 }
 
 .layout-single-column .account__header__tabs .account-role {
-  display: none;
   width: 133.5px;
+  bottom: -8px;
+  position: relative;
 }
 
 /* Follow/unfollow button */
@@ -6076,8 +6077,9 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
 }
 
 .layout-multiple-columns .account__header__tabs .account-role {
-  display: none;
   width: 90px;
+  bottom: -8px;
+  position: relative;
 }
 
 /* Follow/unfollow button */
