@@ -21,7 +21,7 @@ module Mastodon
     end
 
     def suffix
-      '+occm2'
+      '+occm3'
     end
 
     def to_a
