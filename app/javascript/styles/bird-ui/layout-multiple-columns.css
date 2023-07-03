@@ -1907,7 +1907,7 @@
   
   /* Hide label */
   .layout-multiple-columns .account__header__bio .account__header__fields dt {
-    display: none;
+    font-weight: bold;
   }
   
   /* Joined label */
@@ -1998,8 +1998,9 @@
   }
   
   .layout-multiple-columns .account__header__tabs .account-role {
-    display: none;
     width: 90px;
+    bottom: -8px;
+    position: relative;
   }
   
   /* Follow/unfollow button */
