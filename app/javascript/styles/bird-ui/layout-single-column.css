@@ -1258,14 +1258,14 @@
   body.embed .detailed-status__reblogs::after,
   .layout-single-column .detailed-status__reblogs::after {
     color: var(--color-dim);
-    content: 'Boosts';
+    content: '부스트';
     font-weight: 500;
   }
   
   body.embed .detailed-status__favorites::after,
   .layout-single-column .detailed-status__favorites::after {
     color: var(--color-dim);
-    content: 'Favourites';
+    content: '좋아요';
     font-weight: 500;
   }
   
