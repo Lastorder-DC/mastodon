@@ -21,7 +21,7 @@ module Mastodon
     end
 
     def suffix
-      ENV.fetch('MASTODON_VERSION_SUFFIX', '')
+      ENV.fetch('MASTODON_VERSION_SUFFIX', '+occm')
     end
 
     def to_a
