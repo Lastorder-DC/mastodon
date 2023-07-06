@@ -3126,16 +3126,16 @@ body.embed .button.logo-button:hover,
 
   /* Notifications */
   .layout-single-column .navigation-panel .column-link:nth-child(3) {
-    order: 5;
+    order: 2;
   }
 
   /* Explore */
   .layout-single-column .navigation-panel .column-link:nth-child(4) {
-    order: 4;
+    order: 10;
   }
 
   .layout-single-column .navigation-panel .column-link:nth-child(5) {
-    order: 2;
+    order: 9;
   }
 
   .layout-single-column .navigation-panel .column-link:nth-child(6) {
@@ -3147,12 +3147,12 @@ body.embed .button.logo-button:hover,
   }
 
   .layout-single-column .navigation-panel .column-link:nth-child(8) {
-    order: 8;
+    order: 4;
   }
 
   /* Lists */
   .layout-single-column .column-link[href="/lists"] {
-    order: 9;
+    order: 8;
   }
 
   .layout-single-column .navigation-panel .column-link:nth-child(11) {

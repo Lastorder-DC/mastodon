@@ -717,7 +717,7 @@ body.layout-multiple-columns {
 
 /* Make the side input last in order */
 .layout-multiple-columns .drawer {
-  order: 999999;
+  order: 0;
   padding: 0 10px;
   width: var(--width-column);
 }
