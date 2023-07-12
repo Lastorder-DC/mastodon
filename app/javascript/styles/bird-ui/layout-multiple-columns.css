@@ -1,5 +1,5 @@
 /* Mastodon Bird UI by @rolle@mementomori.social
-   1.5.8rc9-nightly-mastodon-4.1.2-nightly */
+   1.6.3-nightly */
 
 /* CSS variables */
 :root {
@@ -339,6 +339,7 @@ body.layout-multiple-columns {
   width: 50px;
 }
 
+.layout-multiple-columns .ui__header__logo img,
 .layout-multiple-columns .ui__header__logo svg {
   display: none;
 }
@@ -954,7 +955,8 @@ body.embed .status__content a,
 .layout-multiple-columns .muted .status__content,
 .layout-multiple-columns .muted .status__content a,
 .layout-multiple-columns .muted .status__content p,
-.layout-multiple-columns .muted .status__display-name strong {
+.layout-multiple-columns .muted .status__display-name strong,
+.layout-multiple-columns .privacy-dropdown__option:not(.active) .privacy-dropdown__option__content {
   color: var(--color-dim);
 }
 
@@ -1028,6 +1030,9 @@ body.embed .status__content a,
 .layout-multiple-columns .report-dialog-modal__lead,
 .layout-multiple-columns .detailed-status__display-name strong,
 .layout-multiple-columns .dismissable-banner__message,
+.layout-multiple-columns .privacy-dropdown__option.active,
+.layout-multiple-columns .privacy-dropdown__option:hover .privacy-dropdown__option__content,
+.layout-multiple-columns .privacy-dropdown__option:focus .privacy-dropdown__option__content,
 .layout-multiple-columns .privacy-dropdown__option,
 .layout-multiple-columns .privacy-dropdown__option__content strong,
 .layout-multiple-columns .status__info .display-name strong.display-name__html,
@@ -1906,6 +1911,7 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
   font-size: 20px;
 }
 
+.layout-multiple-columns .list-adder__lists .fa-times::before,
 .layout-multiple-columns .account__wrapper .account__relationship .icon-button.active .fa::before,
 .layout-multiple-columns .explore__search-results .account__relationship .icon-button.active .fa::before,
 .layout-multiple-columns .notification .account__relationship .icon-button.active .fa::before {
@@ -1914,6 +1920,7 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
   opacity: .75;
 }
 
+.layout-multiple-columns .list-adder__lists .fa-times:hover::before,
 .layout-multiple-columns .explore__search-results .icon-button.active:hover .fa::before,
 .layout-multiple-columns .notification .account__relationship .icon-button.active:hover .fa::before {
   /* stylelint-disable-next-line */
