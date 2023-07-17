@@ -21,7 +21,7 @@ module Mastodon
     end
 
     def suffix
-      ENV.fetch('MASTODON_VERSION_SUFFIX', '+occm')
+      "+occm5#{ENV.fetch('MASTODON_VERSION_SUFFIX', '')}"
     end
 
     def to_a
@@ -33,7 +33,7 @@ module Mastodon
     end
 
     def repository
-      ENV.fetch('GITHUB_REPOSITORY', 'mastodon/mastodon')
+      ENV.fetch('GITHUB_REPOSITORY', 'Lastorder-DC/mastodon')
     end
 
     def source_base_url
