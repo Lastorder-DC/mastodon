@@ -1,5 +1,5 @@
 /* Mastodon Bird UI by @rolle@mementomori.social
-   1.6.3-nightly */
+   1.6.5rc1-nightly */
 
 /* CSS variables */
 :root {
@@ -424,35 +424,6 @@ body.layout-single-column {
   gap: 6px;
 }
 
-/* Modal buttons */
-.layout-single-column .media-modal__navigation button,
-.layout-single-column .image-loader button {
-  align-items: center;
-  border-radius: 50%;
-  /* It's inlined so we have to use !important */
-  /* stylelint-disable-next-line */
-  color: var(--color-light-text) !important;
-  display: inline-flex;
-
-  /* It's inlined so we have to use !important */
-  /* stylelint-disable-next-line */
-  font-size: var(--font-size-heading) !important;
-  /* stylelint-disable-next-line */
-  height: 36px !important;
-  justify-content: center;
-  /* stylelint-disable-next-line */
-  margin: 4px !important;
-  /* stylelint-disable-next-line */
-  top: 2px !important;
-  /* stylelint-disable-next-line */
-  width: 36px !important;
-}
-
-.layout-single-column .media-modal__navigation button {
-  /* stylelint-disable-next-line */
-  top: 5px !important;
-}
-
 .layout-single-column .media-modal__navigation .fa-times::before {
   content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgb(247 249 249)' aria-hidden='true' class='r-jwli3a r-4qtqp9 r-yyyyoo r-z80fyv r-dnmrzs r-bnwqim r-1plcrui r-lrvibr r-19wmn03'%3E%3Cg%3E%3Cpath d='M10.59 12L4.54 5.96l1.42-1.42L12 10.59l6.04-6.05 1.42 1.42L13.41 12l6.05 6.04-1.42 1.42L12 13.41l-6.04 6.05-1.42-1.42L10.59 12z'%3E%3C/path%3E%3C/g%3E%3C/svg%3E");
 }
@@ -563,10 +534,6 @@ body.layout-single-column {
 .layout-single-column .announcements__pagination .fa,
 .layout-single-column .announcements__pagination {
   color: var(--color-dim);
-}
-
-.layout-single-column .announcements__pagination .icon-button:hover i {
-  color: var(--color-light-purple);
 }
 
 /* Dark panels like modals and boxes */
@@ -984,7 +951,9 @@ body.embed .status__content a,
 }
 
 /* Light purple things */
-.account__header__tabs__name h1 small,
+.layout-single-column .announcements__pagination .icon-button:hover i,
+.layout-single-column .server-banner__introduction,
+.layout-single-column .account__header__tabs__name h1 small,
 .layout-single-column .account .account__display-name,
 .layout-single-column .column-settings__section,
 .layout-single-column .setting-toggle__label {
