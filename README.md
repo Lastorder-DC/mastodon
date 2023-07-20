@@ -8,9 +8,9 @@
 
 [releases]: https://github.com/Lastorder-DC/mastodon/releases
 
-OCCM Mastodon is fork of Mastodon, which is **free, open-source social network server** based on ActivityPub where users can follow friends and discover new ones. On Mastodon, users can publish anything they want: links, pictures, text, video. All Mastodon servers are interoperable as a federated network (users on one server can seamlessly communicate with users from another one, including non-Mastodon software that implements ActivityPub)!
+OCCM SNS is fork of Mastodon, which is **free, open-source social network server** based on ActivityPub where users can follow friends and discover new ones. On Mastodon, users can publish anything they want: links, pictures, text, video. All Mastodon servers are interoperable as a federated network (users on one server can seamlessly communicate with users from another one, including non-Mastodon software that implements ActivityPub)!
 
-While installing OCCM Mastodon is possible, it's recommended to install original Mastodon instead, since OCCM Mastodon is focused to not expose any toot to other server by default.
+While installing OCCM SNS is possible, it's recommended to install original Mastodon instead, since OCCM SNS is focused to not expose any toot to other server by default.
 
 Click below to **learn more** in a video:
 
