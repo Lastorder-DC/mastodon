@@ -1762,3 +1762,10 @@ ko:
     not_supported: 이 브라우저는 보안 키를 지원하지 않습니다
     otp_required: 보안 키를 사용하기 위해서는 2단계 인증을 먼저 활성화 해 주세요
     registered_on: "%{date} 에 등록됨"
+  themes:
+     contrast: 마스토돈 (고대비)
+     default: 유사 트위터 (어두움)
+     mastodon-bird-ui-light: 유사 트위터 (밝음)
+     mastodon-bird-ui-contrast: 유사 트위터 (고대비)
+     mastodon-light: 마스토돈 (밝음)
+     mastodon-dark: 마스토돈 (어두움)

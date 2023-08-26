@@ -1817,3 +1817,11 @@ en:
     not_supported: This browser doesn't support security keys
     otp_required: To use security keys please enable two-factor authentication first.
     registered_on: Registered on %{date}
+  themes:
+     contrast: Mastodon (High contrast)
+     default: Mastodon Bird UI (Dark)
+     bird-ui: Mastodon Bird UI (DEPRECATED)
+     mastodon-bird-ui-light: Mastodon Bird UI (Light)
+     mastodon-bird-ui-contrast: Mastodon Bird UI (High contrast)
+     mastodon-light: Mastodon (Light)
+     mastodon-dark: Mastodon (Dark)
