@@ -1765,6 +1765,7 @@ ko:
   themes:
      contrast: 마스토돈 (고대비)
      default: 유사 트위터 (어두움)
+     bird-ui: bird-ui (삭제 예정)
      mastodon-bird-ui-light: 유사 트위터 (밝음)
      mastodon-bird-ui-contrast: 유사 트위터 (고대비)
      mastodon-light: 마스토돈 (밝음)
