@@ -20,6 +20,9 @@ module Mastodon::CLI
     option :import, type: :boolean, default: true, desc: 'Import data from the database to the index'
     option :clean, type: :boolean, default: true, desc: 'Remove outdated documents from the index'
     option :reset_chewy, type: :boolean, default: false, desc: "Reset Chewy's internal index"
+    option :full, type: :boolean, default: false, desc: 'Import full data over Mastodon default importer'
+    option :from, type: :string, default: nil, desc: 'Statuses start date'
+    option :to, type: :string, default: nil, desc: 'Statuses end date'
     desc 'deploy', 'Create or upgrade Elasticsearch indices and populate them'
     long_desc <<~LONG_DESC
       If Elasticsearch is empty, this command will create the necessary indices
@@ -41,8 +44,14 @@ module Mastodon::CLI
                 end
 
       pool      = Concurrent::FixedThreadPool.new(options[:concurrency], max_queue: options[:concurrency] * 10)
-      importers = indices.index_with { |index| "Importer::#{index.name}Importer".constantize.new(batch_size: options[:batch_size], executor: pool) }
-      progress  = ProgressBar.create(total: nil, format: '%t%c/%u |%b%i| %e (%r docs/s)', autofinish: false)
+      importers = indices.index_with { |index| "Importer::#{index.name}Importer".constantize.new(batch_size: options[:batch_size], executor: pool, full: options[:full], from: options[:from], to: options[:to]) }
+      progress  = ProgressBar.create(
+        {
+          total: nil,
+          format: '%t%c/%u |%b%i| %e (%r docs/s)',
+          autofinish: false,
+        }.merge(progress_output_options)
+      )
 
       Chewy::Stash::Specification.reset! if options[:reset_chewy]
 
@@ -115,6 +124,10 @@ module Mastodon::CLI
 
       say('Cannot run with this batch_size setting, must be at least 1', :red)
       exit(1)
+    end
+
+    def progress_output_options
+      Rails.env.test? ? { output: ProgressBar::Outputs::Null } : {}
     end
   end
 end

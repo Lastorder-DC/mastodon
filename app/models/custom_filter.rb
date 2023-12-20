@@ -4,14 +4,17 @@
 #
 # Table name: custom_filters
 #
-#  id         :bigint(8)        not null, primary key
-#  account_id :bigint(8)
-#  expires_at :datetime
-#  phrase     :text             default(""), not null
-#  context    :string           default([]), not null, is an Array
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  action     :integer          default("warn"), not null
+#  id                 :bigint(8)        not null, primary key
+#  account_id         :bigint(8)
+#  expires_at         :datetime
+#  phrase             :text             default(""), not null
+#  context            :string           default([]), not null, is an Array
+#  created_at         :datetime         not null
+#  updated_at         :datetime         not null
+#  action             :integer          default("warn"), not null
+#  exclude_follows    :boolean          default(FALSE), not null
+#  exclude_localusers :boolean          default(FALSE), not null
+#  with_quote         :boolean          default(TRUE), not null
 #
 
 class CustomFilter < ApplicationRecord
@@ -31,7 +34,7 @@ class CustomFilter < ApplicationRecord
   include Expireable
   include Redisable
 
-  enum action: { warn: 0, hide: 1 }, _suffix: :action
+  enum action: { warn: 0, hide: 1, half_warn: 2 }, _suffix: :action
 
   belongs_to :account
   has_many :keywords, class_name: 'CustomFilterKeyword', inverse_of: :custom_filter, dependent: :destroy
@@ -51,7 +54,7 @@ class CustomFilter < ApplicationRecord
     return @expires_in if defined?(@expires_in)
     return nil if expires_at.nil?
 
-    [30.minutes, 1.hour, 6.hours, 12.hours, 1.day, 1.week].find { |expires_in| expires_in.from_now >= expires_at }
+    [30.minutes, 1.hour, 6.hours, 12.hours, 1.day, 1.week, 2.weeks, 1.month, 3.months].find { |expires_in| expires_in.from_now >= expires_at }
   end
 
   def irreversible=(value)
@@ -94,12 +97,22 @@ class CustomFilter < ApplicationRecord
     active_filters.select { |custom_filter, _| !custom_filter.expired? }
   end
 
-  def self.apply_cached_filters(cached_filters, status)
+  def self.apply_cached_filters(cached_filters, status, following: false)
     cached_filters.filter_map do |filter, rules|
-      match = rules[:keywords].match(status.proper.searchable_text) if rules[:keywords].present?
+      next if filter.exclude_follows && following
+      next if filter.exclude_localusers && status.account.local?
+
+      if rules[:keywords].present?
+        match = rules[:keywords].match(status.proper.searchable_text)
+        if match.nil? && filter.with_quote && status.proper.references.exists?
+          match = rules[:keywords].match(status.proper.references.pluck(:text).join("\n\n"))
+          match = rules[:keywords].match(status.proper.references.pluck(:spoiler_text).join("\n\n")) if match.nil?
+        end
+      end
       keyword_matches = [match.to_s] unless match.nil?
 
-      status_matches = [status.id, status.reblog_of_id].compact & rules[:status_ids] if rules[:status_ids].present?
+      reference_ids = filter.with_quote ? status.proper.references.pluck(:id) : []
+      status_matches = ([status.id, status.reblog_of_id] + reference_ids).compact & rules[:status_ids] if rules[:status_ids].present?
 
       next if keyword_matches.blank? && status_matches.blank?
 

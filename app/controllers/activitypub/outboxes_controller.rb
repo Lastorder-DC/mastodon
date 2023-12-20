@@ -37,7 +37,7 @@ class ActivityPub::OutboxesController < ActivityPub::BaseController
       ActivityPub::CollectionPresenter.new(
         id: outbox_url,
         type: :ordered,
-        size: @account.statuses_count,
+        size: @account.user&.setting_hide_statuses_count ? 0 : @account.statuses_count,
         first: outbox_url(page: true),
         last: outbox_url(page: true, min_id: 0)
       )

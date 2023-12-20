@@ -7,8 +7,10 @@ class ProcessMentionsService < BaseService
   # and create local mention pointers
   # @param [Status] status
   # @param [Boolean] save_records Whether to save records in database
-  def call(status, save_records: true)
+  def call(status, limited_type: '', circle: nil, save_records: true)
     @status = status
+    @limited_type = limited_type
+    @circle = circle
     @save_records = save_records
 
     return unless @status.local?
@@ -20,6 +22,10 @@ class ProcessMentionsService < BaseService
       scan_text!
       assign_mentions!
     end
+  end
+
+  def mentions?
+    @current_mentions.present?
   end
 
   private
@@ -51,7 +57,7 @@ class ProcessMentionsService < BaseService
 
       # If after resolving it still isn't found or isn't the right
       # protocol, then give up
-      next match if mention_undeliverable?(mentioned_account) || mentioned_account&.suspended?
+      next match if mention_undeliverable?(mentioned_account) || mentioned_account&.unavailable?
 
       mention   = @previous_mentions.find { |x| x.account_id == mentioned_account.id }
       mention ||= @current_mentions.find  { |x| x.account_id == mentioned_account.id }
@@ -61,6 +67,9 @@ class ProcessMentionsService < BaseService
 
       "@#{mentioned_account.acct}"
     end
+
+    process_mutual! if @limited_type == :mutual
+    process_circle! if @limited_type == :circle
 
     @status.save! if @save_records
   end
@@ -91,5 +100,23 @@ class ProcessMentionsService < BaseService
 
   def mention_undeliverable?(mentioned_account)
     mentioned_account.nil? || (!mentioned_account.local? && !mentioned_account.activitypub?)
+  end
+
+  def process_mutual!
+    mentioned_account_ids = @current_mentions.map(&:account_id)
+
+    @status.account.mutuals.reorder(nil).find_each do |target_account|
+      @current_mentions << @status.mentions.new(silent: true, account: target_account) unless mentioned_account_ids.include?(target_account.id)
+    end
+  end
+
+  def process_circle!
+    mentioned_account_ids = @current_mentions.map(&:account_id)
+
+    @circle.accounts.find_each do |target_account|
+      @current_mentions << @status.mentions.new(silent: true, account: target_account) unless mentioned_account_ids.include?(target_account.id)
+    end
+
+    @circle.statuses << @status
   end
 end

@@ -5,6 +5,226 @@ require 'rails_helper'
 RSpec.describe ActivityPub::ProcessAccountService, type: :service do
   subject { described_class.new }
 
+  before do
+    stub_request(:get, 'https://example.com/.well-known/nodeinfo').to_return(status: 404)
+  end
+
+  context 'with searchability' do
+    subject { described_class.new.call('alice', 'example.com', payload) }
+
+    let(:software) { 'mastodon' }
+    let(:searchable_by) { 'https://www.w3.org/ns/activitystreams#Public' }
+    let(:sender_bio) { '' }
+    let(:indexable) { nil }
+    let(:payload) do
+      {
+        id: 'https://foo.test',
+        type: 'Actor',
+        inbox: 'https://foo.test/inbox',
+        followers: 'https://example.com/followers',
+        searchableBy: searchable_by,
+        indexable: indexable,
+        summary: sender_bio,
+        actor_type: 'Person',
+      }.with_indifferent_access
+    end
+
+    before do
+      Fabricate(:instance_info, domain: 'example.com', software: software)
+      stub_request(:get, 'https://example.com/.well-known/nodeinfo').to_return(body: '{}')
+      stub_request(:get, 'https://example.com/followers').to_return(body: '[]')
+    end
+
+    context 'when public' do
+      it 'searchability is public' do
+        expect(subject.searchability).to eq 'public'
+      end
+    end
+
+    context 'when private' do
+      let(:searchable_by) { 'https://example.com/followers' }
+
+      it 'searchability is private' do
+        expect(subject.searchability).to eq 'private'
+      end
+    end
+
+    context 'when direct' do
+      let(:searchable_by) { '' }
+
+      it 'searchability is direct' do
+        expect(subject.searchability).to eq 'direct'
+      end
+    end
+
+    context 'when limited' do
+      let(:searchable_by) { 'kmyblue:Limited' }
+
+      it 'searchability is limited' do
+        expect(subject.searchability).to eq 'limited'
+      end
+    end
+
+    context 'when limited old spec' do
+      let(:searchable_by) { 'as:Limited' }
+
+      it 'searchability is limited' do
+        expect(subject.searchability).to eq 'limited'
+      end
+    end
+
+    context 'when default value' do
+      let(:searchable_by) { nil }
+
+      it 'searchability is direct' do
+        expect(subject.searchability).to eq 'direct'
+      end
+    end
+
+    context 'when misskey user' do
+      let(:software) { 'misskey' }
+      let(:searchable_by) { nil }
+
+      it 'searchability is public' do
+        expect(subject.searchability).to eq 'public'
+      end
+
+      context 'with true indexable' do
+        let(:indexable) { true }
+
+        it 'searchability is public' do
+          expect(subject.searchability).to eq 'public'
+        end
+      end
+
+      context 'with false indexable' do
+        let(:indexable) { false }
+
+        it 'searchability is limited' do
+          expect(subject.searchability).to eq 'limited'
+        end
+      end
+
+      context 'with no-indexable key' do
+        let(:payload) do
+          {
+            id: 'https://foo.test',
+            type: 'Actor',
+            inbox: 'https://foo.test/inbox',
+            followers: 'https://example.com/followers',
+            searchableBy: searchable_by,
+            summary: sender_bio,
+          }.with_indifferent_access
+        end
+
+        it 'searchability is public' do
+          expect(subject.searchability).to eq 'public'
+        end
+      end
+    end
+
+    context 'with bio' do
+      let(:searchable_by) { nil }
+
+      context 'with public' do
+        let(:sender_bio) { '#searchable_by_all_users' }
+
+        it 'searchability is public' do
+          expect(subject.searchability).to eq 'public'
+        end
+      end
+
+      context 'with private' do
+        let(:sender_bio) { '#searchable_by_followers_only' }
+
+        it 'searchability is private' do
+          expect(subject.searchability).to eq 'private'
+        end
+      end
+
+      context 'with direct' do
+        let(:sender_bio) { '#searchable_by_reacted_users_only' }
+
+        it 'searchability is direct' do
+          expect(subject.searchability).to eq 'direct'
+        end
+      end
+
+      context 'with limited' do
+        let(:sender_bio) { '#searchable_by_nobody' }
+
+        it 'searchability is limited' do
+          expect(subject.searchability).to eq 'limited'
+        end
+      end
+    end
+  end
+
+  context 'with subscription policy' do
+    subject { described_class.new.call('alice', 'example.com', payload) }
+
+    let(:subscribable_by) { 'https://www.w3.org/ns/activitystreams#Public' }
+    let(:sender_bio) { '' }
+    let(:payload) do
+      {
+        id: 'https://foo.test',
+        type: 'Actor',
+        inbox: 'https://foo.test/inbox',
+        followers: 'https://example.com/followers',
+        subscribableBy: subscribable_by,
+        summary: sender_bio,
+        actor_type: 'Person',
+      }.with_indifferent_access
+    end
+
+    before do
+      stub_request(:get, 'https://example.com/.well-known/nodeinfo').to_return(body: '{}')
+      stub_request(:get, 'https://example.com/followers').to_return(body: '[]')
+    end
+
+    context 'when public' do
+      it 'subscription policy is allow' do
+        expect(subject.subscription_policy.to_s).to eq 'allow'
+      end
+    end
+
+    context 'when private' do
+      let(:subscribable_by) { 'https://example.com/followers' }
+
+      it 'subscription policy is followers_only' do
+        expect(subject.subscription_policy.to_s).to eq 'followers_only'
+      end
+    end
+
+    context 'when empty' do
+      let(:subscribable_by) { '' }
+
+      it 'subscription policy is block' do
+        expect(subject.subscription_policy.to_s).to eq 'block'
+      end
+    end
+
+    context 'when default value' do
+      let(:subscribable_by) { nil }
+
+      it 'subscription policy is allow' do
+        expect(subject.subscription_policy.to_s).to eq 'allow'
+      end
+    end
+
+    context 'with bio' do
+      let(:subscribable_by) { nil }
+
+      context 'with no-subscribe' do
+        let(:sender_bio) { '[subscribable:no]' }
+
+        it 'subscription policy is block' do
+          expect(subject.subscription_policy.to_s).to eq 'block'
+        end
+      end
+    end
+  end
+
   context 'with property values' do
     let(:payload) do
       {
@@ -19,6 +239,10 @@ RSpec.describe ActivityPub::ProcessAccountService, type: :service do
       }.with_indifferent_access
     end
 
+    before do
+      stub_request(:get, 'https://example.com/.well-known/nodeinfo').to_return(body: '{}')
+    end
+
     it 'parses out of attachment' do
       account = subject.call('alice', 'example.com', payload)
       expect(account.fields).to be_a Array
@@ -29,6 +253,32 @@ RSpec.describe ActivityPub::ProcessAccountService, type: :service do
       expect(account.fields[1]).to be_a Account::Field
       expect(account.fields[1].name).to eq 'Occupation'
       expect(account.fields[1].value).to eq 'Unit test'
+    end
+  end
+
+  context 'with other settings' do
+    let(:payload) do
+      {
+        id: 'https://foo.test',
+        type: 'Actor',
+        inbox: 'https://foo.test/inbox',
+        otherSetting: [
+          { type: 'PropertyValue', name: 'Pronouns', value: 'They/them' },
+          { type: 'PropertyValue', name: 'Occupation', value: 'Unit test' },
+        ],
+      }.with_indifferent_access
+    end
+
+    before do
+      stub_request(:get, 'https://example.com/.well-known/nodeinfo').to_return(body: '{}')
+    end
+
+    it 'parses out of attachment' do
+      account = subject.call('alice', 'example.com', payload)
+      expect(account.settings).to be_a Hash
+      expect(account.settings.size).to eq 2
+      expect(account.settings['Pronouns']).to eq 'They/them'
+      expect(account.settings['Occupation']).to eq 'Unit test'
     end
   end
 
@@ -127,14 +377,15 @@ RSpec.describe ActivityPub::ProcessAccountService, type: :service do
 
     before do
       stub_const 'ActivityPub::ProcessAccountService::SUBDOMAINS_RATELIMIT', 5
+      8.times do |i|
+        stub_request(:get, "https://test#{i}.testdomain.com/.well-known/nodeinfo").to_return(body: '{}')
+      end
     end
 
-    it 'creates at least some accounts' do
-      expect { subject }.to change { Account.remote.count }.by_at_least(2)
-    end
-
-    it 'creates no more account than the limit allows' do
-      expect { subject }.to change { Account.remote.count }.by_at_most(5)
+    it 'creates accounts without exceeding rate limit' do
+      expect { subject }
+        .to create_some_remote_accounts
+        .and create_fewer_than_rate_limit_accounts
     end
   end
 
@@ -192,15 +443,24 @@ RSpec.describe ActivityPub::ProcessAccountService, type: :service do
         stub_request(:get, "https://foo.test/users/#{i}/featured").to_return(status: 200, body: featured_json.to_json, headers: { 'Content-Type': 'application/activity+json' })
         stub_request(:get, "https://foo.test/users/#{i}/status").to_return(status: 200, body: status_json.to_json, headers: { 'Content-Type': 'application/activity+json' })
         stub_request(:get, "https://foo.test/.well-known/webfinger?resource=acct:user#{i}@foo.test").to_return(body: webfinger.to_json, headers: { 'Content-Type': 'application/jrd+json' })
+        stub_request(:get, 'https://foo.test/.well-known/nodeinfo').to_return(body: '{}')
       end
     end
 
-    it 'creates at least some accounts' do
-      expect { subject.call('user1', 'foo.test', payload) }.to change { Account.remote.count }.by_at_least(2)
+    it 'creates accounts without exceeding rate limit' do
+      expect { subject.call('user1', 'foo.test', payload) }
+        .to create_some_remote_accounts
+        .and create_fewer_than_rate_limit_accounts
     end
+  end
 
-    it 'creates no more account than the limit allows' do
-      expect { subject.call('user1', 'foo.test', payload) }.to change { Account.remote.count }.by_at_most(5)
-    end
+  private
+
+  def create_some_remote_accounts
+    change(Account.remote, :count).by_at_least(2)
+  end
+
+  def create_fewer_than_rate_limit_accounts
+    change(Account.remote, :count).by_at_most(5)
   end
 end

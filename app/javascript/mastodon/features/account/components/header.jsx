@@ -4,14 +4,22 @@ import { defineMessages, injectIntl, FormattedMessage } from 'react-intl';
 
 import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
-import { NavLink } from 'react-router-dom';
+import { NavLink, withRouter } from 'react-router-dom';
 
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
 
+import { ReactComponent as CheckIcon } from '@material-symbols/svg-600/outlined/check.svg';
+import { ReactComponent as LockIcon } from '@material-symbols/svg-600/outlined/lock.svg';
+import { ReactComponent as MoreHorizIcon } from '@material-symbols/svg-600/outlined/more_horiz.svg';
+import { ReactComponent as NotificationsIcon } from '@material-symbols/svg-600/outlined/notifications.svg';
+import { ReactComponent as NotificationsActiveIcon } from '@material-symbols/svg-600/outlined/notifications_active-fill.svg';
+import { ReactComponent as ShareIcon } from '@material-symbols/svg-600/outlined/share.svg';
+
 import { Avatar } from 'mastodon/components/avatar';
 import { Badge, AutomatedBadge, GroupBadge } from 'mastodon/components/badge';
-import Button from 'mastodon/components/button';
+import { Button } from 'mastodon/components/button';
+import { CopyIconButton } from 'mastodon/components/copy_icon_button';
 import { FollowersCounter, FollowingCounter, StatusesCounter } from 'mastodon/components/counters';
 import { Icon }  from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
@@ -19,6 +27,7 @@ import { ShortNumber } from 'mastodon/components/short_number';
 import DropdownMenuContainer from 'mastodon/containers/dropdown_menu_container';
 import { autoPlayGif, me, domain } from 'mastodon/initial_state';
 import { PERMISSION_MANAGE_USERS, PERMISSION_MANAGE_FEDERATION } from 'mastodon/permissions';
+import { WithRouterPropTypes } from 'mastodon/utils/react_router';
 
 import AccountNoteContainer from '../containers/account_note_container';
 import FollowRequestNoteContainer from '../containers/follow_request_note_container';
@@ -39,6 +48,7 @@ const messages = defineMessages({
   mute: { id: 'account.mute', defaultMessage: 'Mute @{name}' },
   report: { id: 'account.report', defaultMessage: 'Report @{name}' },
   share: { id: 'account.share', defaultMessage: 'Share @{name}\'s profile' },
+  copy: { id: 'account.copy', defaultMessage: 'Copy link to profile' },
   media: { id: 'account.media', defaultMessage: 'Media' },
   blockDomain: { id: 'account.block_domain', defaultMessage: 'Block domain {domain}' },
   unblockDomain: { id: 'account.unblock_domain', defaultMessage: 'Unblock domain {domain}' },
@@ -58,6 +68,9 @@ const messages = defineMessages({
   endorse: { id: 'account.endorse', defaultMessage: 'Feature on profile' },
   unendorse: { id: 'account.unendorse', defaultMessage: 'Don\'t feature on profile' },
   add_or_remove_from_list: { id: 'account.add_or_remove_from_list', defaultMessage: 'Add or Remove from lists' },
+  add_or_remove_from_antenna: { id: 'account.add_or_remove_from_antenna', defaultMessage: 'Add or Remove from antennas' },
+  add_or_remove_from_exclude_antenna: { id: 'account.add_or_remove_from_exclude_antenna', defaultMessage: 'Add or Remove from antennas as exclusion' },
+  add_or_remove_from_circle: { id: 'account.add_or_remove_from_circle', defaultMessage: 'Add or Remove from circles' },
   admin_account: { id: 'status.admin_account', defaultMessage: 'Open moderation interface for @{name}' },
   admin_domain: { id: 'status.admin_domain', defaultMessage: 'Open moderation interface for {domain}' },
   languages: { id: 'account.languages', defaultMessage: 'Change subscribed languages' },
@@ -83,13 +96,8 @@ const dateFormatOptions = {
 
 class Header extends ImmutablePureComponent {
 
-  static contextTypes = {
-    identity: PropTypes.object,
-    router: PropTypes.object,
-  };
-
   static propTypes = {
-    account: ImmutablePropTypes.map,
+    account: ImmutablePropTypes.record,
     identity_props: ImmutablePropTypes.list,
     onFollow: PropTypes.func.isRequired,
     onBlock: PropTypes.func.isRequired,
@@ -103,6 +111,9 @@ class Header extends ImmutablePureComponent {
     onUnblockDomain: PropTypes.func.isRequired,
     onEndorseToggle: PropTypes.func.isRequired,
     onAddToList: PropTypes.func.isRequired,
+    onAddToAntenna: PropTypes.func.isRequired,
+    onAddToExcludeAntenna: PropTypes.func.isRequired,
+    onAddToCircle: PropTypes.func.isRequired,
     onEditAccountNote: PropTypes.func.isRequired,
     onChangeLanguages: PropTypes.func.isRequired,
     onInteractionModal: PropTypes.func.isRequired,
@@ -111,6 +122,11 @@ class Header extends ImmutablePureComponent {
     intl: PropTypes.object.isRequired,
     domain: PropTypes.string.isRequired,
     hidden: PropTypes.bool,
+    ...WithRouterPropTypes,
+  };
+
+  static contextTypes = {
+    identity: PropTypes.object,
   };
 
   setRef = c => {
@@ -173,25 +189,24 @@ class Header extends ImmutablePureComponent {
   };
 
   handleHashtagClick = e => {
-    const { router } = this.context;
+    const { history } = this.props;
     const value = e.currentTarget.textContent.replace(/^#/, '');
 
-    if (router && e.button === 0 && !(e.ctrlKey || e.metaKey)) {
+    if (history && e.button === 0 && !(e.ctrlKey || e.metaKey)) {
       e.preventDefault();
-      router.history.push(`/tags/${value}`);
+      history.push(`/tags/${value}`);
     }
   };
 
   handleMentionClick = e => {
-    const { router } = this.context;
-    const { onOpenURL } = this.props;
+    const { history, onOpenURL } = this.props;
 
-    if (router && e.button === 0 && !(e.ctrlKey || e.metaKey)) {
+    if (history && e.button === 0 && !(e.ctrlKey || e.metaKey)) {
       e.preventDefault();
 
       const link = e.currentTarget;
 
-      onOpenURL(link.href, router.history, () => {
+      onOpenURL(link.href, history, () => {
         window.location = link.href;
       });
     }
@@ -239,11 +254,10 @@ class Header extends ImmutablePureComponent {
     const isRemote     = account.get('acct') !== account.get('username');
     const remoteDomain = isRemote ? account.get('acct').split('@')[1] : null;
 
-    let info        = [];
-    let actionBtn   = '';
-    let bellBtn     = '';
-    let lockedIcon  = '';
-    let menu        = [];
+    let actionBtn, bellBtn, lockedIcon, shareBtn;
+
+    let info = [];
+    let menu = [];
 
     if (me !== account.get('id') && account.getIn(['relationship', 'followed_by'])) {
       info.push(<span key='followed_by' className='relationship-tag'><FormattedMessage id='account.follows_you' defaultMessage='Follows you' /></span>);
@@ -258,7 +272,13 @@ class Header extends ImmutablePureComponent {
     }
 
     if (account.getIn(['relationship', 'requested']) || account.getIn(['relationship', 'following'])) {
-      bellBtn = <IconButton icon={account.getIn(['relationship', 'notifying']) ? 'bell' : 'bell-o'} size={24} active={account.getIn(['relationship', 'notifying'])} title={intl.formatMessage(account.getIn(['relationship', 'notifying']) ? messages.disableNotifications : messages.enableNotifications, { name: account.get('username') })} onClick={this.props.onNotifyToggle} />;
+      bellBtn = <IconButton icon={account.getIn(['relationship', 'notifying']) ? 'bell' : 'bell-o'} iconComponent={account.getIn(['relationship', 'notifying']) ? NotificationsActiveIcon : NotificationsIcon} active={account.getIn(['relationship', 'notifying'])} title={intl.formatMessage(account.getIn(['relationship', 'notifying']) ? messages.disableNotifications : messages.enableNotifications, { name: account.get('username') })} onClick={this.props.onNotifyToggle} />;
+    }
+
+    if ('share' in navigator) {
+      shareBtn = <IconButton className='optional' iconComponent={ShareIcon} title={intl.formatMessage(messages.share, { name: account.get('username') })} onClick={this.handleShare} />;
+    } else {
+      shareBtn = <CopyIconButton className='optional' title={intl.formatMessage(messages.copy)} value={account.get('url')} />;
     }
 
     if (me !== account.get('id')) {
@@ -280,10 +300,10 @@ class Header extends ImmutablePureComponent {
     }
 
     if (account.get('locked')) {
-      lockedIcon = <Icon id='lock' title={intl.formatMessage(messages.account_locked)} />;
+      lockedIcon = <Icon id='lock' icon={LockIcon} title={intl.formatMessage(messages.account_locked)} />;
     }
 
-    if (signedIn && account.get('id') !== me) {
+    if (signedIn && account.get('id') !== me && !account.get('suspended')) {
       menu.push({ text: intl.formatMessage(messages.mention, { name: account.get('username') }), action: this.props.onMention });
       menu.push({ text: intl.formatMessage(messages.direct, { name: account.get('username') }), action: this.props.onDirect });
       menu.push(null);
@@ -291,10 +311,6 @@ class Header extends ImmutablePureComponent {
 
     if (isRemote) {
       menu.push({ text: intl.formatMessage(messages.openOriginalPage), href: account.get('url') });
-    }
-
-    if ('share' in navigator) {
-      menu.push({ text: intl.formatMessage(messages.share, { name: account.get('username') }), action: this.handleShare });
       menu.push(null);
     }
 
@@ -326,8 +342,13 @@ class Header extends ImmutablePureComponent {
 
         menu.push({ text: intl.formatMessage(account.getIn(['relationship', 'endorsed']) ? messages.unendorse : messages.endorse), action: this.props.onEndorseToggle });
         menu.push({ text: intl.formatMessage(messages.add_or_remove_from_list), action: this.props.onAddToList });
-        menu.push(null);
       }
+      menu.push({ text: intl.formatMessage(messages.add_or_remove_from_antenna), action: this.props.onAddToAntenna });
+      menu.push({ text: intl.formatMessage(messages.add_or_remove_from_exclude_antenna), action: this.props.onAddToExcludeAntenna });
+      if (account.getIn(['relationship', 'followed_by'])) {
+        menu.push({ text: intl.formatMessage(messages.add_or_remove_from_circle), action: this.props.onAddToCircle });
+      }
+      menu.push(null);
 
       if (account.getIn(['relationship', 'muting'])) {
         menu.push({ text: intl.formatMessage(messages.unmute, { name: account.get('username') }), action: this.props.onMute });
@@ -341,7 +362,9 @@ class Header extends ImmutablePureComponent {
         menu.push({ text: intl.formatMessage(messages.block, { name: account.get('username') }), action: this.props.onBlock, dangerous: true });
       }
 
-      menu.push({ text: intl.formatMessage(messages.report, { name: account.get('username') }), action: this.props.onReport, dangerous: true });
+      if (!account.get('suspended')) {
+        menu.push({ text: intl.formatMessage(messages.report, { name: account.get('username') }), action: this.props.onReport, dangerous: true });
+      }
     }
 
     if (signedIn && isRemote) {
@@ -389,7 +412,7 @@ class Header extends ImmutablePureComponent {
 
         <div className='account__header__image'>
           <div className='account__header__info'>
-            {!suspended && info}
+            {info}
           </div>
 
           {!(suspended || hidden) && <img src={autoPlayGif ? account.get('header') : account.get('header_static')} alt='' className='parallax' />}
@@ -401,18 +424,17 @@ class Header extends ImmutablePureComponent {
               <Avatar account={suspended || hidden ? undefined : account} size={90} />
             </a>
 
-            {!suspended && (
-              <div className='account__header__tabs__buttons'>
-                {!hidden && (
-                  <>
-                    {actionBtn}
-                    {bellBtn}
-                  </>
-                )}
+            <div className='account__header__tabs__buttons'>
+              {!hidden && (
+                <>
+                  {actionBtn}
+                  {bellBtn}
+                  {shareBtn}
+                </>
+              )}
 
-                <DropdownMenuContainer disabled={menu.length === 0} items={menu} icon='ellipsis-v' size={24} direction='right' />
-              </div>
-            )}
+              <DropdownMenuContainer disabled={menu.length === 0} items={menu} icon='ellipsis-v' iconComponent={MoreHorizIcon} size={24} direction='right' />
+            </div>
           </div>
 
           <div className='account__header__tabs__name'>
@@ -448,7 +470,7 @@ class Header extends ImmutablePureComponent {
                       <dt dangerouslySetInnerHTML={{ __html: pair.get('name_emojified') }} title={pair.get('name')} className='translate' />
 
                       <dd className='translate' title={pair.get('value_plain')}>
-                        {pair.get('verified_at') && <span title={intl.formatMessage(messages.linkVerifiedOn, { date: intl.formatDate(pair.get('verified_at'), dateFormatOptions) })}><Icon id='check' className='verified__mark' /></span>} <span dangerouslySetInnerHTML={{ __html: pair.get('value_emojified') }} />
+                        {pair.get('verified_at') && <span title={intl.formatMessage(messages.linkVerifiedOn, { date: intl.formatDate(pair.get('verified_at'), dateFormatOptions) })}><Icon id='check' icon={CheckIcon} className='verified__mark' /></span>} <span dangerouslySetInnerHTML={{ __html: pair.get('value_emojified') }} />
                       </dd>
                     </dl>
                   ))}
@@ -459,6 +481,7 @@ class Header extends ImmutablePureComponent {
                 <NavLink isActive={this.isStatusesPageActive} activeClassName='active' to={`/@${account.get('acct')}`} title={intl.formatNumber(account.get('statuses_count'))}>
                   <ShortNumber
                     value={account.get('statuses_count')}
+                    isHide={account.getIn(['other_settings', 'hide_statuses_count']) || false}
                     renderer={StatusesCounter}
                   />
                 </NavLink>
@@ -466,6 +489,7 @@ class Header extends ImmutablePureComponent {
                 <NavLink exact activeClassName='active' to={`/@${account.get('acct')}/following`} title={intl.formatNumber(account.get('following_count'))}>
                   <ShortNumber
                     value={account.get('following_count')}
+                    isHide={account.getIn(['other_settings', 'hide_following_count']) || false}
                     renderer={FollowingCounter}
                   />
                 </NavLink>
@@ -473,6 +497,7 @@ class Header extends ImmutablePureComponent {
                 <NavLink exact activeClassName='active' to={`/@${account.get('acct')}/followers`} title={intl.formatNumber(account.get('followers_count'))}>
                   <ShortNumber
                     value={account.get('followers_count')}
+                    isHide={account.getIn(['other_settings', 'hide_followers_count']) || false}
                     renderer={FollowersCounter}
                   />
                 </NavLink>
@@ -492,4 +517,4 @@ class Header extends ImmutablePureComponent {
 
 }
 
-export default injectIntl(Header);
+export default withRouter(injectIntl(Header));

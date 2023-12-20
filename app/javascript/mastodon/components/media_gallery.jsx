@@ -8,11 +8,12 @@ import classNames from 'classnames';
 import { is } from 'immutable';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 
+import { ReactComponent as VisibilityOffIcon } from '@material-symbols/svg-600/outlined/visibility_off.svg';
 import { debounce } from 'lodash';
 
 import { Blurhash } from 'mastodon/components/blurhash';
 
-import { autoPlayGif, displayMedia, useBlurhash } from '../initial_state';
+import { autoPlayGif, displayMedia, displayMediaExpand, useBlurhash } from '../initial_state';
 
 import { IconButton } from './icon_button';
 
@@ -99,6 +100,22 @@ class Item extends PureComponent {
 
     if (size === 4 || (size === 3 && index > 0)) {
       height = 50;
+    }
+
+    if (size === 5 || size === 6 || size === 9 || size === 10 || size === 11 || size === 12) {
+      height = 33;
+    }
+    if (size === 7 || size === 8 || size === 13 || size === 14 || size === 15 || size === 16) {
+      height = 25;
+    }
+    if ((size === 5 && index === 4) || (size === 7 && index === 6)) {
+      width = 100;
+    }
+    if (size === 9) {
+      width = 33;
+    }
+    if (size === 10 || size === 11 || size === 12 || size === 13 || size === 14 || size === 15 || size === 16) {
+      width = 25;
     }
 
     if (attachment.get('description')?.length > 0) {
@@ -220,6 +237,7 @@ class MediaGallery extends PureComponent {
     visible: PropTypes.bool,
     autoplay: PropTypes.bool,
     onToggleVisibility: PropTypes.func,
+    compact: PropTypes.bool,
   };
 
   state = {
@@ -290,7 +308,7 @@ class MediaGallery extends PureComponent {
   }
 
   render () {
-    const { media, lang, intl, sensitive, defaultWidth, autoplay } = this.props;
+    const { media, lang, intl, sensitive, defaultWidth, autoplay, compact } = this.props;
     const { visible } = this.state;
     const width = this.state.width || defaultWidth;
 
@@ -304,13 +322,15 @@ class MediaGallery extends PureComponent {
       style.aspectRatio = '3 / 2';
     }
 
-    const size     = media.take(4).size;
+    const maxSize = displayMediaExpand ? 16 : 4;
+
+    const size     = media.take(maxSize).size;
     const uncached = media.every(attachment => attachment.get('type') === 'unknown');
 
     if (this.isFullSizeEligible()) {
       children = <Item standalone autoplay={autoplay} onClick={this.handleClick} attachment={media.get(0)} lang={lang} displayWidth={width} visible={visible} />;
     } else {
-      children = media.take(4).map((attachment, i) => <Item key={attachment.get('id')} autoplay={autoplay} onClick={this.handleClick} attachment={attachment} index={i} lang={lang} size={size} displayWidth={width} visible={visible || uncached} />);
+      children = media.take(maxSize).map((attachment, i) => <Item key={attachment.get('id')} autoplay={autoplay} onClick={this.handleClick} attachment={attachment} index={i} lang={lang} size={size} displayWidth={width} visible={visible || uncached} />);
     }
 
     if (uncached) {
@@ -323,7 +343,7 @@ class MediaGallery extends PureComponent {
         </button>
       );
     } else if (visible) {
-      spoilerButton = <IconButton title={intl.formatMessage(messages.toggle_visible, { number: size })} icon='eye-slash' overlay onClick={this.handleOpen} ariaHidden />;
+      spoilerButton = <IconButton title={intl.formatMessage(messages.toggle_visible, { number: size })} icon='eye-slash' iconComponent={VisibilityOffIcon} overlay onClick={this.handleOpen} ariaHidden />;
     } else {
       spoilerButton = (
         <button type='button' onClick={this.handleOpen} className='spoiler-button__overlay'>
@@ -335,8 +355,16 @@ class MediaGallery extends PureComponent {
       );
     }
 
+    const rowClass = (size === 5 || size === 6 || size === 9 || size === 10 || size === 11 || size === 12) ? 'media-gallery--row3' :
+      (size === 7 || size === 8 || size === 13 || size === 14 || size === 15 || size === 16) ? 'media-gallery--row4' :
+        'media-gallery--row2';
+    const columnClass = (size === 9) ? 'media-gallery--column3' :
+      (size === 10 || size === 11 || size === 12 || size === 13 || size === 14 || size === 15 || size === 16) ? 'media-gallery--column4' :
+        'media-gallery--column2';
+    const compactClass = compact ? 'media-gallery__compact' : null;
+
     return (
-      <div className='media-gallery' style={style} ref={this.handleRef}>
+      <div className={classNames('media-gallery', rowClass, columnClass, compactClass)} style={style} ref={this.handleRef}>
         <div className={classNames('spoiler-button', { 'spoiler-button--minified': visible && !uncached, 'spoiler-button--click-thru': uncached })}>
           {spoilerButton}
         </div>

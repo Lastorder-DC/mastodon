@@ -10,19 +10,13 @@ describe PollExpirationNotifyWorker do
   let(:remote?) { false }
   let(:poll_vote) { Fabricate(:poll_vote, poll: poll) }
 
-  describe '#perform' do
-    around do |example|
-      Sidekiq::Testing.fake! do
-        example.run
-      end
-    end
-
+  describe '#perform', :sidekiq_fake do
     it 'runs without error for missing record' do
       expect { worker.perform(nil) }.to_not raise_error
     end
 
     context 'when poll is not expired' do
-      it 'requeues job' do
+      it 'requeues job', retry: 10 do
         worker.perform(poll.id)
         expect(described_class.sidekiq_options_hash['lock']).to be :until_executing
         expect(described_class).to have_enqueued_sidekiq_job(poll.id).at(poll.expires_at + 5.minutes)

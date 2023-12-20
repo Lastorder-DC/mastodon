@@ -35,11 +35,10 @@ class StatusesIndex < Chewy::Index
       content: {
         tokenizer: 'nori_user_dict',
         filter: %w(
+          english_possessive_stemmer
           lowercase
           asciifolding
           cjk_width
-          elision
-          english_possessive_stemmer
           english_stop
           english_stemmer
         ),
@@ -54,18 +53,71 @@ class StatusesIndex < Chewy::Index
           cjk_width
         ),
       },
+
+      sudachi_analyzer: {
+        tokenizer: 'sudachi_tokenizer',
+        type: 'custom',
+        filter: %w(
+          english_possessive_stemmer
+          lowercase
+          asciifolding
+          cjk_width
+          english_stop
+          english_stemmer
+          my_posfilter
+          sudachi_normalizedform
+        ),
+      },
+    },
+    tokenizer: {
+      sudachi_tokenizer: {
+        resources_path: '/etc/elasticsearch/sudachi',
+        split_mode: 'A',
+        type: 'sudachi_tokenizer',
+        discard_punctuation: 'true',
+      },
     },
   }
 
-  index_scope ::Status.unscoped.kept.without_reblogs.includes(:media_attachments, :preview_cards, :local_mentioned, :local_favorited, :local_reblogged, :local_bookmarked, :tags, preloadable_poll: :local_voters), delete_if: ->(status) { status.searchable_by.empty? }
+  index_scope ::Status.unscoped.kept.without_reblogs.includes(
+    :account,
+    :media_attachments,
+    :local_mentioned,
+    :local_favorited,
+    :local_reblogged,
+    :local_bookmarked,
+    :local_emoji_reacted,
+    :tags,
+    :local_referenced,
+    preview_cards_status: :preview_card,
+    preloadable_poll: :local_voters
+  ),
+              delete_if: lambda { |status|
+                           if status.searchability == 'direct'
+                             status.searchable_by.empty?
+                           else
+                             status.searchability == 'limited' ? !status.local? : false
+                           end
+                         }
 
   root date_detection: false do
     field(:id, type: 'long')
     field(:account_id, type: 'long')
-    field(:text, type: 'text', analyzer: 'verbatim', value: ->(status) { status.searchable_text }) { field(:stemmed, type: 'text', analyzer: 'content') }
-    field(:tags, type: 'text', analyzer: 'hashtag',  value: ->(status) { status.tags.map(&:display_name) })
+    field(:text, type: 'text', analyzer: 'sudachi_analyzer', value: ->(status) { status.searchable_text })
+    field(:tags, type: 'text', analyzer: 'hashtag', value: ->(status) { status.tags.map(&:display_name) })
     field(:searchable_by, type: 'long', value: ->(status) { status.searchable_by })
+    field(:mentioned_by, type: 'long', value: ->(status) { status.mentioned_by })
+    field(:favourited_by, type: 'long', value: ->(status) { status.favourited_by })
+    field(:reblogged_by, type: 'long', value: ->(status) { status.reblogged_by })
+    field(:bookmarked_by, type: 'long', value: ->(status) { status.bookmarked_by })
+    field(:bookmark_categoried_by, type: 'long', value: ->(status) { status.bookmark_categoried_by })
+    field(:emoji_reacted_by, type: 'long', value: ->(status) { status.emoji_reacted_by })
+    field(:referenced_by, type: 'long', value: ->(status) { status.referenced_by })
+    field(:voted_by, type: 'long', value: ->(status) { status.voted_by })
+    field(:searchability, type: 'keyword', value: ->(status) { status.compute_searchability })
+    field(:visibility, type: 'keyword', value: ->(status) { status.searchable_visibility })
     field(:language, type: 'keyword')
+    field(:domain, type: 'keyword', value: ->(status) { status.account.domain || '' })
     field(:properties, type: 'keyword', value: ->(status) { status.searchable_properties })
     field(:created_at, type: 'date', value: ->(status) { clamp_date(status.created_at) })
   end

@@ -19,6 +19,16 @@ class AccountsIndex < Chewy::Index
         type: 'stemmer',
         language: 'possessive_english',
       },
+
+      my_posfilter: {
+        type: 'sudachi_part_of_speech',
+        stoptags: [
+          '助詞',
+          '助動詞',
+          '補助記号,句点',
+          '補助記号,読点',
+        ],
+      },
     },
 
     analyzer: {
@@ -33,6 +43,15 @@ class AccountsIndex < Chewy::Index
           english_stop
           english_stemmer
         ),
+      },
+
+      sudachi_analyzer: {
+        filter: %w(
+          my_posfilter
+          sudachi_normalizedform
+        ),
+        type: 'custom',
+        tokenizer: 'sudachi_tokenizer',
       },
 
       verbatim: {
@@ -52,6 +71,13 @@ class AccountsIndex < Chewy::Index
         min_gram: 1,
         max_gram: 15,
       },
+
+      sudachi_tokenizer: {
+        resources_path: '/etc/elasticsearch/sudachi',
+        split_mode: 'A',
+        type: 'sudachi_tokenizer',
+        discard_punctuation: 'true',
+      },
     },
   }
 
@@ -59,12 +85,13 @@ class AccountsIndex < Chewy::Index
 
   root date_detection: false do
     field(:id, type: 'long')
-    field(:following_count, type: 'long')
-    field(:followers_count, type: 'long')
+    field(:following_count, type: 'long', value: ->(account) { account.public_following_count })
+    field(:followers_count, type: 'long', value: ->(account) { account.public_followers_count })
     field(:properties, type: 'keyword', value: ->(account) { account.searchable_properties })
     field(:last_status_at, type: 'date', value: ->(account) { clamp_date(account.last_status_at || account.created_at) })
+    field(:domain, type: 'keyword', value: ->(account) { account.domain || '' })
     field(:display_name, type: 'text', analyzer: 'verbatim') { field :edge_ngram, type: 'text', analyzer: 'edge_ngram', search_analyzer: 'verbatim' }
     field(:username, type: 'text', analyzer: 'verbatim', value: ->(account) { [account.username, account.domain].compact.join('@') }) { field :edge_ngram, type: 'text', analyzer: 'edge_ngram', search_analyzer: 'verbatim' }
-    field(:text, type: 'text', analyzer: 'verbatim', value: ->(account) { account.searchable_text }) { field :stemmed, type: 'text', analyzer: 'natural' }
+    field(:text, type: 'text', analyzer: 'sudachi_analyzer', value: ->(account) { account.searchable_text })
   end
 end

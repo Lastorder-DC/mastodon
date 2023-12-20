@@ -9,7 +9,9 @@ class Api::V1::Accounts::StatusesController < Api::BaseController
   def index
     cache_if_unauthenticated!
     @statuses = load_statuses
-    render json: @statuses, each_serializer: REST::StatusSerializer, relationships: StatusRelationshipsPresenter.new(@statuses, current_user&.account_id)
+    render json: @statuses, each_serializer: REST::StatusSerializer,
+           relationships: StatusRelationshipsPresenter.new(@statuses, current_user&.account_id),
+           emoji_reaction_permitted_account_ids: EmojiReactionAccountsPresenter.new(@statuses, current_user&.account_id)
   end
 
   private
@@ -19,7 +21,7 @@ class Api::V1::Accounts::StatusesController < Api::BaseController
   end
 
   def load_statuses
-    @account.suspended? ? [] : cached_account_statuses
+    @account.unavailable? ? [] : cached_account_statuses
   end
 
   def cached_account_statuses

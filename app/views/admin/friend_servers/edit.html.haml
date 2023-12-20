@@ -1,0 +1,32 @@
+- content_for :page_title do
+  = t('admin.friend_servers.edit_friend')
+
+= simple_form_for @friend, url: admin_friend_server_path(@friend), method: :put do |f|
+  = render 'shared/error_messages', object: @friend
+  = render 'friend_fields', f: f, friend: @friend
+
+  .fields-group
+    %h4= t('admin.friend_servers.status')
+    .fields-group
+      - if @friend.accepted?
+        %span.positive-hint
+          = fa_icon('check')
+          &nbsp;
+          = t 'admin.friend_servers.enabled'
+      - elsif @friend.pending?
+        = fa_icon('hourglass')
+        &nbsp;
+        = t 'admin.friend_servers.pending'
+      - else
+        %span.negative-hint
+          = fa_icon('times')
+          &nbsp;
+          = t 'admin.friend_servers.disabled'
+      .action-buttons
+        %div
+          = link_to t('admin.friend_servers.follow'), follow_admin_friend_server_path(@friend), class: 'button', method: :post, data: { confirm: t('admin.accounts.are_you_sure') } if @friend.idle?
+          = link_to t('admin.friend_servers.accept'), accept_admin_friend_server_path(@friend), class: 'button', method: :post, data: { confirm: t('admin.accounts.are_you_sure') } if @friend.they_are_pending?
+          = link_to t('admin.friend_servers.reject'), reject_admin_friend_server_path(@friend), class: 'button', method: :post, data: { confirm: t('admin.accounts.are_you_sure') } if @friend.they_are_pending?
+
+  .actions
+    = f.button :button, t('generic.save_changes'), type: :submit

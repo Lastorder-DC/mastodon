@@ -10,7 +10,7 @@ RSpec.describe FeedManager do
     end
   end
 
-  it 'tracks at least as many statuses as reblogs', skip_stub: true do
+  it 'tracks at least as many statuses as reblogs', :skip_stub do
     expect(FeedManager::REBLOG_FALLOFF).to be <= FeedManager::MAX_ITEMS
   end
 
@@ -27,6 +27,7 @@ RSpec.describe FeedManager do
     let(:bob)   { Fabricate(:account, username: 'bob', domain: 'example.com') }
     let(:jeff)  { Fabricate(:account, username: 'jeff') }
     let(:list) { Fabricate(:list, account: alice) }
+    let(:antenna) { Fabricate(:antenna, account: alice, insert_feeds: true, list: list) }
 
     context 'with home feed' do
       it 'returns false for followee\'s status' do
@@ -186,6 +187,42 @@ RSpec.describe FeedManager do
         list.exclusive = false
         alice.follow!(jeff)
         list.accounts << jeff
+        status = Fabricate(:status, text: 'I post a lot', account: bob)
+        reblog = Fabricate(:status, reblog: status, account: jeff)
+        expect(described_class.instance.filter?(:home, reblog, alice)).to be false
+      end
+
+      it 'returns true for post from followee on exclusive antenna' do
+        list.exclusive = true
+        alice.follow!(bob)
+        antenna.accounts << bob
+        allow(Antenna).to receive(:where).and_return(antenna)
+        status = Fabricate(:status, text: 'I post a lot', account: bob)
+        expect(described_class.instance.filter?(:home, status, alice)).to be true
+      end
+
+      it 'returns true for reblog from followee on exclusive antenna' do
+        list.exclusive = true
+        alice.follow!(jeff)
+        antenna.accounts << jeff
+        allow(Antenna).to receive(:where).and_return(antenna)
+        status = Fabricate(:status, text: 'I post a lot', account: bob)
+        reblog = Fabricate(:status, reblog: status, account: jeff)
+        expect(described_class.instance.filter?(:home, reblog, alice)).to be true
+      end
+
+      it 'returns false for post from followee on non-exclusive antenna' do
+        list.exclusive = false
+        alice.follow!(bob)
+        antenna.accounts << bob
+        status = Fabricate(:status, text: 'I post a lot', account: bob)
+        expect(described_class.instance.filter?(:home, status, alice)).to be false
+      end
+
+      it 'returns false for reblog from followee on non-exclusive antenna' do
+        list.exclusive = false
+        alice.follow!(jeff)
+        antenna.accounts << jeff
         status = Fabricate(:status, text: 'I post a lot', account: bob)
         reblog = Fabricate(:status, reblog: status, account: jeff)
         expect(described_class.instance.filter?(:home, reblog, alice)).to be false

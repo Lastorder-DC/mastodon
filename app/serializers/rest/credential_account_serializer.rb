@@ -10,6 +10,7 @@ class REST::CredentialAccountSerializer < REST::AccountSerializer
 
     {
       privacy: user.setting_default_privacy,
+      searchability: user.setting_default_searchability,
       sensitive: user.setting_default_sensitive,
       language: user.setting_default_language,
       note: object.note,

@@ -3,10 +3,11 @@
 class StatusFilter
   attr_reader :status, :account
 
-  def initialize(status, account, preloaded_relations = {})
+  def initialize(status, account, preloaded_relations = {}, preloaded_status_relations = {})
     @status              = status
     @account             = account
     @preloaded_relations = preloaded_relations
+    @preloaded_status_relations = preloaded_status_relations
   end
 
   def filtered?
@@ -54,6 +55,6 @@ class StatusFilter
   end
 
   def policy_allows_show?
-    StatusPolicy.new(account, status, @preloaded_relations).show?
+    StatusPolicy.new(account, status, @preloaded_relations, @preloaded_status_relations).show?
   end
 end

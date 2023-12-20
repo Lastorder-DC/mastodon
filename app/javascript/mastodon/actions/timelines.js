@@ -149,6 +149,7 @@ export const expandAccountTimeline         = (accountId, { maxId, withReplies, t
 export const expandAccountFeaturedTimeline = (accountId, { tagged } = {}) => expandTimeline(`account:${accountId}:pinned${tagged ? `:${tagged}` : ''}`, `/api/v1/accounts/${accountId}/statuses`, { pinned: true, tagged });
 export const expandAccountMediaTimeline    = (accountId, { maxId } = {}) => expandTimeline(`account:${accountId}:media`, `/api/v1/accounts/${accountId}/statuses`, { max_id: maxId, only_media: true, limit: 40 });
 export const expandListTimeline            = (id, { maxId } = {}, done = noOp) => expandTimeline(`list:${id}`, `/api/v1/timelines/list/${id}`, { max_id: maxId }, done);
+export const expandAntennaTimeline         = (id, { maxId } = {}, done = noOp) => expandTimeline(`antenna:${id}`, `/api/v1/timelines/antenna/${id}`, { max_id: maxId }, done);
 export const expandHashtagTimeline         = (hashtag, { maxId, tags, local } = {}, done = noOp) => {
   return expandTimeline(`hashtag:${hashtag}${local ? ':local' : ''}`, `/api/v1/timelines/tag/${hashtag}`, {
     max_id: maxId,
@@ -163,6 +164,7 @@ export const fillHomeTimelineGaps      = (done = noOp) => fillTimelineGaps('home
 export const fillPublicTimelineGaps    = ({ onlyMedia, onlyRemote } = {}, done = noOp) => fillTimelineGaps(`public${onlyRemote ? ':remote' : ''}${onlyMedia ? ':media' : ''}`, '/api/v1/timelines/public', { remote: !!onlyRemote, only_media: !!onlyMedia }, done);
 export const fillCommunityTimelineGaps = ({ onlyMedia } = {}, done = noOp) => fillTimelineGaps(`community${onlyMedia ? ':media' : ''}`, '/api/v1/timelines/public', { local: true, only_media: !!onlyMedia }, done);
 export const fillListTimelineGaps      = (id, done = noOp) => fillTimelineGaps(`list:${id}`, `/api/v1/timelines/list/${id}`, {}, done);
+export const fillAntennaTimelineGaps   = (id, done = noOp) => fillTimelineGaps(`antenna:${id}`, `/api/v1/timelines/antenna/${id}`, {}, done);
 
 export function expandTimelineRequest(timeline, isLoadingMore) {
   return {

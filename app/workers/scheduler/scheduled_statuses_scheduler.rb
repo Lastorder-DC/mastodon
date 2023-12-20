@@ -7,6 +7,7 @@ class Scheduler::ScheduledStatusesScheduler
 
   def perform
     publish_scheduled_statuses!
+    unpublish_expired_statuses!
     publish_scheduled_announcements!
     unpublish_expired_announcements!
   end
@@ -19,8 +20,18 @@ class Scheduler::ScheduledStatusesScheduler
     end
   end
 
+  def unpublish_expired_statuses!
+    expired_statuses.find_each do |expired_status|
+      RemoveExpiredStatusWorker.perform_at(expired_status.scheduled_at, expired_status.id)
+    end
+  end
+
   def due_statuses
     ScheduledStatus.where('scheduled_at <= ?', Time.now.utc + PostStatusService::MIN_SCHEDULE_OFFSET)
+  end
+
+  def expired_statuses
+    ScheduledExpirationStatus.where('scheduled_at <= ?', Time.now.utc + PostStatusService::MIN_SCHEDULE_OFFSET)
   end
 
   def publish_scheduled_announcements!

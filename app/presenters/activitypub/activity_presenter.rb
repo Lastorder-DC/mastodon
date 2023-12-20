@@ -4,14 +4,14 @@ class ActivityPub::ActivityPresenter < ActiveModelSerializers::Model
   attributes :id, :type, :actor, :published, :to, :cc, :virtual_object
 
   class << self
-    def from_status(status, allow_inlining: true)
+    def from_status(status, use_bearcap: true, allow_inlining: true, for_misskey: false, for_friend: false)
       new.tap do |presenter|
         presenter.id        = ActivityPub::TagManager.instance.activity_uri_for(status)
         presenter.type      = status.reblog? ? 'Announce' : 'Create'
         presenter.actor     = ActivityPub::TagManager.instance.uri_for(status.account)
         presenter.published = status.created_at
-        presenter.to        = ActivityPub::TagManager.instance.to(status)
-        presenter.cc        = ActivityPub::TagManager.instance.cc(status)
+        presenter.to        = for_friend ? ActivityPub::TagManager.instance.to_for_friend(status) : ActivityPub::TagManager.instance.to(status)
+        presenter.cc        = for_misskey ? ActivityPub::TagManager.instance.cc_for_misskey(status) : ActivityPub::TagManager.instance.cc(status)
 
         presenter.virtual_object = begin
           if status.reblog?
@@ -20,6 +20,8 @@ class ActivityPub::ActivityPresenter < ActiveModelSerializers::Model
             else
               ActivityPub::TagManager.instance.uri_for(status.proper)
             end
+          elsif status.limited_visibility? && use_bearcap && !status.account.user&.setting_unsafe_limited_distribution
+            "bear:?#{{ u: ActivityPub::TagManager.instance.uri_for(status.proper), t: status.capability_tokens.first.token }.to_query}"
           else
             status.proper
           end

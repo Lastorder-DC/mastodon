@@ -1,3 +1,5 @@
+// Kmyblue tracking marker: copied antenna_editor/search, circle_editor/search
+
 import PropTypes from 'prop-types';
 import { PureComponent } from 'react';
 
@@ -6,6 +8,9 @@ import { defineMessages, injectIntl } from 'react-intl';
 import classNames from 'classnames';
 
 import { connect } from 'react-redux';
+
+import { ReactComponent as CancelIcon } from '@material-symbols/svg-600/outlined/cancel.svg';
+import { ReactComponent as SearchIcon } from '@material-symbols/svg-600/outlined/search.svg';
 
 import { Icon }  from 'mastodon/components/icon';
 
@@ -69,8 +74,8 @@ class Search extends PureComponent {
         </label>
 
         <div role='button' tabIndex={0} className='search__icon' onClick={this.handleClear}>
-          <Icon id='search' className={classNames({ active: !hasValue })} />
-          <Icon id='times-circle' aria-label={intl.formatMessage(messages.search)} className={classNames({ active: hasValue })} />
+          <Icon id='search' icon={SearchIcon} className={classNames({ active: !hasValue })} />
+          <Icon id='times-circle' icon={CancelIcon} aria-label={intl.formatMessage(messages.search)} className={classNames({ active: hasValue })} />
         </div>
       </div>
     );

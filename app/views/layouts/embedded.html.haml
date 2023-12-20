@@ -2,7 +2,8 @@
 %html{ lang: I18n.locale }
   %head
     %meta{ charset: 'utf-8' }/
-    %meta{ name: 'robots', content: 'noindex' }/
+    %meta{ name: 'robots', content: 'noindex, noai, noimageai' }/
+    %meta{ name: 'CCBot', content: 'nofollow' }
 
     - if cdn_host?
       %link{ rel: 'dns-prefetch', href: cdn_host }/

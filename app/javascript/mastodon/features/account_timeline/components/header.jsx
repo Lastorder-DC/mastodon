@@ -2,20 +2,22 @@ import PropTypes from 'prop-types';
 
 import { FormattedMessage } from 'react-intl';
 
-import { NavLink } from 'react-router-dom';
+import { NavLink, withRouter } from 'react-router-dom';
 
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
+
+import { WithRouterPropTypes } from 'mastodon/utils/react_router';
 
 import InnerHeader from '../../account/components/header';
 
 import MemorialNote from './memorial_note';
 import MovedNote from './moved_note';
 
-export default class Header extends ImmutablePureComponent {
+class Header extends ImmutablePureComponent {
 
   static propTypes = {
-    account: ImmutablePropTypes.map,
+    account: ImmutablePropTypes.record,
     onFollow: PropTypes.func.isRequired,
     onBlock: PropTypes.func.isRequired,
     onMention: PropTypes.func.isRequired,
@@ -27,6 +29,9 @@ export default class Header extends ImmutablePureComponent {
     onUnblockDomain: PropTypes.func.isRequired,
     onEndorseToggle: PropTypes.func.isRequired,
     onAddToList: PropTypes.func.isRequired,
+    onAddToAntenna: PropTypes.func.isRequired,
+    onAddToExcludeAntenna: PropTypes.func.isRequired,
+    onAddToCircle: PropTypes.func.isRequired,
     onChangeLanguages: PropTypes.func.isRequired,
     onInteractionModal: PropTypes.func.isRequired,
     onOpenAvatar: PropTypes.func.isRequired,
@@ -34,10 +39,7 @@ export default class Header extends ImmutablePureComponent {
     hideTabs: PropTypes.bool,
     domain: PropTypes.string.isRequired,
     hidden: PropTypes.bool,
-  };
-
-  static contextTypes = {
-    router: PropTypes.object,
+    ...WithRouterPropTypes,
   };
 
   handleFollow = () => {
@@ -49,11 +51,11 @@ export default class Header extends ImmutablePureComponent {
   };
 
   handleMention = () => {
-    this.props.onMention(this.props.account, this.context.router.history);
+    this.props.onMention(this.props.account, this.props.history);
   };
 
   handleDirect = () => {
-    this.props.onDirect(this.props.account, this.context.router.history);
+    this.props.onDirect(this.props.account, this.props.history);
   };
 
   handleReport = () => {
@@ -94,6 +96,18 @@ export default class Header extends ImmutablePureComponent {
 
   handleAddToList = () => {
     this.props.onAddToList(this.props.account);
+  };
+
+  handleAddToAntenna = () => {
+    this.props.onAddToAntenna(this.props.account);
+  };
+
+  handleAddToExcludeAntenna = () => {
+    this.props.onAddToExcludeAntenna(this.props.account);
+  };
+
+  handleAddToCircle = () => {
+    this.props.onAddToCircle(this.props.account);
   };
 
   handleEditAccountNote = () => {
@@ -138,6 +152,9 @@ export default class Header extends ImmutablePureComponent {
           onUnblockDomain={this.handleUnblockDomain}
           onEndorseToggle={this.handleEndorseToggle}
           onAddToList={this.handleAddToList}
+          onAddToAntenna={this.handleAddToAntenna}
+          onAddToExcludeAntenna={this.handleAddToExcludeAntenna}
+          onAddToCircle={this.handleAddToCircle}
           onEditAccountNote={this.handleEditAccountNote}
           onChangeLanguages={this.handleChangeLanguages}
           onInteractionModal={this.handleInteractionModal}
@@ -159,3 +176,5 @@ export default class Header extends ImmutablePureComponent {
   }
 
 }
+
+export default withRouter(Header);

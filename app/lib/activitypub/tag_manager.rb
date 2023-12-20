@@ -36,6 +36,8 @@ class ActivityPub::TagManager
   def uri_for(target)
     return target.uri if target.respond_to?(:local?) && !target.local?
 
+    return unless target.respond_to?(:object_type)
+
     case target.object_type
     when :person
       target.instance_actor? ? instance_actor_url : account_url(target)
@@ -45,6 +47,10 @@ class ActivityPub::TagManager
       account_status_url(target.account, target)
     when :emoji
       emoji_url(target)
+    when :emoji_reaction
+      emoji_reaction_url(target)
+    when :conversation
+      context_url(target)
     when :flag
       target.uri
     end
@@ -74,6 +80,12 @@ class ActivityPub::TagManager
     account_status_replies_url(target.account, target, page_params)
   end
 
+  def references_uri_for(target, page_params = nil)
+    raise ArgumentError, 'target must be a local activity' unless %i(note comment activity).include?(target.object_type) && target.local?
+
+    account_status_references_url(target.account, target, page_params)
+  end
+
   def followers_uri_for(target)
     target.local? ? account_followers_url(target) : target.followers_url.presence
   end
@@ -86,9 +98,11 @@ class ActivityPub::TagManager
     case status.visibility
     when 'public'
       [COLLECTIONS[:public]]
-    when 'unlisted', 'private'
+    when 'unlisted', 'public_unlisted', 'private'
       [account_followers_url(status.account)]
-    when 'direct', 'limited'
+    when 'login'
+      [account_followers_url(status.account), 'as:LoginOnly', 'kmyblue:LoginOnly', 'LoginUser']
+    when 'direct'
       if status.account.silenced?
         # Only notify followers if the account is locally silenced
         account_ids = status.active_mentions.pluck(:account_id)
@@ -106,7 +120,16 @@ class ActivityPub::TagManager
           result << followers_uri_for(mention.account) if mention.account.group?
         end.compact
       end
+    when 'limited'
+      # do not empty array to avoid Fedibird personal visibility
+      status.conversation.nil? ? ['kmyblue:Limited'] : [context_url(status.conversation)]
     end
+  end
+
+  def to_for_friend(status)
+    to = to(status)
+    to << 'kmyblue:LocalPublic' if status.public_unlisted_visibility?
+    to
   end
 
   # Secondary audience of a status
@@ -122,9 +145,25 @@ class ActivityPub::TagManager
     case status.visibility
     when 'public'
       cc << account_followers_url(status.account)
-    when 'unlisted'
+    when 'unlisted', 'public_unlisted'
       cc << COLLECTIONS[:public]
     end
+
+    cc + cc_private_visibility(status)
+  end
+
+  def cc_for_misskey(status)
+    if (status.account.user&.setting_reject_unlisted_subscription && status.unlisted_visibility?) || (status.account.user&.setting_reject_public_unlisted_subscription && status.public_unlisted_visibility?)
+      cc = cc_private_visibility(status)
+      cc << uri_for(status.reblog.account) if status.reblog?
+      return cc
+    end
+
+    cc(status)
+  end
+
+  def cc_private_visibility(status)
+    cc = []
 
     unless status.direct_visibility? || status.limited_visibility?
       if status.account.silenced?
@@ -169,7 +208,7 @@ class ActivityPub::TagManager
     uri_to_resource(uri, Account)
   end
 
-  def uri_to_resource(uri, klass)
+  def uri_to_resource(uri, klass, url: false)
     return if uri.nil?
 
     if local_uri?(uri)
@@ -182,9 +221,90 @@ class ActivityPub::TagManager
     elsif OStatus::TagManager.instance.local_id?(uri)
       klass.find_by(id: OStatus::TagManager.instance.unique_tag_to_local_id(uri, klass.to_s))
     else
-      klass.find_by(uri: uri.split('#').first)
+      resource   = klass.find_by(uri: uri.split('#').first)
+      resource ||= klass.where('uri != url').find_by(url: uri.split('#').first) if url
+      resource
     end
   rescue ActiveRecord::RecordNotFound
     nil
+  end
+
+  def limited_scope(status)
+    case status.limited_scope
+    when 'mutual'
+      'Mutual'
+    when 'circle'
+      'Circle'
+    when 'reply'
+      'Reply'
+    else
+      ''
+    end
+  end
+
+  def subscribable_by(account)
+    case account.subscription_policy
+    when :allow
+      [COLLECTIONS[:public]]
+    when :followers_only
+      [account_followers_url(account)]
+    else
+      []
+    end
+  end
+
+  def searchable_by(status)
+    searchable_by =
+      case status.compute_searchability_activitypub
+      when 'public'
+        [COLLECTIONS[:public]]
+      when 'private'
+        [account_followers_url(status.account)]
+      when 'limited'
+        ['as:Limited', 'kmyblue:Limited']
+      else
+        []
+      end
+
+    searchable_by.concat(mentions_uris(status)).compact
+  end
+
+  def searchable_by_for_friend(status)
+    searchable = searchable_by(status)
+    searchable << 'kmyblue:LocalPublic' if status.compute_searchability_local == 'public_unlisted'
+    searchable
+  end
+
+  def account_searchable_by(account)
+    case account.compute_searchability_activitypub
+    when 'public'
+      [COLLECTIONS[:public]]
+    when 'private'
+      [account_followers_url(account)]
+    when 'limited'
+      ['as:Limited', 'kmyblue:Limited']
+    else
+      []
+    end
+  end
+
+  def mentions_uris(status)
+    if status.account.silenced?
+      # Only notify followers if the account is locally silenced
+      account_ids = status.active_mentions.pluck(:account_id)
+      uris = status.account.followers.where(id: account_ids).each_with_object([]) do |account, result|
+        result << uri_for(account)
+        result << account_followers_url(account) if account.group?
+      end
+      uris.concat(FollowRequest.where(target_account_id: status.account_id, account_id: account_ids).each_with_object([]) do |request, result|
+        result << uri_for(request.account)
+        result << account_followers_url(request.account) if request.account.group?
+      end)
+    else
+      status.active_mentions.each_with_object([]) do |mention, result|
+        result << uri_for(mention.account)
+        result << account_followers_url(mention.account) if mention.account.group?
+      end
+    end
   end
 end

@@ -20,6 +20,7 @@ class AccountWarning < ApplicationRecord
   enum action: {
     none: 0,
     disable: 1_000,
+    force_cw: 1_200,
     mark_statuses_as_sensitive: 1_250,
     delete_statuses: 1_500,
     sensitive: 2_000,
@@ -27,7 +28,7 @@ class AccountWarning < ApplicationRecord
     suspend: 4_000,
   }, _suffix: :action
 
-  before_validation :before_validate
+  normalizes :text, with: ->(text) { text.to_s }, apply_to_nil: true
 
   belongs_to :account, inverse_of: :account_warnings
   belongs_to :target_account, class_name: 'Account', inverse_of: :strikes
@@ -49,11 +50,5 @@ class AccountWarning < ApplicationRecord
 
   def to_log_human_identifier
     target_account.acct
-  end
-
-  private
-
-  def before_validate
-    self.text = '' if text.blank?
   end
 end

@@ -190,7 +190,8 @@
 .information-badge,
 .simple_form .overridden,
 .simple_form .recommended,
-.simple_form .not_recommended {
+.simple_form .not_recommended,
+.simple_form .kmyblue {
   display: inline-block;
   padding: 4px 6px;
   cursor: default;
@@ -252,6 +253,12 @@
   color: lighten($error-red, 12%);
   background-color: rgba(lighten($error-red, 12%), 0.1);
   border-color: rgba(lighten($error-red, 12%), 0.5);
+}
+
+.simple_form .kmyblue {
+  color: lighten($kmyblue, 12%);
+  background-color: rgba(lighten($kmyblue, 12%), 0.1);
+  border-color: rgba(lighten($kmyblue, 12%), 0.5);
 }
 
 .account__header__fields {
@@ -398,5 +405,16 @@
   &__count,
   &__count small {
     color: $gold-star;
+  }
+}
+
+.batch-table__row--attention .media-attachments-table {
+  .image {
+    max-width: 80%;
+    max-height: 200px;
+  }
+
+  .detailed-status__meta {
+    margin-top: 8px;
   }
 }

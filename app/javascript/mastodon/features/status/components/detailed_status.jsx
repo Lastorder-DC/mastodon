@@ -1,41 +1,41 @@
 import PropTypes from 'prop-types';
 
-import { injectIntl, defineMessages, FormattedDate, FormattedMessage } from 'react-intl';
+import { FormattedDate, FormattedMessage } from 'react-intl';
 
 import classNames from 'classnames';
-import { Link } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
 
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
+
+import { ReactComponent as AlternateEmailIcon } from '@material-symbols/svg-600/outlined/alternate_email.svg';
+import { ReactComponent as ReferenceIcon } from '@material-symbols/svg-600/outlined/link.svg';
+import { ReactComponent as EmojiReactionIcon } from '@material-symbols/svg-600/outlined/mood.svg';
+import { ReactComponent as RepeatIcon } from '@material-symbols/svg-600/outlined/repeat.svg';
+import { ReactComponent as StarIcon } from '@material-symbols/svg-600/outlined/star-fill.svg';
 
 import { AnimatedNumber } from 'mastodon/components/animated_number';
 import EditedTimestamp from 'mastodon/components/edited_timestamp';
 import { getHashtagBarForStatus } from 'mastodon/components/hashtag_bar';
 import { Icon }  from 'mastodon/components/icon';
 import PictureInPicturePlaceholder from 'mastodon/components/picture_in_picture_placeholder';
+import { SearchabilityIcon } from 'mastodon/components/searchability_icon';
+import { VisibilityIcon } from 'mastodon/components/visibility_icon';
+import { enableEmojiReaction, isHideItem } from 'mastodon/initial_state';
+import { WithRouterPropTypes } from 'mastodon/utils/react_router';
 
 import { Avatar } from '../../../components/avatar';
 import { DisplayName } from '../../../components/display_name';
 import MediaGallery from '../../../components/media_gallery';
 import StatusContent from '../../../components/status_content';
+import StatusEmojiReactionsBar from '../../../components/status_emoji_reactions_bar';
 import Audio from '../../audio';
 import scheduleIdleTask from '../../ui/util/schedule_idle_task';
 import Video from '../../video';
 
 import Card from './card';
 
-const messages = defineMessages({
-  public_short: { id: 'privacy.public.short', defaultMessage: 'Public' },
-  unlisted_short: { id: 'privacy.unlisted.short', defaultMessage: 'Unlisted' },
-  private_short: { id: 'privacy.private.short', defaultMessage: 'Followers only' },
-  direct_short: { id: 'privacy.direct.short', defaultMessage: 'Mentioned people only' },
-});
-
 class DetailedStatus extends ImmutablePureComponent {
-
-  static contextTypes = {
-    router: PropTypes.object,
-  };
 
   static propTypes = {
     status: ImmutablePropTypes.map,
@@ -53,6 +53,9 @@ class DetailedStatus extends ImmutablePureComponent {
       available: PropTypes.bool,
     }),
     onToggleMediaVisibility: PropTypes.func,
+    onEmojiReact: PropTypes.func,
+    onUnEmojiReact: PropTypes.func,
+    ...WithRouterPropTypes,
   };
 
   state = {
@@ -60,9 +63,9 @@ class DetailedStatus extends ImmutablePureComponent {
   };
 
   handleAccountClick = (e) => {
-    if (e.button === 0 && !(e.ctrlKey || e.metaKey) && this.context.router) {
+    if (e.button === 0 && !(e.ctrlKey || e.metaKey) && this.props.history) {
       e.preventDefault();
-      this.context.router.history.push(`/@${this.props.status.getIn(['account', 'acct'])}`);
+      this.props.history.push(`/@${this.props.status.getIn(['account', 'acct'])}`);
     }
 
     e.stopPropagation();
@@ -132,24 +135,28 @@ class DetailedStatus extends ImmutablePureComponent {
     } else if (attachments.getIn([0, 'type']) === 'audio') {
       return '16 / 9';
     } else {
-      return (attachments.size === 1 && attachments.getIn([0, 'meta', 'small', 'aspect'])) ? attachments.getIn([0, 'meta', 'small', 'aspect']) : '3 / 2'
+      return (attachments.size === 1 && attachments.getIn([0, 'meta', 'small', 'aspect'])) ? attachments.getIn([0, 'meta', 'small', 'aspect']) : '3 / 2';
     }
   }
 
   render () {
     const status = this._properStatus();
     const outerStyle = { boxSizing: 'border-box' };
-    const { intl, compact, pictureInPicture } = this.props;
+    const { compact, pictureInPicture } = this.props;
 
     if (!status) {
       return null;
     }
 
     let media           = '';
+    let isCardMediaWithSensitive = false;
     let applicationLink = '';
     let reblogLink = '';
-    let reblogIcon = 'retweet';
+    const reblogIcon = 'retweet';
+    const reblogIconComponent = RepeatIcon;
     let favouriteLink = '';
+    let emojiReactionsLink = '';
+    let statusReferencesLink = '';
     let edited = '';
 
     if (this.props.measureHeight) {
@@ -217,32 +224,36 @@ class DetailedStatus extends ImmutablePureComponent {
           />
         );
       }
-    } else if (status.get('spoiler_text').length === 0) {
-      media = <Card sensitive={status.get('sensitive')} onOpenMedia={this.props.onOpenMedia} card={status.get('card', null)} />;
+    } else if (status.get('card')) {
+      media = <Card sensitive={status.get('sensitive') && !status.get('spoiler_text')} onOpenMedia={this.props.onOpenMedia} card={status.get('card', null)} />;
+      isCardMediaWithSensitive = status.get('spoiler_text').length > 0;
+    }
+
+    let emojiReactionsBar = null;
+    if (status.get('emoji_reactions')) {
+      const emojiReactions = status.get('emoji_reactions');
+      const emojiReactionPolicy = status.getIn(['account', 'other_settings', 'emoji_reaction_policy']) || 'allow';
+      const emojiReactionAvailableServer = !isHideItem('emoji_reaction_unavailable_server') || status.get('emoji_reaction_available_server');
+      if (emojiReactions.size > 0 && enableEmojiReaction && emojiReactionAvailableServer && emojiReactionPolicy !== 'block') {
+        emojiReactionsBar = <StatusEmojiReactionsBar emojiReactions={emojiReactions} status={status} onEmojiReact={this.props.onEmojiReact} onUnEmojiReact={this.props.onUnEmojiReact} />;
+      }
     }
 
     if (status.get('application')) {
       applicationLink = <> · <a className='detailed-status__application' href={status.getIn(['application', 'website'])} target='_blank' rel='noopener noreferrer'>{status.getIn(['application', 'name'])}</a></>;
     }
 
-    const visibilityIconInfo = {
-      'public': { icon: 'globe', text: intl.formatMessage(messages.public_short) },
-      'unlisted': { icon: 'unlock', text: intl.formatMessage(messages.unlisted_short) },
-      'private': { icon: 'lock', text: intl.formatMessage(messages.private_short) },
-      'direct': { icon: 'at', text: intl.formatMessage(messages.direct_short) },
-    };
+    const visibilityLink = <> · <VisibilityIcon visibility={status.get('limited_scope') || status.get('visibility_ex')} /></>;
+    const searchabilityLink = <> · <SearchabilityIcon searchability={status.get('searchability')} /></>;
 
-    const visibilityIcon = visibilityIconInfo[status.get('visibility')];
-    const visibilityLink = <> · <Icon id={visibilityIcon.icon} title={visibilityIcon.text} /></>;
-
-    if (['private', 'direct'].includes(status.get('visibility'))) {
+    if (['private', 'direct'].includes(status.get('visibility_ex'))) {
       reblogLink = '';
-    } else if (this.context.router) {
+    } else if (this.props.history) {
       reblogLink = (
         <>
           {' · '}
           <Link to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/reblogs`} className='detailed-status__link'>
-            <Icon id={reblogIcon} />
+            <Icon id={reblogIcon} icon={reblogIconComponent} />
             <span className='detailed-status__reblogs'>
               <AnimatedNumber value={status.get('reblogs_count')} />
             </span>
@@ -254,7 +265,7 @@ class DetailedStatus extends ImmutablePureComponent {
         <>
           {' · '}
           <a href={`/interact/${status.get('id')}?type=reblog`} className='detailed-status__link' onClick={this.handleModalLink}>
-            <Icon id={reblogIcon} />
+            <Icon id={reblogIcon} icon={reblogIconComponent} />
             <span className='detailed-status__reblogs'>
               <AnimatedNumber value={status.get('reblogs_count')} />
             </span>
@@ -263,10 +274,10 @@ class DetailedStatus extends ImmutablePureComponent {
       );
     }
 
-    if (this.context.router) {
+    if (this.props.history) {
       favouriteLink = (
         <Link to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/favourites`} className='detailed-status__link'>
-          <Icon id='star' />
+          <Icon id='star' icon={StarIcon} />
           <span className='detailed-status__favorites'>
             <AnimatedNumber value={status.get('favourites_count')} />
           </span>
@@ -275,9 +286,49 @@ class DetailedStatus extends ImmutablePureComponent {
     } else {
       favouriteLink = (
         <a href={`/interact/${status.get('id')}?type=favourite`} className='detailed-status__link' onClick={this.handleModalLink}>
-          <Icon id='star' />
+          <Icon id='star' icon={StarIcon} />
           <span className='detailed-status__favorites'>
             <AnimatedNumber value={status.get('favourites_count')} />
+          </span>
+        </a>
+      );
+    }
+
+    if (this.props.history) {
+      emojiReactionsLink = (
+        <Link to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/emoji_reactions`} className='detailed-status__link'>
+          <Icon id='smile-o' icon={EmojiReactionIcon} />
+          <span className='detailed-status__favorites'>
+            <AnimatedNumber value={status.get('emoji_reactions_count')} />
+          </span>
+        </Link>
+      );
+    } else {
+      emojiReactionsLink = (
+        <a href={`/interact/${status.get('id')}?type=emoji_reactions`} className='detailed-status__link' onClick={this.handleModalLink}>
+          <Icon id='smile-o' icon={EmojiReactionIcon} />
+          <span className='detailed-status__favorites'>
+            <AnimatedNumber value={status.get('emoji_reactions_count')} />
+          </span>
+        </a>
+      );
+    }
+
+    if (this.props.history) {
+      statusReferencesLink = (
+        <Link to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/references`} className='detailed-status__link'>
+          <Icon id='link' icon={ReferenceIcon} />
+          <span className='detailed-status__favorites'>
+            <AnimatedNumber value={status.get('status_referred_by_count')} />
+          </span>
+        </Link>
+      );
+    } else {
+      statusReferencesLink = (
+        <a href={`/interact/${status.get('id')}?type=references`} className='detailed-status__link' onClick={this.handleModalLink}>
+          <Icon id='link' icon={ReferenceIcon} />
+          <span className='detailed-status__favorites'>
+            <AnimatedNumber value={status.get('status_referred_by_count')} />
           </span>
         </a>
       );
@@ -298,9 +349,9 @@ class DetailedStatus extends ImmutablePureComponent {
     return (
       <div style={outerStyle}>
         <div ref={this.setRef} className={classNames('detailed-status', { compact })}>
-          {status.get('visibility') === 'direct' && (
+          {status.get('visibility_ex') === 'direct' && (
             <div className='status__prepend'>
-              <div className='status__prepend-icon-wrapper'><Icon id='at' className='status__prepend-icon' fixedWidth /></div>
+              <div className='status__prepend-icon-wrapper'><Icon id='at' icon={AlternateEmailIcon} className='status__prepend-icon' /></div>
               <FormattedMessage id='status.direct_indicator' defaultMessage='Private mention' />
             </div>
           )}
@@ -317,14 +368,16 @@ class DetailedStatus extends ImmutablePureComponent {
             {...statusContentProps}
           />
 
-          {media}
+          {(!isCardMediaWithSensitive || !status.get('hidden')) && media}
 
-          {expanded && hashtagBar}
+          {(!status.get('spoiler_text') || expanded) && hashtagBar}
+
+          {emojiReactionsBar}
 
           <div className='detailed-status__meta'>
             <a className='detailed-status__datetime' href={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}`} target='_blank' rel='noopener noreferrer'>
               <FormattedDate value={new Date(status.get('created_at'))} hour12={false} year='numeric' month='short' day='2-digit' hour='2-digit' minute='2-digit' />
-            </a>{edited}{visibilityLink}{applicationLink}{reblogLink} · {favouriteLink}
+            </a>{edited}{visibilityLink}{searchabilityLink}{applicationLink}{reblogLink} · {favouriteLink} · {emojiReactionsLink} - {statusReferencesLink}
           </div>
         </div>
       </div>
@@ -333,4 +386,4 @@ class DetailedStatus extends ImmutablePureComponent {
 
 }
 
-export default injectIntl(DetailedStatus);
+export default withRouter(DetailedStatus);

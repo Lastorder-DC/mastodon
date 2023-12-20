@@ -1,25 +1,13 @@
 # frozen_string_literal: true
 
-class REST::CustomEmojiSerializer < ActiveModel::Serializer
+class REST::CustomEmojiSerializer < REST::CustomEmojiSlimSerializer
   include RoutingHelper
 
-  attributes :shortcode, :url, :static_url, :visible_in_picker
+  # Please update `app/javascript/mastodon/api_types/custom_emoji.ts` when making changes to the attributes
 
-  attribute :category, if: :category_loaded?
+  attribute :aliases, if: :aliases?
 
-  def url
-    full_asset_url(object.image.url)
-  end
-
-  def static_url
-    full_asset_url(object.image.url(:static))
-  end
-
-  def category
-    object.category.name
-  end
-
-  def category_loaded?
-    object.association(:category).loaded? && object.category.present?
+  def aliases?
+    object.respond_to?(:aliases) && object.aliases.present?
   end
 end

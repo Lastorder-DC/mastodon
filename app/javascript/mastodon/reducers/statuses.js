@@ -1,5 +1,9 @@
-import { Map as ImmutableMap, fromJS } from 'immutable';
+import { Map as ImmutableMap, List as ImmutableList, fromJS } from 'immutable';
 
+import {
+  BOOKMARK_CATEGORY_EDITOR_ADD_REQUEST,
+  BOOKMARK_CATEGORY_EDITOR_ADD_FAIL,
+} from '../actions/bookmark_categories';
 import { STATUS_IMPORT, STATUSES_IMPORT } from '../actions/importer';
 import { normalizeStatusTranslation } from '../actions/importer/normalizer';
 import {
@@ -26,6 +30,7 @@ import {
   STATUS_TRANSLATE_UNDO,
   STATUS_FETCH_REQUEST,
   STATUS_FETCH_FAIL,
+  STATUS_EMOJI_REACTION_UPDATE,
 } from '../actions/statuses';
 import { TIMELINE_DELETE } from '../actions/timelines';
 
@@ -40,6 +45,29 @@ const deleteStatus = (state, id, references) => {
   });
 
   return state.delete(id);
+};
+
+const updateStatusEmojiReaction = (state, emoji_reaction, myId) => {
+  emoji_reaction.me = emoji_reaction.account_ids ? emoji_reaction.account_ids.indexOf(myId) >= 0 : false;
+
+  const status = state.get(emoji_reaction.status_id);
+  if (!status) return state;
+
+  let emoji_reactions = Array.from(status.get('emoji_reactions') || []);
+
+  if (emoji_reaction.count > 0) {
+    const old_emoji = emoji_reactions.find((er) => er.get('name') === emoji_reaction.name && (!er.get('domain') || er.get('domain') === emoji_reaction.domain));
+    if (old_emoji) {
+      const index = emoji_reactions.indexOf(old_emoji);
+      emoji_reactions[index] = old_emoji.merge({ account_ids: emoji_reaction.account_ids, count: emoji_reaction.count, me: emoji_reaction.me });
+    } else {
+      emoji_reactions.push(ImmutableMap(emoji_reaction));
+    }
+  } else {
+    emoji_reactions = emoji_reactions.filter((er) => er.get('name') !== emoji_reaction.name || er.get('domain') !== emoji_reaction.domain);
+  }
+
+  return state.setIn([emoji_reaction.status_id, 'emoji_reactions'], ImmutableList(emoji_reactions));
 };
 
 const statusTranslateSuccess = (state, id, translation) => {
@@ -87,6 +115,10 @@ export default function statuses(state = initialState, action) {
     return state.get(action.status.get('id')) === undefined ? state : state.setIn([action.status.get('id'), 'bookmarked'], true);
   case BOOKMARK_FAIL:
     return state.get(action.status.get('id')) === undefined ? state : state.setIn([action.status.get('id'), 'bookmarked'], false);
+  case BOOKMARK_CATEGORY_EDITOR_ADD_REQUEST:
+    return state.get(action.statusId) === undefined ? state : state.setIn([action.statusId, 'bookmarked'], true);
+  case BOOKMARK_CATEGORY_EDITOR_ADD_FAIL:
+    return state.get(action.statusId) === undefined ? state : state.setIn([action.statusId, 'bookmarked'], false);
   case UNBOOKMARK_REQUEST:
     return state.get(action.status.get('id')) === undefined ? state : state.setIn([action.status.get('id'), 'bookmarked'], false);
   case UNBOOKMARK_FAIL:
@@ -127,6 +159,8 @@ export default function statuses(state = initialState, action) {
     return statusTranslateSuccess(state, action.id, action.translation);
   case STATUS_TRANSLATE_UNDO:
     return statusTranslateUndo(state, action.id);
+  case STATUS_EMOJI_REACTION_UPDATE:
+    return updateStatusEmojiReaction(state, action.emoji_reaction, action.accountId);
   default:
     return state;
   }

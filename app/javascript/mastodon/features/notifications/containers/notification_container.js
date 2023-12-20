@@ -7,6 +7,7 @@ import {
   favourite,
   unreblog,
   unfavourite,
+  emojiReact,
 } from '../../../actions/interactions';
 import {
   hideStatus,
@@ -54,12 +55,24 @@ const mapDispatchToProps = dispatch => ({
     }
   },
 
+  onReblogForceModal (status) {
+    if (status.get('reblogged')) {
+      dispatch(unreblog(status));
+    } else {
+      dispatch(initBoostModal({ status, onReblog: this.onModalReblog }));
+    }
+  },
+
   onFavourite (status) {
     if (status.get('favourited')) {
       dispatch(unfavourite(status));
     } else {
       dispatch(favourite(status));
     }
+  },
+
+  onEmojiReact (status, emoji) {
+    dispatch(emojiReact(status, emoji));
   },
 
   onToggleHidden (status) {

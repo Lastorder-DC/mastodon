@@ -18,10 +18,13 @@ import {
   importFetchedStatuses,
 } from './importer';
 import { submitMarkers } from './markers';
+import { notificationsUpdate } from "./notifications_typed";
 import { register as registerPushNotifications } from './push_notifications';
 import { saveSettings } from './settings';
+import { STATUS_EMOJI_REACTION_UPDATE } from './statuses';
 
-export const NOTIFICATIONS_UPDATE      = 'NOTIFICATIONS_UPDATE';
+export * from "./notifications_typed";
+
 export const NOTIFICATIONS_UPDATE_NOOP = 'NOTIFICATIONS_UPDATE_NOOP';
 
 export const NOTIFICATIONS_EXPAND_REQUEST = 'NOTIFICATIONS_EXPAND_REQUEST';
@@ -59,6 +62,15 @@ export const loadPending = () => ({
   type: NOTIFICATIONS_LOAD_PENDING,
 });
 
+export function updateEmojiReactions(emoji_reaction, accountId) {
+  return (dispatch) =>
+    dispatch({
+      type: STATUS_EMOJI_REACTION_UPDATE,
+      emoji_reaction,
+      accountId,
+    });
+}
+
 export function updateNotifications(notification, intlMessages, intlLocale) {
   return (dispatch, getState) => {
     const activeFilter = getState().getIn(['settings', 'notifications', 'quickFilter', 'active']);
@@ -95,12 +107,8 @@ export function updateNotifications(notification, intlMessages, intlLocale) {
         dispatch(importFetchedAccount(notification.report.target_account));
       }
 
-      dispatch({
-        type: NOTIFICATIONS_UPDATE,
-        notification,
-        usePendingItems: preferPendingItems,
-        meta: (playSound && !filtered) ? { sound: 'boop' } : undefined,
-      });
+
+      dispatch(notificationsUpdate({ notification, preferPendingItems, playSound: playSound && !filtered}));
 
       fetchRelatedRelationships(dispatch, [notification]);
     } else if (playSound && !filtered) {
@@ -132,10 +140,13 @@ const excludeTypesFromFilter = filter => {
     'follow',
     'follow_request',
     'favourite',
+    'emoji_reaction',
     'reblog',
+    'status_reference',
     'mention',
     'poll',
     'status',
+    'list_status',
     'update',
     'admin.sign_up',
     'admin.report',

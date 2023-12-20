@@ -27,17 +27,24 @@
 #  edited_at                    :datetime
 #  trendable                    :boolean
 #  ordered_media_attachment_ids :bigint(8)        is an Array
+#  searchability                :integer
+#  markdown                     :boolean          default(FALSE)
+#  limited_scope                :integer
+#  quote_of_id                  :bigint(8)
 #
 
+require 'ostruct'
+
 class Status < ApplicationRecord
+  include Cacheable
   include Discard::Model
   include Paginable
-  include Cacheable
-  include StatusThreadingConcern
-  include StatusSnapshotConcern
   include RateLimitable
-  include StatusSafeReblogInsert
-  include StatusSearchConcern
+  include Status::SafeReblogInsert
+  include Status::SearchConcern
+  include Status::SnapshotConcern
+  include Status::ThreadingConcern
+  include DtlHelper
 
   rate_limit by: :account, family: :statuses
 
@@ -50,41 +57,66 @@ class Status < ApplicationRecord
   update_index('statuses', :proper)
   update_index('public_statuses', :proper)
 
-  enum visibility: { public: 0, unlisted: 1, private: 2, direct: 3, limited: 4 }, _suffix: :visibility
+  enum visibility: { public: 0, unlisted: 1, private: 2, direct: 3, limited: 4, public_unlisted: 10, login: 11 }, _suffix: :visibility
+  enum searchability: { public: 0, private: 1, direct: 2, limited: 3, unsupported: 4, public_unlisted: 10 }, _suffix: :searchability
+  enum limited_scope: { none: 0, mutual: 1, circle: 2, personal: 3, reply: 4 }, _suffix: :limited
 
   belongs_to :application, class_name: 'Doorkeeper::Application', optional: true
 
   belongs_to :account, inverse_of: :statuses
   belongs_to :in_reply_to_account, class_name: 'Account', optional: true
   belongs_to :conversation, optional: true
+  has_one :owned_conversation, class_name: 'Conversation', foreign_key: 'ancestor_status_id', dependent: :nullify, inverse_of: false
   belongs_to :preloadable_poll, class_name: 'Poll', foreign_key: 'poll_id', optional: true, inverse_of: false
 
   belongs_to :thread, foreign_key: 'in_reply_to_id', class_name: 'Status', inverse_of: :replies, optional: true
   belongs_to :reblog, foreign_key: 'reblog_of_id', class_name: 'Status', inverse_of: :reblogs, optional: true
+  belongs_to :quote, foreign_key: 'quote_of_id', class_name: 'Status', inverse_of: :quotes, optional: true
 
   has_many :favourites, inverse_of: :status, dependent: :destroy
+  has_many :emoji_reactions, inverse_of: :status, dependent: :destroy
   has_many :bookmarks, inverse_of: :status, dependent: :destroy
   has_many :reblogs, foreign_key: 'reblog_of_id', class_name: 'Status', inverse_of: :reblog, dependent: :destroy
   has_many :reblogged_by_accounts, through: :reblogs, class_name: 'Account', source: :account
-  has_many :replies, foreign_key: 'in_reply_to_id', class_name: 'Status', inverse_of: :thread
+  has_many :quotes, foreign_key: 'quote_of_id', class_name: 'Status', inverse_of: :quote, dependent: nil
+  has_many :quoted_by_accounts, through: :quotes, class_name: 'Account', source: :account
+  has_many :replies, foreign_key: 'in_reply_to_id', class_name: 'Status', inverse_of: :thread, dependent: nil
   has_many :mentions, dependent: :destroy, inverse_of: :status
   has_many :mentioned_accounts, through: :mentions, source: :account, class_name: 'Account'
-  has_many :active_mentions, -> { active }, class_name: 'Mention', inverse_of: :status
-  has_many :media_attachments, dependent: :nullify
+  has_many :media_attachments, -> { order('id asc') }, dependent: :nullify, inverse_of: false
+  has_many :reference_objects, class_name: 'StatusReference', inverse_of: :status, dependent: :destroy
+  has_many :references, through: :reference_objects, class_name: 'Status', source: :target_status
+  has_many :referenced_by_status_objects, foreign_key: 'target_status_id', class_name: 'StatusReference', inverse_of: :target_status, dependent: :destroy
+  has_many :referenced_by_statuses, through: :referenced_by_status_objects, class_name: 'Status', source: :status
+  has_many :capability_tokens, class_name: 'StatusCapabilityToken', inverse_of: :status, dependent: :destroy
+  has_many :bookmark_category_relationships, class_name: 'BookmarkCategoryStatus', inverse_of: :status, dependent: :destroy
+  has_many :bookmark_categories, class_name: 'BookmarkCategory', through: :bookmark_category_relationships, source: :bookmark_category
+  has_many :joined_bookmark_categories, class_name: 'BookmarkCategory', through: :bookmark_category_relationships, source: :bookmark_category
+
+  # The `dependent` option is enabled by the initial `mentions` association declaration
+  has_many :active_mentions, -> { active }, class_name: 'Mention', inverse_of: :status # rubocop:disable Rails/HasManyOrHasOneDependent
+  has_many :silent_mentions, -> { silent }, class_name: 'Mention', inverse_of: :status # rubocop:disable Rails/HasManyOrHasOneDependent
 
   # Those associations are used for the private search index
   has_many :local_mentioned, -> { merge(Account.local) }, through: :active_mentions, source: :account
   has_many :local_favorited, -> { merge(Account.local) }, through: :favourites, source: :account
   has_many :local_reblogged, -> { merge(Account.local) }, through: :reblogs, source: :account
   has_many :local_bookmarked, -> { merge(Account.local) }, through: :bookmarks, source: :account
+  has_many :local_bookmark_categoried, -> { merge(Account.local) }, through: :bookmark_categories, source: :account
+  has_many :local_emoji_reacted, -> { merge(Account.local) }, through: :emoji_reactions, source: :account
+  has_many :local_referenced, -> { merge(Account.local) }, through: :referenced_by_statuses, source: :account
 
   has_and_belongs_to_many :tags
-  has_and_belongs_to_many :preview_cards
+
+  has_one :preview_cards_status, inverse_of: :status, dependent: :delete
 
   has_one :notification, as: :activity, dependent: :destroy
-  has_one :status_stat, inverse_of: :status
+  has_one :status_stat, inverse_of: :status, dependent: nil
   has_one :poll, inverse_of: :status, dependent: :destroy
-  has_one :trend, class_name: 'StatusTrend', inverse_of: :status
+  has_one :trend, class_name: 'StatusTrend', inverse_of: :status, dependent: nil
+  has_one :scheduled_expiration_status, inverse_of: :status, dependent: :destroy
+  has_one :circle_status, inverse_of: :status, dependent: :destroy
+  has_many :list_status, inverse_of: :status, dependent: :destroy
 
   validates :uri, uniqueness: true, presence: true, unless: :local?
   validates :text, presence: true, unless: -> { with_media? || reblog? }
@@ -103,7 +135,8 @@ class Status < ApplicationRecord
   scope :with_accounts, ->(ids) { where(id: ids).includes(:account) }
   scope :without_replies, -> { where('statuses.reply = FALSE OR statuses.in_reply_to_account_id = statuses.account_id') }
   scope :without_reblogs, -> { where(statuses: { reblog_of_id: nil }) }
-  scope :with_public_visibility, -> { where(visibility: :public) }
+  scope :with_public_visibility, -> { where(visibility: [:public, :public_unlisted, :login]) }
+  scope :with_public_search_visibility, -> { merge(where(visibility: [:public, :public_unlisted, :login]).or(Status.where(searchability: [:public, :public_unlisted]))) }
   scope :tagged_with, ->(tag_ids) { joins(:statuses_tags).where(statuses_tags: { tag_id: tag_ids }) }
   scope :excluding_silenced_accounts, -> { left_outer_joins(:account).where(accounts: { silenced_at: nil }) }
   scope :including_silenced_accounts, -> { left_outer_joins(:account).where.not(accounts: { silenced_at: nil }) }
@@ -119,6 +152,7 @@ class Status < ApplicationRecord
   scope :tagged_with_none, lambda { |tag_ids|
     where('NOT EXISTS (SELECT * FROM statuses_tags forbidden WHERE forbidden.status_id = statuses.id AND forbidden.tag_id IN (?))', tag_ids)
   }
+  scope :unset_searchability, -> { where(searchability: nil, reblog_of_id: nil) }
 
   after_create_commit :trigger_create_webhooks
   after_update_commit :trigger_update_webhooks
@@ -132,6 +166,7 @@ class Status < ApplicationRecord
   before_validation :prepare_contents, if: :local?
   before_validation :set_reblog
   before_validation :set_visibility
+  before_validation :set_searchability
   before_validation :set_conversation
   before_validation :set_local
 
@@ -148,18 +183,35 @@ class Status < ApplicationRecord
                    :conversation,
                    :status_stat,
                    :tags,
-                   :preview_cards,
                    :preloadable_poll,
+                   :reference_objects,
+                   :scheduled_expiration_status,
+                   preview_cards_status: [:preview_card],
                    account: [:account_stat, user: :role],
                    active_mentions: { account: :account_stat },
                    reblog: [
                      :application,
                      :tags,
-                     :preview_cards,
                      :media_attachments,
                      :conversation,
                      :status_stat,
                      :preloadable_poll,
+                     :reference_objects,
+                     :scheduled_expiration_status,
+                     preview_cards_status: [:preview_card],
+                     account: [:account_stat, user: :role],
+                     active_mentions: { account: :account_stat },
+                   ],
+                   quote: [
+                     :application,
+                     :tags,
+                     :media_attachments,
+                     :conversation,
+                     :status_stat,
+                     :preloadable_poll,
+                     :reference_objects,
+                     :scheduled_expiration_status,
+                     preview_cards_status: [:preview_card],
                      account: [:account_stat, user: :role],
                      active_mentions: { account: :account_stat },
                    ],
@@ -197,6 +249,10 @@ class Status < ApplicationRecord
     !reblog_of_id.nil?
   end
 
+  def quote?
+    !quote_of_id.nil? && !quote.nil?
+  end
+
   def within_realtime_window?
     created_at >= REAL_TIME_WINDOW.ago
   end
@@ -226,7 +282,11 @@ class Status < ApplicationRecord
   end
 
   def preview_card
-    preview_cards.first
+    preview_cards_status&.preview_card&.tap { |x| x.original_url = preview_cards_status.url }
+  end
+
+  def reset_preview_card!
+    PreviewCardsStatus.where(status_id: id).delete_all
   end
 
   def hidden?
@@ -234,21 +294,30 @@ class Status < ApplicationRecord
   end
 
   def distributable?
-    public_visibility? || unlisted_visibility?
+    public_visibility? || unlisted_visibility? || public_unlisted_visibility?
   end
 
   alias sign? distributable?
 
   def with_media?
-    ordered_media_attachments.any?
+    media_attachments.any?
+  end
+
+  def expired?
+    false
+    # !expired_at.nil?
   end
 
   def with_preview_card?
-    preview_cards.any?
+    preview_cards_status.present?
   end
 
   def with_poll?
     preloadable_poll.present?
+  end
+
+  def with_status_reference?
+    reference_objects.any?
   end
 
   def non_sensitive_with_media?
@@ -257,6 +326,10 @@ class Status < ApplicationRecord
 
   def reported?
     @reported ||= Report.where(target_account: account).unresolved.where('? = ANY(status_ids)', id).exists?
+  end
+
+  def dtl?
+    (%w(public public_unlisted login).include?(visibility) || (unlisted_visibility? && public_searchability?)) && tags.where(name: dtl_tag_name).exists?
   end
 
   def emojis
@@ -289,12 +362,78 @@ class Status < ApplicationRecord
     status_stat&.favourites_count || 0
   end
 
+  def emoji_reactions_count
+    status_stat&.emoji_reactions_count || 0
+  end
+
+  def emoji_reaction_accounts_count
+    status_stat&.emoji_reaction_accounts_count || 0
+  end
+
+  def status_referred_by_count
+    status_stat&.status_referred_by_count || 0
+  end
+
   def increment_count!(key)
     update_status_stat!(key => public_send(key) + 1)
   end
 
   def decrement_count!(key)
     update_status_stat!(key => [public_send(key) - 1, 0].max)
+  end
+
+  def add_status_referred_by_count!(diff)
+    update_status_stat!(status_referred_by_count: [public_send(:status_referred_by_count) + diff, 0].max)
+  end
+
+  def emoji_reactions_grouped_by_name(account = nil, **options)
+    return [] if account.present? && !self.account.show_emoji_reaction?(account)
+    return [] if account.nil? && !options[:force] && self.account.emoji_reaction_policy != :allow
+
+    permitted_account_ids = options[:permitted_account_ids]
+
+    (Oj.load(status_stat&.emoji_reactions || '', mode: :strict) || []).tap do |emoji_reactions|
+      if account.present?
+        public_emoji_reactions = []
+
+        emoji_reactions.each do |emoji_reaction|
+          emoji_reaction['me'] = emoji_reaction['account_ids'].include?(account.id.to_s)
+          emoji_reaction['account_ids'] -= account.excluded_from_timeline_account_ids.map(&:to_s)
+
+          accounts = []
+          if permitted_account_ids
+            emoji_reaction['account_ids'] = emoji_reaction['account_ids'] & permitted_account_ids.map(&:to_s)
+          else
+            accounts = Account.where(id: emoji_reaction['account_ids'], silenced_at: nil, suspended_at: nil)
+            accounts = accounts.where('domain IS NULL OR domain NOT IN (?)', account.excluded_from_timeline_domains) if account.excluded_from_timeline_domains.size.positive?
+            emoji_reaction['account_ids'] = accounts.pluck(:id).map(&:to_s)
+          end
+
+          emoji_reaction['count'] = emoji_reaction['account_ids'].size
+          public_emoji_reactions << emoji_reaction if (emoji_reaction['count']).positive?
+        end
+
+        public_emoji_reactions
+      else
+        emoji_reactions
+      end
+    end
+  end
+
+  def generate_emoji_reactions_grouped_by_name
+    records = emoji_reactions.group(:name).order(Arel.sql('MIN(created_at) ASC')).select('name, min(custom_emoji_id) as custom_emoji_id, count(*) as count, array_agg(account_id::text order by created_at) as account_ids')
+    Oj.dump(ActiveModelSerializers::SerializableResource.new(records, each_serializer: REST::EmojiReactionsGroupedByNameSerializer, scope: nil, scope_name: :current_user))
+  end
+
+  def refresh_emoji_reactions_grouped_by_name!
+    generate_emoji_reactions_grouped_by_name.tap do |emoji_reactions_json|
+      update_status_stat!(emoji_reactions: emoji_reactions_json, emoji_reactions_count: emoji_reactions.size, emoji_reaction_accounts_count: emoji_reactions.map(&:account_id).uniq.size)
+    end
+  end
+
+  def generate_emoji_reactions_grouped_by_account
+    # TODO: for serializer
+    EmojiReaction.where(status_id: id).group_by(&:account)
   end
 
   def trendable?
@@ -313,9 +452,55 @@ class Status < ApplicationRecord
     attributes['trendable'].nil? && account.requires_review_notification?
   end
 
+  def compute_searchability
+    local = account.local?
+    check_searchability = public_unlisted_searchability? ? 'public' : searchability
+
+    return 'private' if %w(public public_unlisted).include?(check_searchability) && account.silenced?
+    return 'direct' if unsupported_searchability?
+    return check_searchability if local && !check_searchability.nil?
+    return 'direct' if local || %i(public private direct limited).exclude?(account.searchability.to_sym)
+
+    account_searchability = Status.searchabilities[account.searchability]
+    status_searchability = Status.searchabilities[check_searchability.nil? ? 'direct' : check_searchability]
+    Status.searchabilities.invert.fetch([account_searchability, status_searchability].max) || 'direct'
+  end
+
+  def compute_searchability_activitypub
+    return 'private' if public_unlisted_searchability?
+
+    compute_searchability
+  end
+
+  def compute_searchability_local
+    return 'public_unlisted' if public_unlisted_searchability?
+
+    compute_searchability
+  end
+
+  def searchable_visibility
+    return limited_scope if limited_visibility? && !none_limited?
+
+    visibility
+  end
+
   class << self
     def selectable_visibilities
-      visibilities.keys - %w(direct limited)
+      vs = visibilities.keys - %w(direct limited)
+      vs -= %w(public_unlisted) unless Setting.enable_public_unlisted_visibility
+      vs
+    end
+
+    def selectable_reblog_visibilities
+      %w(unset) + selectable_visibilities
+    end
+
+    def selectable_searchabilities
+      searchabilities.keys - %w(unsupported)
+    end
+
+    def selectable_searchabilities_for_search
+      searchabilities.keys - %w(public_unlisted unsupported)
     end
 
     def favourites_map(status_ids, account_id)
@@ -334,8 +519,25 @@ class Status < ApplicationRecord
       ConversationMute.select('conversation_id').where(conversation_id: conversation_ids).where(account_id: account_id).each_with_object({}) { |m, h| h[m.conversation_id] = true }
     end
 
+    def blocks_map(account_ids, account_id)
+      Block.where(account_id: account_id, target_account_id: account_ids).each_with_object({}) { |b, h| h[b.target_account_id] = true }
+    end
+
+    def domain_blocks_map(domains, account_id)
+      AccountDomainBlock.where(account_id: account_id, domain: domains).each_with_object({}) { |d, h| h[d.domain] = true }
+    end
+
     def pins_map(status_ids, account_id)
       StatusPin.select('status_id').where(status_id: status_ids).where(account_id: account_id).each_with_object({}) { |p, h| h[p.status_id] = true }
+    end
+
+    def emoji_reaction_allows_map(status_ids, account_id)
+      my_account = Account.find_by(id: account_id)
+      Status.where(id: status_ids).pluck(:account_id).uniq.index_with { |a| Account.find_by(id: a).show_emoji_reaction?(my_account) }
+    end
+
+    def emoji_reaction_availables_map(domains)
+      domains.index_with { |d| InstanceInfo.emoji_reaction_available?(d) }
     end
 
     def reload_stale_associations!(cached_items)
@@ -406,6 +608,10 @@ class Status < ApplicationRecord
     end
   end
 
+  def distributable_friend?
+    public_visibility? || public_unlisted_visibility? || (unlisted_visibility? && (public_searchability? || public_unlisted_searchability?))
+  end
+
   private
 
   def update_status_stat!(attrs)
@@ -437,16 +643,35 @@ class Status < ApplicationRecord
     self.sensitive  = false if sensitive.nil?
   end
 
+  def set_searchability
+    return if searchability.nil?
+
+    self.searchability = if %w(public public_unlisted login unlisted).include?(visibility)
+                           searchability
+                         elsif visibility == 'limited' || visibility == 'direct'
+                           searchability == 'limited' ? :limited : :direct
+                         elsif visibility == 'private'
+                           searchability == 'public' || searchability == 'public_unlisted' ? :private : searchability
+                         else
+                           :direct
+                         end
+  end
+
   def set_conversation
     self.thread = thread.reblog if thread&.reblog?
 
     self.reply = !(in_reply_to_id.nil? && thread.nil?) unless reply
 
-    if reply? && !thread.nil?
+    if reply? && !thread.nil? && (!limited_visibility? || none_limited? || reply_limited?)
       self.in_reply_to_account_id = carried_over_reply_to_account_id
       self.conversation_id        = thread.conversation_id if conversation_id.nil?
     elsif conversation_id.nil?
-      self.conversation = Conversation.new
+      if local?
+        self.owned_conversation = Conversation.new
+        self.conversation = owned_conversation
+      else
+        self.conversation = Conversation.new
+      end
     end
   end
 

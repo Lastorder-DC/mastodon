@@ -19,25 +19,28 @@
 #  visible_in_picker            :boolean          default(TRUE), not null
 #  category_id                  :bigint(8)
 #  image_storage_schema_version :integer
+#  image_width                  :integer
+#  image_height                 :integer
+#  aliases                      :jsonb
+#  is_sensitive                 :boolean          default(FALSE), not null
+#  license                      :string
 #
 
 class CustomEmoji < ApplicationRecord
   include Attachmentable
 
-  LIMIT = 256.kilobytes
+  LIMIT = 512.kilobytes
 
   SHORTCODE_RE_FRAGMENT = '[a-zA-Z0-9_]{2,}'
 
-  SCAN_RE = /(?<=[^[:alnum:]:]|\n|^)
-    :(#{SHORTCODE_RE_FRAGMENT}):
-    (?=[^[:alnum:]:]|$)/x
+  SCAN_RE = /:(#{SHORTCODE_RE_FRAGMENT}):/x
   SHORTCODE_ONLY_RE = /\A#{SHORTCODE_RE_FRAGMENT}\z/
 
-  IMAGE_MIME_TYPES = %w(image/png image/gif image/webp).freeze
+  IMAGE_MIME_TYPES = %w(image/png image/gif image/webp image/jpeg).freeze
 
   belongs_to :category, class_name: 'CustomEmojiCategory', optional: true
-
-  has_one :local_counterpart, -> { where(domain: nil) }, class_name: 'CustomEmoji', primary_key: :shortcode, foreign_key: :shortcode, inverse_of: false
+  has_one :local_counterpart, -> { where(domain: nil) }, class_name: 'CustomEmoji', primary_key: :shortcode, foreign_key: :shortcode, inverse_of: false, dependent: nil
+  has_many :emoji_reactions, inverse_of: :custom_emoji, dependent: :destroy
 
   has_attached_file :image, styles: { static: { format: 'png', convert_options: '-coalesce +profile "!icc,*" +set date:modify +set date:create +set date:timestamp' } }, validate_media_type: false
 
@@ -56,6 +59,8 @@ class CustomEmoji < ApplicationRecord
 
   after_commit :remove_entity_cache
 
+  after_post_process :set_post_size
+
   def local?
     domain.nil?
   end
@@ -65,13 +70,34 @@ class CustomEmoji < ApplicationRecord
   end
 
   def copy!
-    copy = self.class.find_or_initialize_by(domain: nil, shortcode: shortcode)
+    copy = self.class.find_or_initialize_by(
+      domain: nil,
+      shortcode: shortcode,
+      license: license,
+      aliases: aliases,
+      is_sensitive: is_sensitive
+    )
     copy.image = image
     copy.tap(&:save!)
   end
 
   def to_log_human_identifier
     shortcode
+  end
+
+  def update_size
+    size(Rails.configuration.x.use_s3 ? image.url : image.path)
+  end
+
+  def aliases_raw
+    return '' if aliases.nil? || aliases.blank?
+
+    aliases.join(',')
+  end
+
+  def aliases_raw=(raw)
+    aliases = raw.split(',').filter(&:present?).uniq
+    self[:aliases] = aliases
   end
 
   class << self
@@ -98,5 +124,17 @@ class CustomEmoji < ApplicationRecord
 
   def downcase_domain
     self.domain = domain.downcase unless domain.nil?
+  end
+
+  def set_post_size
+    image.queued_for_write.each do |style, file|
+      size(file.path) if style == :original
+    end
+  end
+
+  def size(path)
+    image_size = FastImage.size(path)
+    self.image_width = image_size[0]
+    self.image_height = image_size[1]
   end
 end

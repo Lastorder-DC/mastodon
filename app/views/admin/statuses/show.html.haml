@@ -2,7 +2,7 @@
   = t('statuses.title', name: display_name(@account), quote: truncate(@status.spoiler_text.presence || @status.text, length: 50, omission: '…', escape: false))
 
 - content_for :heading_actions do
-  = link_to t('admin.statuses.open'), ActivityPub::TagManager.instance.url_for(@status), class: 'button', target: '_blank'
+  = link_to t('admin.statuses.open'), ActivityPub::TagManager.instance.url_for(@status), class: 'button', target: '_blank', rel: 'noopener noreferrer'
 
 %h3= t('admin.statuses.metadata')
 
@@ -42,12 +42,25 @@
         %th= t('admin.statuses.favourites')
         %td= friendly_number_to_human @status.favourites_count
 
+.action-buttons
+  %div
+    - if @account.local? && can?(:warn, @account)
+      = link_to t('admin.statuses.remove_history'), remove_history_admin_account_status_path(@account.id), data: { confirm: t('admin.statuses.are_you_sure') }, method: :post, class: 'button'
+    - if @account.local? && @status.with_media? && can?(:warn, @account)
+      = link_to t('admin.statuses.remove_media'), remove_media_admin_account_status_path(@account.id), data: { confirm: t('admin.statuses.are_you_sure') }, method: :post, class: 'button'
+    - if @account.local? && !@status.sensitive && @status.with_media? && can?(:warn, @account)
+      = link_to t('admin.statuses.force_nsfw'), force_sensitive_admin_account_status_path(@account.id), data: { confirm: t('admin.statuses.are_you_sure') }, method: :post, class: 'button'
+    - if @account.local? && @status.spoiler_text.blank? && can?(:warn, @account)
+      = link_to t('admin.statuses.force_cw'), force_cw_admin_account_status_path(@account.id), data: { confirm: t('admin.statuses.are_you_sure') }, method: :post, class: 'button'
+    - if @account.local? && can?(:warn, @account)
+      = link_to t('admin.statuses.remove'), remove_status_admin_account_status_path(@account.id), data: { confirm: t('admin.statuses.are_you_sure') }, method: :post, class: 'button'
+
 %hr.spacer/
 
 %h3= t('admin.statuses.history')
 
 %ol.history
-  - @status.edits.includes(:account, status: [:account]).each.with_index do |status_edit, i|
+  - batched_ordered_status_edits.with_index do |status_edit, i|
     %li
       .history__entry
         %h5

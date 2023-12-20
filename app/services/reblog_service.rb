@@ -23,7 +23,8 @@ class ReblogService < BaseService
     visibility = if reblogged_status.hidden?
                    reblogged_status.visibility
                  else
-                   options[:visibility] || account.user&.setting_default_privacy
+                   options[:visibility] ||
+                     (account.user&.setting_default_reblog_privacy == 'unset' ? account.user&.setting_default_privacy : account.user&.setting_default_reblog_privacy)
                  end
 
     reblog = account.statuses.create!(reblog: reblogged_status, text: '', visibility: visibility, rate_limit: options[:with_rate_limit])

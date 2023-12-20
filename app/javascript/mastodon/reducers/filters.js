@@ -11,6 +11,7 @@ const normalizeFilter = (state, filter) => {
     filter_action: filter.filter_action,
     keywords: filter.keywords,
     expires_at: filter.expires_at ? Date.parse(filter.expires_at) : null,
+    with_quote: filter.with_quote,
   });
 
   if (is(state.get(filter.id), normalizedFilter)) {

@@ -1,7 +1,7 @@
 import api, { getLinks } from '../api';
 
 import { fetchRelationships } from './accounts';
-import { importFetchedAccounts, importFetchedStatus } from './importer';
+import { importFetchedAccounts, importFetchedStatus, importFetchedStatuses } from './importer';
 
 export const REBLOG_REQUEST = 'REBLOG_REQUEST';
 export const REBLOG_SUCCESS = 'REBLOG_SUCCESS';
@@ -15,6 +15,10 @@ export const FAVOURITE_REQUEST = 'FAVOURITE_REQUEST';
 export const FAVOURITE_SUCCESS = 'FAVOURITE_SUCCESS';
 export const FAVOURITE_FAIL    = 'FAVOURITE_FAIL';
 
+export const EMOJIREACT_REQUEST = 'EMOJIREACT_REQUEST';
+export const EMOJIREACT_SUCCESS = 'EMOJIREACT_SUCCESS';
+export const EMOJIREACT_FAIL    = 'EMOJIREACT_FAIL';
+
 export const UNREBLOG_REQUEST = 'UNREBLOG_REQUEST';
 export const UNREBLOG_SUCCESS = 'UNREBLOG_SUCCESS';
 export const UNREBLOG_FAIL    = 'UNREBLOG_FAIL';
@@ -22,6 +26,10 @@ export const UNREBLOG_FAIL    = 'UNREBLOG_FAIL';
 export const UNFAVOURITE_REQUEST = 'UNFAVOURITE_REQUEST';
 export const UNFAVOURITE_SUCCESS = 'UNFAVOURITE_SUCCESS';
 export const UNFAVOURITE_FAIL    = 'UNFAVOURITE_FAIL';
+
+export const UNEMOJIREACT_REQUEST = 'UNEMOJIREACT_REQUEST';
+export const UNEMOJIREACT_SUCCESS = 'UNEMOJIREACT_SUCCESS';
+export const UNEMOJIREACT_FAIL    = 'UNEMOJIREACT_FAIL';
 
 export const REBLOGS_FETCH_REQUEST = 'REBLOGS_FETCH_REQUEST';
 export const REBLOGS_FETCH_SUCCESS = 'REBLOGS_FETCH_SUCCESS';
@@ -33,7 +41,19 @@ export const FAVOURITES_FETCH_FAIL    = 'FAVOURITES_FETCH_FAIL';
 
 export const FAVOURITES_EXPAND_REQUEST = 'FAVOURITES_EXPAND_REQUEST';
 export const FAVOURITES_EXPAND_SUCCESS = 'FAVOURITES_EXPAND_SUCCESS';
-export const FAVOURITES_EXPAND_FAIL = 'FAVOURITES_EXPAND_FAIL';
+export const FAVOURITES_EXPAND_FAIL    = 'FAVOURITES_EXPAND_FAIL';
+
+export const STATUS_REFERENCES_FETCH_REQUEST = 'STATUS_REFERENCES_FETCH_REQUEST';
+export const STATUS_REFERENCES_FETCH_SUCCESS = 'STATUS_REFERENCES_FETCH_SUCCESS';
+export const STATUS_REFERENCES_FETCH_FAIL    = 'STATUS_REFERENCES_FETCH_FAIL';
+
+export const EMOJI_REACTIONS_FETCH_REQUEST = 'EMOJI_REACTIONS_FETCH_REQUEST';
+export const EMOJI_REACTIONS_FETCH_SUCCESS = 'EMOJI_REACTIONS_FETCH_SUCCESS';
+export const EMOJI_REACTIONS_FETCH_FAIL    = 'EMOJI_REACTIONS_FETCH_FAIL';
+
+export const EMOJI_REACTIONS_EXPAND_REQUEST = 'EMOJI_REACTIONS_EXPAND_REQUEST';
+export const EMOJI_REACTIONS_EXPAND_SUCCESS = 'EMOJI_REACTIONS_EXPAND_SUCCESS';
+export const EMOJI_REACTIONS_EXPAND_FAIL    = 'EMOJI_REACTIONS_EXPAND_FAIL';
 
 export const PIN_REQUEST = 'PIN_REQUEST';
 export const PIN_SUCCESS = 'PIN_SUCCESS';
@@ -50,6 +70,14 @@ export const BOOKMARK_FAIL    = 'BOOKMARKED_FAIL';
 export const UNBOOKMARK_REQUEST = 'UNBOOKMARKED_REQUEST';
 export const UNBOOKMARK_SUCCESS = 'UNBOOKMARKED_SUCCESS';
 export const UNBOOKMARK_FAIL    = 'UNBOOKMARKED_FAIL';
+
+export const MENTIONED_USERS_FETCH_REQUEST = 'MENTIONED_USERS_FETCH_REQUEST';
+export const MENTIONED_USERS_FETCH_SUCCESS = 'MENTIONED_USERS_FETCH_SUCCESS';
+export const MENTIONED_USERS_FETCH_FAIL    = 'MENTIONED_USERS_FETCH_FAIL';
+
+export const MENTIONED_USERS_EXPAND_REQUEST = 'MENTIONED_USERS_EXPAND_REQUEST';
+export const MENTIONED_USERS_EXPAND_SUCCESS = 'MENTIONED_USERS_EXPAND_SUCCESS';
+export const MENTIONED_USERS_EXPAND_FAIL    = 'MENTIONED_USERS_EXPAND_FAIL';
 
 export function reblog(status, visibility) {
   return function (dispatch, getState) {
@@ -200,6 +228,91 @@ export function unfavouriteFail(status, error) {
   return {
     type: UNFAVOURITE_FAIL,
     status: status,
+    error: error,
+    skipLoading: true,
+  };
+}
+
+export function emojiReact(status, emoji) {
+  return function (dispatch, getState) {
+    dispatch(emojiReactRequest(status, emoji));
+
+    const api_emoji = typeof emoji !== 'string' ? (emoji.custom ? (emoji.name + (emoji.domain || '')) : emoji.native) : emoji;
+
+    api(getState).post(`/api/v1/statuses/${status.get('id')}/emoji_reactions`, { emoji: api_emoji }).then(function (response) {
+      dispatch(importFetchedStatus(response.data));
+      dispatch(emojiReactSuccess(status, emoji));
+    }).catch(function (error) {
+      dispatch(emojiReactFail(status, emoji, error));
+    });
+  };
+}
+
+export function unEmojiReact(status, emoji) {
+  return (dispatch, getState) => {
+    dispatch(unEmojiReactRequest(status, emoji));
+
+    api(getState).post(`/api/v1/statuses/${status.get('id')}/emoji_unreaction`, { emoji }).then((response) => {
+      // TODO: do not update because this api has a bug
+      dispatch(importFetchedStatus(response.data));
+      dispatch(unEmojiReactSuccess(status, emoji));
+    }).catch(error => {
+      dispatch(unEmojiReactFail(status, emoji, error));
+    });
+  };
+}
+
+export function emojiReactRequest(status, emoji) {
+  return {
+    type: EMOJIREACT_REQUEST,
+    status: status,
+    emoji: emoji,
+    skipLoading: true,
+  };
+}
+
+export function emojiReactSuccess(status, emoji) {
+  return {
+    type: EMOJIREACT_SUCCESS,
+    status: status,
+    emoji: emoji,
+    skipLoading: true,
+  };
+}
+
+export function emojiReactFail(status, emoji, error) {
+  return {
+    type: EMOJIREACT_FAIL,
+    status: status,
+    emoji: emoji,
+    error: error,
+    skipLoading: true,
+  };
+}
+
+export function unEmojiReactRequest(status, emoji) {
+  return {
+    type: UNEMOJIREACT_REQUEST,
+    status: status,
+    emoji: emoji,
+    skipLoading: true,
+  };
+}
+
+export function unEmojiReactSuccess(status, emoji) {
+  return {
+    type: UNEMOJIREACT_SUCCESS,
+    status: status,
+    emoji: emoji,
+    skipLoading: true,
+  };
+}
+
+export function unEmojiReactFail(status, emoji, error) {
+  return {
+    type: UNEMOJIREACT_FAIL,
+    status: status,
+    emoji: emoji,
     error: error,
     skipLoading: true,
   };
@@ -441,6 +554,120 @@ export function expandFavouritesFail(id, error) {
   };
 }
 
+export function fetchEmojiReactions(id) {
+  return (dispatch, getState) => {
+    dispatch(fetchEmojiReactionsRequest(id));
+
+    api(getState).get(`/api/v1/statuses/${id}/emoji_reactioned_by`).then(response => {
+      const next = getLinks(response).refs.find(link => link.rel === 'next');
+      dispatch(importFetchedAccounts(response.data.map((er) => er.account)));
+      dispatch(fetchEmojiReactionsSuccess(id, response.data, next ? next.uri : null));
+    }).catch(error => {
+      dispatch(fetchEmojiReactionsFail(id, error));
+    });
+  };
+}
+
+export function fetchEmojiReactionsRequest(id) {
+  return {
+    type: EMOJI_REACTIONS_FETCH_REQUEST,
+    id,
+  };
+}
+
+export function fetchEmojiReactionsSuccess(id, accounts, next) {
+  return {
+    type: EMOJI_REACTIONS_FETCH_SUCCESS,
+    id,
+    accounts,
+    next,
+  };
+}
+
+export function fetchEmojiReactionsFail(id, error) {
+  return {
+    type: EMOJI_REACTIONS_FETCH_FAIL,
+    error,
+  };
+}
+
+export function expandEmojiReactions(id) {
+  return (dispatch, getState) => {
+    const url = getState().getIn(['user_lists', 'emoji_reactioned_by', id, 'next']);
+    if (url === null) {
+      return;
+    }
+
+    dispatch(expandEmojiReactionsRequest(id));
+
+    api(getState).get(url).then(response => {
+      const next = getLinks(response).refs.find(link => link.rel === 'next');
+
+      dispatch(importFetchedAccounts(response.data.map((er) => er.account)));
+      dispatch(expandEmojiReactionsSuccess(id, response.data, next ? next.uri : null));
+    }).catch(error => dispatch(expandEmojiReactionsFail(id, error)));
+  };
+}
+
+export function expandEmojiReactionsRequest(id) {
+  return {
+    type: EMOJI_REACTIONS_EXPAND_REQUEST,
+    id,
+  };
+}
+
+export function expandEmojiReactionsSuccess(id, accounts, next) {
+  return {
+    type: EMOJI_REACTIONS_EXPAND_SUCCESS,
+    id,
+    accounts,
+    next,
+  };
+}
+
+export function expandEmojiReactionsFail(id, error) {
+  return {
+    type: EMOJI_REACTIONS_EXPAND_FAIL,
+    id,
+    error,
+  };
+}
+
+export function fetchStatusReferences(id) {
+  return (dispatch, getState) => {
+    dispatch(fetchStatusReferencesRequest(id));
+
+    api(getState).get(`/api/v1/statuses/${id}/referred_by`).then(response => {
+      dispatch(importFetchedStatuses(response.data));
+      dispatch(fetchStatusReferencesSuccess(id, response.data));
+    }).catch(error => {
+      dispatch(fetchStatusReferencesFail(id, error));
+    });
+  };
+}
+
+export function fetchStatusReferencesRequest(id) {
+  return {
+    type: STATUS_REFERENCES_FETCH_REQUEST,
+    id,
+  };
+}
+
+export function fetchStatusReferencesSuccess(id, statuses) {
+  return {
+    type: STATUS_REFERENCES_FETCH_SUCCESS,
+    id,
+    statuses,
+  };
+}
+
+export function fetchStatusReferencesFail(id, error) {
+  return {
+    type: STATUS_REFERENCES_FETCH_FAIL,
+    error,
+  };
+}
+
 export function pin(status) {
   return (dispatch, getState) => {
     dispatch(pinRequest(status));
@@ -514,5 +741,87 @@ export function unpinFail(status, error) {
     status,
     error,
     skipLoading: true,
+  };
+}
+
+export function fetchMentionedUsers(id) {
+  return (dispatch, getState) => {
+    dispatch(fetchMentionedUsersRequest(id));
+
+    api(getState).get(`/api/v1/statuses/${id}/mentioned_by`).then(response => {
+      const next = getLinks(response).refs.find(link => link.rel === 'next');
+      dispatch(importFetchedAccounts(response.data));
+      dispatch(fetchMentionedUsersSuccess(id, response.data, next ? next.uri : null));
+      dispatch(fetchRelationships(response.data.map(item => item.id)));
+    }).catch(error => {
+      dispatch(fetchMentionedUsersFail(id, error));
+    });
+  };
+}
+
+export function fetchMentionedUsersRequest(id) {
+  return {
+    type: MENTIONED_USERS_FETCH_REQUEST,
+    id,
+  };
+}
+
+export function fetchMentionedUsersSuccess(id, accounts, next) {
+  return {
+    type: MENTIONED_USERS_FETCH_SUCCESS,
+    id,
+    accounts,
+    next,
+  };
+}
+
+export function fetchMentionedUsersFail(id, error) {
+  return {
+    type: MENTIONED_USERS_FETCH_FAIL,
+    id,
+    error,
+  };
+}
+
+export function expandMentionedUsers(id) {
+  return (dispatch, getState) => {
+    const url = getState().getIn(['user_lists', 'mentioned_users', id, 'next']);
+    if (url === null) {
+      return;
+    }
+
+    dispatch(expandMentionedUsersRequest(id));
+
+    api(getState).get(url).then(response => {
+      const next = getLinks(response).refs.find(link => link.rel === 'next');
+
+      dispatch(importFetchedAccounts(response.data));
+      dispatch(expandMentionedUsersSuccess(id, response.data, next ? next.uri : null));
+      dispatch(fetchRelationships(response.data.map(item => item.id)));
+    }).catch(error => dispatch(expandMentionedUsersFail(id, error)));
+  };
+}
+
+export function expandMentionedUsersRequest(id) {
+  return {
+    type: MENTIONED_USERS_EXPAND_REQUEST,
+    id,
+  };
+}
+
+export function expandMentionedUsersSuccess(id, accounts, next) {
+  return {
+    type: MENTIONED_USERS_EXPAND_SUCCESS,
+    id,
+    accounts,
+    next,
+  };
+}
+
+export function expandMentionedUsersFail(id, error) {
+  return {
+    type: MENTIONED_USERS_EXPAND_FAIL,
+    id,
+    error,
   };
 }

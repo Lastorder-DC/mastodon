@@ -2,7 +2,7 @@
 
 class REST::V1::FilterSerializer < ActiveModel::Serializer
   attributes :id, :phrase, :context, :whole_word, :expires_at,
-             :irreversible
+             :irreversible, :exclude_follows, :exclude_localusers
 
   delegate :context, :expires_at, to: :custom_filter
 
@@ -17,6 +17,10 @@ class REST::V1::FilterSerializer < ActiveModel::Serializer
   def irreversible
     custom_filter.irreversible?
   end
+
+  delegate :exclude_follows, to: :custom_filter
+
+  delegate :exclude_localusers, to: :custom_filter
 
   private
 

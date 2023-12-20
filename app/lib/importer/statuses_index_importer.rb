@@ -17,11 +17,13 @@ class Importer::StatusesIndexImporter < Importer::BaseImporter
 
           bulk = ActiveRecord::Base.connection_pool.with_connection do
             to_index = index.adapter.default_scope.where(id: status_ids)
+            to_index = to_index.where('created_at >= ?', @from) if @from.present?
+            to_index = to_index.where('created_at < ?', @to) if @to.present?
             crutches = Chewy::Index::Crutch::Crutches.new index, to_index
             to_index.map do |object|
               # This is unlikely to happen, but the post may have been
               # un-interacted with since it was queued for indexing
-              if object.searchable_by.empty?
+              if object.searchable_by.empty? && %w(public public_unlisted private).exclude?(object.searchability)
                 deleted += 1
                 { delete: { _id: object.id } }
               else
@@ -49,13 +51,16 @@ class Importer::StatusesIndexImporter < Importer::BaseImporter
   end
 
   def scopes
-    [
+    targets = [
       local_statuses_scope,
       local_mentions_scope,
       local_favourites_scope,
+      local_emoji_reacted_scope,
       local_votes_scope,
       local_bookmarks_scope,
     ]
+    targets << remote_searchable_scope if @full
+    targets
   end
 
   def local_mentions_scope
@@ -64,6 +69,10 @@ class Importer::StatusesIndexImporter < Importer::BaseImporter
 
   def local_favourites_scope
     Favourite.where(account: Account.local).select(:id, :status_id)
+  end
+
+  def local_emoji_reacted_scope
+    EmojiReaction.where(account: Account.local).select(:id, :status_id)
   end
 
   def local_bookmarks_scope
@@ -76,5 +85,9 @@ class Importer::StatusesIndexImporter < Importer::BaseImporter
 
   def local_statuses_scope
     Status.local.select('"statuses"."id", COALESCE("statuses"."reblog_of_id", "statuses"."id") AS status_id')
+  end
+
+  def remote_searchable_scope
+    Status.remote_dynamic_searchability.select('"statuses"."id", COALESCE("statuses"."reblog_of_id", "statuses"."id") AS status_id')
   end
 end

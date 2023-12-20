@@ -11,7 +11,7 @@ class BatchedRemoveStatusService < BaseService
     ActiveRecord::Associations::Preloader.new(
       records: statuses,
       associations: options[:skip_side_effects] ? :reblogs : [:account, :tags, reblogs: :account]
-    )
+    ).call
 
     statuses_and_reblogs = statuses.flat_map { |status| [status] + status.reblogs }
 
@@ -23,7 +23,7 @@ class BatchedRemoveStatusService < BaseService
     ActiveRecord::Associations::Preloader.new(
       records: statuses_with_account_conversations,
       associations: [mentions: :account]
-    )
+    ).call
 
     statuses_with_account_conversations.each(&:unlink_from_conversations!)
 
@@ -50,6 +50,7 @@ class BatchedRemoveStatusService < BaseService
 
       unpush_from_home_timelines(account, account_statuses)
       unpush_from_list_timelines(account, account_statuses)
+      unpush_from_antenna_timelines(account, account_statuses)
     end
 
     # Cannot be batched
@@ -75,6 +76,14 @@ class BatchedRemoveStatusService < BaseService
     account.lists_for_local_distribution.select(:id, :account_id).includes(account: :user).reorder(nil).find_each do |list|
       statuses.each do |status|
         FeedManager.instance.unpush_from_list(list, status)
+      end
+    end
+  end
+
+  def unpush_from_antenna_timelines(_account, statuses)
+    Antenna.availables.select(:id, :account_id).includes(account: :user).reorder(nil).find_each do |antenna|
+      statuses.each do |status|
+        FeedManager.instance.unpush_from_antenna(antenna, status)
       end
     end
   end

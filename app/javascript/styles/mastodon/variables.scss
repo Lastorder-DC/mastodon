@@ -14,6 +14,7 @@ $success-green: #79bd9a !default; // Padua
 $error-red: $red-500 !default; // Cerise
 $warning-red: #ff5050 !default; // Sunset Orange
 $gold-star: #ca8f04 !default; // Dark Goldenrod
+$kmyblue: #29a5f7 !default;
 
 $red-bookmark: $warning-red;
 
@@ -22,6 +23,10 @@ $classic-base-color: #282c37; // Midnight Express
 $classic-primary-color: #9baec8; // Echo Blue
 $classic-secondary-color: #d9e1e8; // Pattens Blue
 $classic-highlight-color: #6364ff; // Brand purple
+
+// Values for kmyblue original functions
+$emoji-reaction-color: #42485a !default;
+$emoji-reaction-selected-color: #617ed5 !default;
 
 // Variables for defaults in UI
 $base-shadow-color: $black !default;

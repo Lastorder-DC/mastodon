@@ -1,3 +1,5 @@
+// Kmyblue tracking marker: copied antennas/new_antenna_form, circles/new_circle_form, bookmark_categories/new_bookmark_category_form
+
 import PropTypes from 'prop-types';
 import { PureComponent } from 'react';
 
@@ -6,7 +8,7 @@ import { defineMessages, injectIntl } from 'react-intl';
 import { connect } from 'react-redux';
 
 import { changeListEditorTitle, submitListEditor } from 'mastodon/actions/lists';
-import Button from 'mastodon/components/button';
+import { Button } from 'mastodon/components/button';
 
 const messages = defineMessages({
   label: { id: 'lists.new.title_placeholder', defaultMessage: 'New list title' },

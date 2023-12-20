@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class AdminMailer < ApplicationMailer
-  layout 'plain_mailer'
+  layout 'admin_mailer'
 
   helper :accounts
   helper :languages
@@ -32,6 +32,14 @@ class AdminMailer < ApplicationMailer
 
     locale_for_account(@me) do
       mail subject: default_i18n_subject(instance: @instance, username: @account.username)
+    end
+  end
+
+  def new_pending_friend_server(friend_server)
+    @friend = friend_server
+
+    locale_for_account(@me) do
+      mail subject: default_i18n_subject(instance: @instance, domain: @friend.domain)
     end
   end
 

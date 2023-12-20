@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const http = require('http');
+const path = require('path');
 const url = require('url');
 
 const dotenv = require('dotenv');
@@ -11,14 +12,19 @@ const { JSDOM } = require('jsdom');
 const log = require('npmlog');
 const pg = require('pg');
 const dbUrlToConfig = require('pg-connection-string').parse;
-const metrics = require('prom-client');
 const uuid = require('uuid');
 const WebSocket = require('ws');
 
+const { setupMetrics } = require('./metrics');
+const { isTruthy } = require("./utils");
+
 const environment = process.env.NODE_ENV || 'development';
 
+// Correctly detect and load .env or .env.production file based on environment:
+const dotenvFile = environment === 'production' ? '.env.production' : '.env';
+
 dotenv.config({
-  path: environment === 'production' ? '.env.production' : '.env',
+  path: path.resolve(__dirname, path.join('..', dotenvFile))
 });
 
 log.level = process.env.LOG_LEVEL || 'verbose';
@@ -192,78 +198,15 @@ const startServer = async () => {
   const redisClient = await createRedisClient(redisConfig);
   const { redisPrefix } = redisConfig;
 
-  // Collect metrics from Node.js
-  metrics.collectDefaultMetrics();
-
-  new metrics.Gauge({
-    name: 'pg_pool_total_connections',
-    help: 'The total number of clients existing within the pool',
-    collect() {
-      this.set(pgPool.totalCount);
-    },
-  });
-
-  new metrics.Gauge({
-    name: 'pg_pool_idle_connections',
-    help: 'The number of clients which are not checked out but are currently idle in the pool',
-    collect() {
-      this.set(pgPool.idleCount);
-    },
-  });
-
-  new metrics.Gauge({
-    name: 'pg_pool_waiting_queries',
-    help: 'The number of queued requests waiting on a client when all clients are checked out',
-    collect() {
-      this.set(pgPool.waitingCount);
-    },
-  });
-
-  const connectedClients = new metrics.Gauge({
-    name: 'connected_clients',
-    help: 'The number of clients connected to the streaming server',
-    labelNames: ['type'],
-  });
-
-  const connectedChannels = new metrics.Gauge({
-    name: 'connected_channels',
-    help: 'The number of channels the streaming server is streaming to',
-    labelNames: [ 'type', 'channel' ]
-  });
-
-  const redisSubscriptions = new metrics.Gauge({
-    name: 'redis_subscriptions',
-    help: 'The number of Redis channels the streaming server is subscribed to',
-  });
-
-  const redisMessagesReceived = new metrics.Counter({
-    name: 'redis_messages_received_total',
-    help: 'The total number of messages the streaming server has received from redis subscriptions'
-  });
-
-  const messagesSent = new metrics.Counter({
-    name: 'messages_sent_total',
-    help: 'The total number of messages the streaming server sent to clients per connection type',
-    labelNames: [ 'type' ]
-  });
-
-  // Prime the gauges so we don't loose metrics between restarts:
-  redisSubscriptions.set(0);
-  connectedClients.set({ type: 'websocket' }, 0);
-  connectedClients.set({ type: 'eventsource' }, 0);
-
-  // For each channel, initialize the gauges at zero; There's only a finite set of channels available
-  CHANNEL_NAMES.forEach(( channel ) => {
-    connectedChannels.set({ type: 'websocket', channel }, 0);
-    connectedChannels.set({ type: 'eventsource', channel }, 0);
-  })
-
-  // Prime the counters so that we don't loose metrics between restarts.
-  // Unfortunately counters don't support the set() API, so instead I'm using
-  // inc(0) to achieve the same result.
-  redisMessagesReceived.inc(0);
-  messagesSent.inc({ type: 'websocket' }, 0);
-  messagesSent.inc({ type: 'eventsource' }, 0);
+  const metrics = setupMetrics(CHANNEL_NAMES, pgPool);
+  // TODO: migrate all metrics to metrics.X.method() instead of just X.method()
+  const {
+    connectedClients,
+    connectedChannels,
+    redisSubscriptions,
+    redisMessagesReceived,
+    messagesSent,
+  } = metrics;
 
   // When checking metrics in the browser, the favicon is requested this
   // prevents the request from falling through to the API Router, which would
@@ -383,25 +326,6 @@ const startServer = async () => {
       delete subs[channel];
     }
   };
-
-  const FALSE_VALUES = [
-    false,
-    0,
-    '0',
-    'f',
-    'F',
-    'false',
-    'FALSE',
-    'off',
-    'OFF',
-  ];
-
-  /**
-   * @param {any} value
-   * @returns {boolean}
-   */
-  const isTruthy = value =>
-    value && !FALSE_VALUES.includes(value);
 
   /**
    * @param {any} req
@@ -535,6 +459,8 @@ const startServer = async () => {
       return 'direct';
     case '/api/v1/streaming/list':
       return 'list';
+    case '/api/v1/streaming/antenna':
+      return 'antenna';
     default:
       return undefined;
     }
@@ -740,6 +666,33 @@ const startServer = async () => {
   });
 
   /**
+   * @param {string} antennaId
+   * @param {any} req
+   * @returns {Promise.<void>}
+   */
+  const authorizeAntennaAccess = (antennaId, req) => new Promise((resolve, reject) => {
+    const { accountId } = req;
+
+    pgPool.connect((err, client, done) => {
+      if (err) {
+        reject();
+        return;
+      }
+
+      client.query('SELECT id, account_id FROM antennas WHERE id = $1 LIMIT 1', [antennaId], (err, result) => {
+        done();
+
+        if (err || result.rows.length === 0 || result.rows[0].account_id !== accountId) {
+          reject();
+          return;
+        }
+
+        resolve();
+      });
+    });
+  });
+
+  /**
    * @param {string[]} ids
    * @param {any} req
    * @param {function(string, string): void} output
@@ -769,6 +722,13 @@ const startServer = async () => {
     /** @type {SubscriptionListener} */
     const listener = message => {
       const { event, payload } = message;
+
+      // reference_texts property is not working if ProcessReferencesWorker is
+      // used on PostStatusService and so on. (Asynchronous processing)
+      const reference_texts = payload?.reference_texts || [];
+      if (payload && typeof payload.reference_texts !== 'undefined') {
+        delete payload.reference_texts;
+      }
 
       // Streaming only needs to apply filtering to some channels and only to
       // some events. This is because majority of the filtering happens on the
@@ -828,7 +788,12 @@ const startServer = async () => {
         }
 
         if (!payload.filtered && !req.cachedFilters) {
-          queries.push(client.query('SELECT filter.id AS id, filter.phrase AS title, filter.context AS context, filter.expires_at AS expires_at, filter.action AS filter_action, keyword.keyword AS keyword, keyword.whole_word AS whole_word FROM custom_filter_keywords keyword JOIN custom_filters filter ON keyword.custom_filter_id = filter.id WHERE filter.account_id = $1 AND (filter.expires_at IS NULL OR filter.expires_at > NOW())', [req.accountId]));
+          queries.push(client.query('SELECT filter.id AS id, filter.phrase AS title, filter.context AS context, filter.expires_at AS expires_at, filter.action AS filter_action, filter.with_quote AS with_quote, keyword.keyword AS keyword, keyword.whole_word AS whole_word, filter.exclude_follows AS exclude_follows, filter.exclude_localusers AS exclude_localusers FROM custom_filter_keywords keyword JOIN custom_filters filter ON keyword.custom_filter_id = filter.id WHERE filter.account_id = $1 AND (filter.expires_at IS NULL OR filter.expires_at > NOW())', [req.accountId]));
+        }
+        if (!payload.filtered) {
+          queries.push(client.query(`SELECT 1
+                                     FROM follows
+                                     WHERE (account_id = $1 AND target_account_id = $2)`, [req.accountId, payload.account.id]));
         }
 
         Promise.all(queries).then(values => {
@@ -847,6 +812,8 @@ const startServer = async () => {
             transmit(event, payload);
             return;
           }
+
+          const following = values[values.length - 1].rows.length > 0;
 
           // Handling for constructing the custom filters and caching them on the request
           // TODO: Move this logic out of the message handling lifecycle
@@ -870,7 +837,10 @@ const startServer = async () => {
                     // representing a value in an enum defined by Ruby on Rails:
                     //
                     // enum { warn: 0, hide: 1 }
-                    filter_action: ['warn', 'hide'][filter.filter_action],
+                    filter_action: ['warn', 'hide', 'half_warn'][filter.filter_action],
+                    with_quote: filter.with_quote,
+                    excludeFollows: filter.exclude_follows,
+                    excludeLocalusers: filter.exclude_localusers,
                   },
                 };
               }
@@ -906,13 +876,21 @@ const startServer = async () => {
           if (req.cachedFilters) {
             const status = payload;
             // TODO: Calculate searchableContent in Ruby on Rails:
-            const searchableContent = ([status.spoiler_text || '', status.content].concat((status.poll && status.poll.options) ? status.poll.options.map(option => option.title) : [])).concat(status.media_attachments.map(att => att.description)).join('\n\n').replace(/<br\s*\/?>/g, '\n').replace(/<\/p><p>/g, '\n\n');
+            const searchableContent = ([status.spoiler_text || '', status.content, ...(reference_texts || [])].concat((status.poll && status.poll.options) ? status.poll.options.map(option => option.title) : [])).concat(status.media_attachments.map(att => att.description)).join('\n\n').replace(/<br\s*\/?>/g, '\n').replace(/<\/p><p>/g, '\n\n');
             const searchableTextContent = JSDOM.fragment(searchableContent).textContent;
 
             const now = new Date();
             const filter_results = Object.values(req.cachedFilters).reduce((results, cachedFilter) => {
               // Check the filter hasn't expired before applying:
               if (cachedFilter.expires_at !== null && cachedFilter.expires_at < now) {
+                return results;
+              }
+
+              if (cachedFilter.filter && cachedFilter.filter.excludeFollows && following) {
+                return results;
+              }
+
+              if (cachedFilter.filter && cachedFilter.filter.excludeLocalusers && !accountDomain) {
                 return results;
               }
 
@@ -1239,6 +1217,17 @@ const startServer = async () => {
       });
 
       break;
+    case 'antenna':
+      authorizeAntennaAccess(params.antenna, req).then(() => {
+        resolve({
+          channelIds: [`timeline:antenna:${params.antenna}`],
+          options: { needsFiltering: false },
+        });
+      }).catch(() => {
+        reject('Not authorized to stream this antenna');
+      });
+
+      break;
     default:
       reject('Unknown stream type');
     }
@@ -1252,6 +1241,8 @@ const startServer = async () => {
   const streamNameFromChannelName = (channelName, params) => {
     if (channelName === 'list') {
       return [channelName, params.list];
+    } else if (channelName === 'antenna') {
+      return [channelName, params.antenna];
     } else if (['hashtag', 'hashtag:local'].includes(channelName)) {
       return [channelName, params.tag];
     } else {
@@ -1296,7 +1287,7 @@ const startServer = async () => {
       log.verbose(request.requestId, 'Subscription error:', err.toString());
       socket.send(JSON.stringify({ error: err.toString() }));
     });
-  }
+  };
 
 
   const removeSubscription = (subscriptions, channelIds, request) => {
@@ -1316,7 +1307,7 @@ const startServer = async () => {
     subscription.stopHeartbeat();
 
     delete subscriptions[channelIds.join(';')];
-  }
+  };
 
   /**
    * @param {WebSocketSession} session
@@ -1336,7 +1327,7 @@ const startServer = async () => {
         socket.send(JSON.stringify({ error: "Error unsubscribing from channel" }));
       }
     });
-  }
+  };
 
   /**
    * @param {WebSocketSession} session
@@ -1414,7 +1405,7 @@ const startServer = async () => {
       const subscriptions = Object.keys(session.subscriptions);
 
       subscriptions.forEach(channelIds => {
-        removeSubscription(session.subscriptions, channelIds.split(';'), req)
+        removeSubscription(session.subscriptions, channelIds.split(';'), req);
       });
 
       // Decrement the metrics for connected clients:

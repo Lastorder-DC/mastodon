@@ -15,10 +15,9 @@ import { VerifiedBadge } from 'mastodon/components/verified_badge';
 import { me } from '../initial_state';
 
 import { Avatar } from './avatar';
-import Button from './button';
+import { Button } from './button';
 import { FollowersCounter } from './counters';
 import { DisplayName } from './display_name';
-import { IconButton } from './icon_button';
 import { RelativeTimestamp } from './relative_timestamp';
 
 const messages = defineMessages({
@@ -37,18 +36,17 @@ class Account extends ImmutablePureComponent {
 
   static propTypes = {
     size: PropTypes.number,
-    account: ImmutablePropTypes.map,
+    account: ImmutablePropTypes.record,
     onFollow: PropTypes.func.isRequired,
     onBlock: PropTypes.func.isRequired,
     onMute: PropTypes.func.isRequired,
     onMuteNotifications: PropTypes.func.isRequired,
     intl: PropTypes.object.isRequired,
     hidden: PropTypes.bool,
+    hideButtons: PropTypes.bool,
     minimal: PropTypes.bool,
-    actionIcon: PropTypes.string,
-    actionTitle: PropTypes.string,
     defaultAction: PropTypes.string,
-    onActionClick: PropTypes.func,
+    children: PropTypes.object,
     withBio: PropTypes.bool,
   };
 
@@ -76,12 +74,8 @@ class Account extends ImmutablePureComponent {
     this.props.onMuteNotifications(this.props.account, false);
   };
 
-  handleAction = () => {
-    this.props.onActionClick(this.props.account);
-  };
-
   render () {
-    const { account, intl, hidden, withBio, onActionClick, actionIcon, actionTitle, defaultAction, size, minimal } = this.props;
+    const { account, intl, hidden, hideButtons, withBio, defaultAction, size, minimal, children } = this.props;
 
     if (!account) {
       return <EmptyAccount size={size} minimal={minimal} />;
@@ -98,9 +92,7 @@ class Account extends ImmutablePureComponent {
 
     let buttons;
 
-    if (actionIcon && onActionClick) {
-      buttons = <IconButton icon={actionIcon} title={actionTitle} onClick={this.handleAction} />;
-    } else if (!actionIcon && account.get('id') !== me && account.get('relationship', null) !== null) {
+    if (!hideButtons && account.get('id') !== me && account.get('relationship', null) !== null) {
       const following = account.getIn(['relationship', 'following']);
       const requested = account.getIn(['relationship', 'requested']);
       const blocking  = account.getIn(['relationship', 'blocking']);
@@ -129,7 +121,7 @@ class Account extends ImmutablePureComponent {
         buttons = <Button title={intl.formatMessage(messages.mute)} onClick={this.handleMute} />;
       } else if (defaultAction === 'block') {
         buttons = <Button text={intl.formatMessage(messages.block)} onClick={this.handleBlock} />;
-      } else if (!account.get('moved') || following) {
+      } else if (!account.get('suspended') && !account.get('moved') || following) {
         buttons = <Button text={intl.formatMessage(following ? messages.unfollow : messages.follow)} onClick={this.handleFollow} />;
       }
     }
@@ -160,15 +152,20 @@ class Account extends ImmutablePureComponent {
               <DisplayName account={account} />
               {!minimal && (
                 <div className='account__details'>
-                  <ShortNumber value={account.get('followers_count')} renderer={FollowersCounter} /> {verification} {muteTimeRemaining}
+                  <ShortNumber value={account.get('followers_count')} isHide={account.getIn(['other_settings', 'hide_followers_count']) || false} renderer={FollowersCounter} /> {verification} {muteTimeRemaining}
                 </div>
               )}
             </div>
           </Link>
 
           {!minimal && (
-            <div className='account__relationship'>
-              {buttons}
+            <div>
+              <div>
+                {children}
+              </div>
+              <div className='account__relationship'>
+                {buttons}
+              </div>
             </div>
           )}
         </div>

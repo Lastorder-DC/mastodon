@@ -125,6 +125,22 @@ module Mastodon::CLI
       say('OK', :green)
     end
 
+    desc 'size', 'Set custom emojis width/height'
+    long_desc <<-LONG_DESC
+      Set custom emojis width/height if width/height is nil or zero.
+    LONG_DESC
+    def size
+      scope = CustomEmoji.where(image_width: nil).or(CustomEmoji.where(image_height: [0, nil]))
+      size = scope.size
+      count = 0
+      scope.find_each do |emoji|
+        emoji.update_size
+        emoji.save!
+        count += 1
+        say("(#{count}/#{size}) proceed #{emoji.shortcode}@#{emoji.domain}")
+      end
+    end
+
     private
 
     def color(green, _yellow, red)

@@ -36,6 +36,8 @@ class UserRole < ApplicationRecord
     manage_roles: (1 << 17),
     manage_user_access: (1 << 18),
     delete_user_data: (1 << 19),
+    manage_sensitive_words: (1 << 29),
+    manage_ng_words: (1 << 30),
   }.freeze
 
   module Flags
@@ -49,7 +51,7 @@ class UserRole < ApplicationRecord
         invite_users
       ).freeze,
 
-      moderation: %w(
+      moderation: %i(
         view_dashboard
         view_audit_log
         manage_users
@@ -61,9 +63,11 @@ class UserRole < ApplicationRecord
         manage_blocks
         manage_taxonomies
         manage_invites
+        manage_ng_words
+        manage_sensitive_words
       ).freeze,
 
-      administration: %w(
+      administration: %i(
         manage_settings
         manage_rules
         manage_roles
@@ -72,7 +76,7 @@ class UserRole < ApplicationRecord
         manage_announcements
       ).freeze,
 
-      devops: %w(
+      devops: %i(
         view_devops
       ).freeze,
 

@@ -52,6 +52,7 @@ RSpec.describe ActivityPub::FetchRemoteKeyService, type: :service do
   before do
     stub_request(:get, 'https://example.com/alice').to_return(body: Oj.dump(actor))
     stub_request(:get, 'https://example.com/.well-known/webfinger?resource=acct:alice@example.com').to_return(body: Oj.dump(webfinger), headers: { 'Content-Type': 'application/jrd+json' })
+    stub_request(:get, 'https://example.com/.well-known/nodeinfo').to_return(body: '{}')
   end
 
   describe '#call' do

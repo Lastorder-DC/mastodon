@@ -62,7 +62,7 @@ class FollowerAccountsController < ApplicationController
       ActivityPub::CollectionPresenter.new(
         id: account_followers_url(@account, page: params.fetch(:page, 1)),
         type: :ordered,
-        size: @account.followers_count,
+        size: @account.public_followers_count,
         items: follows.map { |follow| ActivityPub::TagManager.instance.uri_for(follow.account) },
         part_of: account_followers_url(@account),
         next: next_page_url,
@@ -72,7 +72,7 @@ class FollowerAccountsController < ApplicationController
       ActivityPub::CollectionPresenter.new(
         id: account_followers_url(@account),
         type: :ordered,
-        size: @account.followers_count,
+        size: @account.public_followers_count,
         first: page_url(1)
       )
     end

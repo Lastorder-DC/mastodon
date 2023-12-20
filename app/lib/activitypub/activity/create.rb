@@ -61,7 +61,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
       end
     end
 
-    @status
+    @status || reject_payload!
   end
 
   def audience_to
@@ -82,6 +82,10 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     process_tags
     process_audience
 
+    return nil unless valid_status?
+    return nil if (reply_to_local? || reply_to_local_account? || reply_to_local_from_tags?) && reject_reply_to_local?
+    return nil if mention_to_local_but_not_followed? && reject_reply_exclude_followers?
+
     ApplicationRecord.transaction do
       @status = Status.create!(@params)
       attach_tags(@status)
@@ -89,8 +93,11 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
 
     resolve_thread(@status)
     fetch_replies(@status)
+    process_conversation! if @status.limited_visibility?
+    process_references!
     distribute
     forward_for_reply
+    join_group!
   end
 
   def distribute
@@ -108,7 +115,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
   end
 
   def process_status_params
-    @status_parser = ActivityPub::Parser::StatusParser.new(@json, followers_collection: @account.followers_url)
+    @status_parser = ActivityPub::Parser::StatusParser.new(@json, followers_collection: @account.followers_url, object: @object, account: @account, friend_domain: friend_domain?)
 
     @params = {
       uri: @status_parser.uri,
@@ -123,14 +130,26 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
       reply: @status_parser.reply,
       sensitive: @account.sensitized? || @status_parser.sensitive || false,
       visibility: @status_parser.visibility,
+      limited_scope: @status_parser.limited_scope,
+      searchability: @status_parser.searchability,
       thread: replied_to_status,
-      conversation: conversation_from_uri(@object['conversation']),
-      media_attachment_ids: process_attachments.take(4).map(&:id),
+      conversation: conversation_from_activity,
+      media_attachment_ids: process_attachments.take(MediaAttachment::ACTIVITYPUB_STATUS_ATTACHMENT_MAX).map(&:id),
       poll: process_poll,
     }
   end
 
-  def process_audience
+  def valid_status?
+    valid = !Admin::NgWord.reject?("#{@params[:spoiler_text]}\n#{@params[:text]}") && !Admin::NgWord.hashtag_reject?(@tags.size)
+
+    valid = !Admin::NgWord.stranger_mention_reject?("#{@params[:spoiler_text]}\n#{@params[:text]}") if valid && mention_to_local_but_not_followed?
+
+    valid
+  end
+
+  def accounts_in_audience
+    return @accounts_in_audience if @accounts_in_audience
+
     # Unlike with tags, there is no point in resolving accounts we don't already
     # know here, because silent mentions would only be used for local access control anyway
     accounts_in_audience = (audience_to + audience_cc).uniq.filter_map do |audience|
@@ -144,6 +163,10 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
       accounts_in_audience.uniq!
     end
 
+    @accounts_in_audience = accounts_in_audience
+  end
+
+  def process_audience
     accounts_in_audience.each do |account|
       # This runs after tags are processed, and those translate into non-silent
       # mentions, which take precedence
@@ -160,6 +183,10 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     # Accounts that are tagged but are not in the audience are not
     # supposed to be notified explicitly
     @silenced_account_ids = @mentions.map(&:account_id) - accounts_in_audience.map(&:id)
+  end
+
+  def account_representative
+    accounts_in_audience.detect(&:local?) || Account.representative
   end
 
   def postprocess_audience_and_deliver
@@ -209,7 +236,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
   end
 
   def process_hashtag(tag)
-    return if tag['name'].blank?
+    return if tag['name'].blank? || ignore_hashtags?
 
     Tag.find_or_create_by_names(tag['name']) do |hashtag|
       @tags << hashtag unless @tags.include?(hashtag) || !hashtag.valid?
@@ -238,11 +265,21 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
 
     emoji = CustomEmoji.find_by(shortcode: custom_emoji_parser.shortcode, domain: @account.domain)
 
-    return unless emoji.nil? || custom_emoji_parser.image_remote_url != emoji.image_remote_url || (custom_emoji_parser.updated_at && custom_emoji_parser.updated_at >= emoji.updated_at)
+    return unless emoji.nil? ||
+                  custom_emoji_parser.image_remote_url != emoji.image_remote_url ||
+                  (custom_emoji_parser.updated_at && custom_emoji_parser.updated_at >= emoji.updated_at) ||
+                  custom_emoji_parser.license != emoji.license
 
     begin
-      emoji ||= CustomEmoji.new(domain: @account.domain, shortcode: custom_emoji_parser.shortcode, uri: custom_emoji_parser.uri)
+      emoji ||= CustomEmoji.new(
+        domain: @account.domain,
+        shortcode: custom_emoji_parser.shortcode,
+        uri: custom_emoji_parser.uri
+      )
       emoji.image_remote_url = custom_emoji_parser.image_remote_url
+      emoji.license = custom_emoji_parser.license
+      emoji.is_sensitive = custom_emoji_parser.is_sensitive
+      emoji.aliases = custom_emoji_parser.aliases
       emoji.save
     rescue Seahorse::Client::NetworkingError => e
       Rails.logger.warn "Error storing emoji: #{e}"
@@ -257,7 +294,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     as_array(@object['attachment']).each do |attachment|
       media_attachment_parser = ActivityPub::Parser::MediaAttachmentParser.new(attachment)
 
-      next if media_attachment_parser.remote_url.blank? || media_attachments.size >= 4
+      next if media_attachment_parser.remote_url.blank? || media_attachments.size >= MediaAttachment::ACTIVITYPUB_STATUS_ATTACHMENT_MAX
 
       begin
         media_attachment = MediaAttachment.create(
@@ -341,6 +378,10 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     ActivityPub::FetchRepliesWorker.perform_async(status.id, uri, { 'request_id' => @options[:request_id] }) unless uri.nil?
   end
 
+  def conversation_from_activity
+    conversation_from_context(@object['context']) || conversation_from_uri(@object['conversation'])
+  end
+
   def conversation_from_uri(uri)
     return nil if uri.nil?
     return Conversation.find_by(id: OStatus::TagManager.instance.unique_tag_to_local_id(uri, 'Conversation')) if OStatus::TagManager.instance.local_id?(uri)
@@ -349,6 +390,26 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
       Conversation.find_or_create_by!(uri: uri)
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
       retry
+    end
+  end
+
+  def conversation_from_context(uri)
+    return nil if uri.nil? || (!uri.start_with?('https://') && !uri.start_with?('http://'))
+    return Conversation.find_by(id: ActivityPub::TagManager.instance.uri_to_local_id(uri)) if ActivityPub::TagManager.instance.local_uri?(uri)
+
+    begin
+      conversation = Conversation.find_or_create_by!(uri: uri)
+
+      json = fetch_resource_without_id_validation(uri, account_representative)
+      return conversation if json.nil? || json['type'] != 'Group'
+      return conversation if json['inbox'].blank? || json['inbox'] == conversation.inbox_url
+
+      conversation.update!(inbox_url: json['inbox'])
+      conversation
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
+      retry
+    rescue Mastodon::UnexpectedResponseError
+      Conversation.find_or_create_by!(uri: uri)
     end
   end
 
@@ -382,13 +443,49 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     @skip_download ||= DomainBlock.reject_media?(@account.domain)
   end
 
+  def reply_to_local_account?
+    accounts_in_audience.any?(&:local?)
+  end
+
+  def reply_to_local_account_following?
+    !reply_to_local_account? || accounts_in_audience.none? { |account| account.local? && !account.following?(@account) }
+  end
+
+  def reply_to_local_from_tags?
+    @mentions.present? && @mentions.any? { |m| m.account.local? }
+  end
+
+  def reply_to_local_from_tags_following?
+    @mentions.nil? || @mentions.none? { |m| m.account.local? && !m.account.following?(@account) }
+  end
+
   def reply_to_local?
     !replied_to_status.nil? && replied_to_status.account.local?
   end
 
+  def reply_to_local_status_following?
+    !reply_to_local? || replied_to_status.account.following?(@account)
+  end
+
+  def mention_to_local_but_not_followed?
+    !reply_to_local_account_following? || !reply_to_local_status_following? || !reply_to_local_from_tags_following?
+  end
+
+  def reject_reply_to_local?
+    @reject_reply_to_local ||= DomainBlock.reject_reply?(@account.domain)
+  end
+
+  def reject_reply_exclude_followers?
+    @reject_reply_exclude_followers ||= DomainBlock.reject_reply_exclude_followers?(@account.domain)
+  end
+
+  def ignore_hashtags?
+    @ignore_hashtags ||= DomainBlock.reject_hashtag?(@account.domain)
+  end
+
   def related_to_local_activity?
     fetch? || followed_by_local_accounts? || requested_through_relay? ||
-      responds_to_followed_account? || addresses_local_accounts?
+      responds_to_followed_account? || addresses_local_accounts? || quote_local? || free_friend_domain?
   end
 
   def responds_to_followed_account?
@@ -415,6 +512,16 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     ActivityPub::RawDistributionWorker.perform_async(Oj.dump(@json), replied_to_status.account_id, [@account.preferred_inbox_url])
   end
 
+  def process_conversation!
+    return unless @status.conversation.present? && @status.conversation.local?
+
+    ProcessConversationService.new.call(@status)
+
+    return if @json['signature'].blank?
+
+    ActivityPub::ForwardConversationWorker.perform_async(Oj.dump(@json), @status.id, false)
+  end
+
   def increment_voters_count!
     poll = replied_to_status.preloadable_poll
 
@@ -425,5 +532,37 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
   rescue ActiveRecord::StaleObjectError
     poll.reload
     retry
+  end
+
+  def process_references!
+    references = @object['references'].nil? ? [] : ActivityPub::FetchReferencesService.new.call(@status, @object['references'])
+
+    ProcessReferencesService.call_service_without_error(@status, [], references, [quote].compact)
+  end
+
+  def quote_local?
+    url = quote
+
+    if url.present?
+      ActivityPub::TagManager.instance.uri_to_resource(url, Status)&.local?
+    else
+      false
+    end
+  end
+
+  def free_friend_domain?
+    FriendDomain.free_receivings.exists?(domain: @account.domain)
+  end
+
+  def friend_domain?
+    FriendDomain.enabled.find_by(domain: @account.domain)&.accepted?
+  end
+
+  def quote
+    @quote ||= @object['quote'] || @object['quoteUrl'] || @object['quoteURL'] || @object['_misskey_quote']
+  end
+
+  def join_group!
+    GroupReblogService.new.call(@status)
   end
 end

@@ -63,6 +63,9 @@ class EmojiFormatter
   private
 
   def emoji_map
+    # from emoji_reactions_grouped_by_name (status_stat)
+    return @emoji_map ||= custom_emojis.each_with_object({}) { |e, h| h[e.name] = [e.url, e.static_url] } if custom_emojis.first&.image.blank?
+
     @emoji_map ||= custom_emojis.each_with_object({}) { |e, h| h[e.shortcode] = [full_asset_url(e.image.url), full_asset_url(e.image.url(:static))] }
   end
 
@@ -88,7 +91,7 @@ class EmojiFormatter
   end
 
   def image_attributes
-    { rel: 'emoji', draggable: false, width: 16, height: 16, class: image_class_names, style: image_style }
+    { rel: 'emoji', draggable: false, height: 16, class: image_class_names, style: image_style }
   end
 
   def image_data_attributes(original_url, static_url)
@@ -100,7 +103,7 @@ class EmojiFormatter
   end
 
   def image_style
-    @options[:style]
+    "min-width:16px;#{@options[:style] || ''}"
   end
 
   def animate?

@@ -1,8 +1,8 @@
 import { Map as ImmutableMap, List as ImmutableList } from 'immutable';
 
 import {
-  ACCOUNT_BLOCK_SUCCESS,
-  ACCOUNT_MUTE_SUCCESS,
+  blockAccountSuccess,
+  muteAccountSuccess,
 } from '../actions/accounts';
 import { CONTEXT_FETCH_SUCCESS } from '../actions/statuses';
 import { TIMELINE_DELETE, TIMELINE_UPDATE } from '../actions/timelines';
@@ -11,33 +11,38 @@ import { compareId } from '../compare_id';
 const initialState = ImmutableMap({
   inReplyTos: ImmutableMap(),
   replies: ImmutableMap(),
+  references: ImmutableMap(),
 });
 
-const normalizeContext = (immutableState, id, ancestors, descendants) => immutableState.withMutations(state => {
+const normalizeContext = (immutableState, id, ancestors, descendants, references) => immutableState.withMutations(state => {
   state.update('inReplyTos', immutableAncestors => immutableAncestors.withMutations(inReplyTos => {
     state.update('replies', immutableDescendants => immutableDescendants.withMutations(replies => {
-      function addReply({ id, in_reply_to_id }) {
-        if (in_reply_to_id && !inReplyTos.has(id)) {
+      state.update('references', immutableReferences => immutableReferences.withMutations(referencePosts => {
+        function addReply({ id, in_reply_to_id }) {
+          if (in_reply_to_id && !inReplyTos.has(id)) {
 
-          replies.update(in_reply_to_id, ImmutableList(), siblings => {
-            const index = siblings.findLastIndex(sibling => compareId(sibling, id) < 0);
-            return siblings.insert(index + 1, id);
-          });
+            replies.update(in_reply_to_id, ImmutableList(), siblings => {
+              const index = siblings.findLastIndex(sibling => compareId(sibling, id) < 0);
+              return siblings.insert(index + 1, id);
+            });
 
-          inReplyTos.set(id, in_reply_to_id);
+            inReplyTos.set(id, in_reply_to_id);
+          }
         }
-      }
 
-      // We know in_reply_to_id of statuses but `id` itself.
-      // So we assume that the status of the id replies to last ancestors.
+        // We know in_reply_to_id of statuses but `id` itself.
+        // So we assume that the status of the id replies to last ancestors.
 
-      ancestors.forEach(addReply);
+        ancestors.forEach(addReply);
 
-      if (ancestors[0]) {
-        addReply({ id, in_reply_to_id: ancestors[ancestors.length - 1].id });
-      }
+        if (ancestors[0]) {
+          addReply({ id, in_reply_to_id: ancestors[ancestors.length - 1].id });
+        }
 
-      descendants.forEach(addReply);
+        descendants.forEach(addReply);
+
+        referencePosts.set(id, ImmutableList(references.map((r) => r.id)));
+      }));
     }));
   }));
 });
@@ -92,11 +97,11 @@ const updateContext = (state, status) => {
 
 export default function replies(state = initialState, action) {
   switch(action.type) {
-  case ACCOUNT_BLOCK_SUCCESS:
-  case ACCOUNT_MUTE_SUCCESS:
-    return filterContexts(state, action.relationship, action.statuses);
+  case blockAccountSuccess.type:
+  case muteAccountSuccess.type:
+    return filterContexts(state, action.payload.relationship, action.payload.statuses);
   case CONTEXT_FETCH_SUCCESS:
-    return normalizeContext(state, action.id, action.ancestors, action.descendants);
+    return normalizeContext(state, action.id, action.ancestors, action.descendants, action.references);
   case TIMELINE_DELETE:
     return deleteFromContexts(state, [action.id]);
   case TIMELINE_UPDATE:

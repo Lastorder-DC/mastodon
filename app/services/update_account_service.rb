@@ -5,6 +5,12 @@ class UpdateAccountService < BaseService
     was_locked    = account.locked
     update_method = raise_error ? :update! : :update
 
+    if account.user && params.key?(:bio_markdown)
+      user_params = { settings_attributes: { bio_markdown: params['bio_markdown'] } }
+      params.delete(:bio_markdown)
+      account.user.send(update_method, user_params)
+    end
+
     account.send(update_method, params).tap do |ret|
       next unless ret
 
@@ -21,14 +27,20 @@ class UpdateAccountService < BaseService
 
   def authorize_all_follow_requests(account)
     follow_requests = FollowRequest.where(target_account: account)
-    follow_requests = follow_requests.preload(:account).select { |req| !req.account.silenced? }
+    follow_requests = follow_requests.preload(:account).select { |req| !req.account.silenced? && reject_straight_follow_domains.exclude?(req.account.domain) }
     AuthorizeFollowWorker.push_bulk(follow_requests, limit: 1_000) do |req|
       [req.account_id, req.target_account_id]
     end
   end
 
+  def reject_straight_follow_domains
+    DomainBlock.where(reject_straight_follow: true).pluck(:domain)
+  end
+
   def check_links(account)
-    VerifyAccountLinksWorker.perform_async(account.id) if account.fields.any?(&:requires_verification?)
+    return unless account.fields.any?(&:requires_verification?)
+
+    VerifyAccountLinksWorker.perform_async(account.id)
   end
 
   def process_hashtags(account)

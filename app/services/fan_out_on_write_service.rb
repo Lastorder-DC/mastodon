@@ -2,6 +2,7 @@
 
 class FanOutOnWriteService < BaseService
   include Redisable
+  include DtlHelper
 
   # Push a status into home and mentions feeds
   # @param [Status] status
@@ -18,8 +19,12 @@ class FanOutOnWriteService < BaseService
     warm_payload_cache!
 
     fan_out_to_local_recipients!
-    fan_out_to_public_recipients! if broadcastable?
-    fan_out_to_public_streams! if broadcastable?
+    if broadcastable?
+      fan_out_to_public_recipients!
+      fan_out_to_public_streams!
+    elsif broadcastable_unlisted_public?
+      fan_out_to_unlisted_public_streams!
+    end
   end
 
   private
@@ -41,14 +46,21 @@ class FanOutOnWriteService < BaseService
 
     unless @options[:skip_notifications]
       notify_mentioned_accounts!
+      notify_for_conversation! if @status.limited_visibility?
       notify_about_update! if update?
     end
 
     case @status.visibility.to_sym
-    when :public, :unlisted, :private
+    when :public, :unlisted, :public_unlisted, :login, :private
       deliver_to_all_followers!
       deliver_to_lists!
+      deliver_to_antennas!
+      deliver_to_stl_antennas! if Setting.enable_local_timeline
+      deliver_to_ltl_antennas! if Setting.enable_local_timeline
     when :limited
+      deliver_to_lists_mentioned_accounts_only!
+      deliver_to_antennas!
+      deliver_to_stl_antennas! if Setting.enable_local_timeline
       deliver_to_mentioned_followers!
     else
       deliver_to_mentioned_followers!
@@ -65,6 +77,11 @@ class FanOutOnWriteService < BaseService
     broadcast_to_public_streams!
   end
 
+  def fan_out_to_unlisted_public_streams!
+    broadcast_to_hashtag_streams!
+    deliver_to_hashtag_followers!
+  end
+
   def deliver_to_self!
     FeedManager.instance.push_to_home(@account, @status, update: update?) if @account.local?
   end
@@ -74,11 +91,31 @@ class FanOutOnWriteService < BaseService
       LocalNotificationWorker.push_bulk(mentions) do |mention|
         [mention.account_id, mention.id, 'Mention', 'mention']
       end
+
+      next unless update?
+
+      # This may result in duplicate update payloads, but this ensures clients
+      # are aware of edits to posts only appearing in mention notifications
+      # (e.g. private mentions or mentions by people they do not follow)
+      PushUpdateWorker.push_bulk(mentions.filter { |mention| subscribed_to_streaming_api?(mention.account_id) }) do |mention|
+        [mention.account_id, @status.id, "timeline:#{mention.account_id}:notifications", { 'update' => true }]
+      end
+    end
+  end
+
+  def notify_for_conversation!
+    return if @status.conversation.nil?
+
+    account_ids = @status.conversation.statuses.pluck(:account_id).uniq.reject { |account_id| account_id == @status.account_id }
+    @status.silent_mentions.where(account_id: account_ids).joins(:account).merge(Account.local).select(:id, :account_id).reorder(nil).find_in_batches do |mentions|
+      LocalNotificationWorker.push_bulk(mentions) do |mention|
+        [mention.account_id, mention.id, 'Mention', 'mention']
+      end
     end
   end
 
   def notify_about_update!
-    @status.reblogged_by_accounts.merge(Account.local).select(:id).reorder(nil).find_in_batches do |accounts|
+    @status.reblogged_by_accounts.or(@status.quoted_by_accounts).merge(Account.local).select(:id).reorder(nil).find_in_batches do |accounts|
       LocalNotificationWorker.push_bulk(accounts) do |account|
         [account.id, @status.id, 'Status', 'update']
       end
@@ -109,6 +146,27 @@ class FanOutOnWriteService < BaseService
     end
   end
 
+  def deliver_to_lists_mentioned_accounts_only!
+    mentioned_account_ids = @status.mentions.pluck(:account_id)
+    @account.lists_for_local_distribution.where(account_id: mentioned_account_ids).select(:id).reorder(nil).find_in_batches do |lists|
+      FeedInsertWorker.push_bulk(lists) do |list|
+        [@status.id, list.id, 'list', { 'update' => update? }]
+      end
+    end
+  end
+
+  def deliver_to_stl_antennas!
+    DeliveryAntennaService.new.call(@status, @options[:update], mode: :stl)
+  end
+
+  def deliver_to_ltl_antennas!
+    DeliveryAntennaService.new.call(@status, @options[:update], mode: :ltl)
+  end
+
+  def deliver_to_antennas!
+    DeliveryAntennaService.new.call(@status, @options[:update], mode: :home)
+  end
+
   def deliver_to_mentioned_followers!
     @status.mentions.joins(:account).merge(@account.followers_for_local_distribution).select(:id, :account_id).reorder(nil).find_in_batches do |mentions|
       FeedInsertWorker.push_bulk(mentions) do |mention|
@@ -120,7 +178,7 @@ class FanOutOnWriteService < BaseService
   def broadcast_to_hashtag_streams!
     @status.tags.map(&:name).each do |hashtag|
       redis.publish("timeline:hashtag:#{hashtag.mb_chars.downcase}", anonymous_payload)
-      redis.publish("timeline:hashtag:#{hashtag.mb_chars.downcase}:local", anonymous_payload) if @status.local?
+      redis.publish("timeline:hashtag:#{hashtag.mb_chars.downcase}:local", anonymous_payload) if @status.local? && Setting.enable_local_timeline
     end
   end
 
@@ -128,11 +186,13 @@ class FanOutOnWriteService < BaseService
     return if @status.reply? && @status.in_reply_to_account_id != @account.id
 
     redis.publish('timeline:public', anonymous_payload)
-    redis.publish(@status.local? ? 'timeline:public:local' : 'timeline:public:remote', anonymous_payload)
+    redis.publish('timeline:public:remote', anonymous_payload) unless @status.local?
+    redis.publish('timeline:public:local', anonymous_payload) if @status.local? && Setting.enable_local_timeline
 
     if @status.with_media?
       redis.publish('timeline:public:media', anonymous_payload)
-      redis.publish(@status.local? ? 'timeline:public:local:media' : 'timeline:public:remote:media', anonymous_payload)
+      redis.publish('timeline:public:remote:media', anonymous_payload) unless @status.local?
+      redis.publish('timeline:public:local:media', anonymous_payload) if @status.local? && Setting.enable_local_timeline
     end
   end
 
@@ -152,7 +212,7 @@ class FanOutOnWriteService < BaseService
   end
 
   def rendered_status
-    @rendered_status ||= InlineRenderer.render(@status, nil, :status)
+    @rendered_status ||= InlineRenderer.render(@status, nil, :status_internal)
   end
 
   def update?
@@ -160,6 +220,14 @@ class FanOutOnWriteService < BaseService
   end
 
   def broadcastable?
-    @status.public_visibility? && !@status.reblog? && !@account.silenced?
+    (@status.public_visibility? || @status.public_unlisted_visibility? || @status.login_visibility?) && !@status.reblog? && !@account.silenced?
+  end
+
+  def broadcastable_unlisted_public?
+    @status.unlisted_visibility? && @status.compute_searchability == 'public' && !@status.reblog? && !@account.silenced?
+  end
+
+  def subscribed_to_streaming_api?(account_id)
+    redis.exists?("subscribed:timeline:#{account_id}") || redis.exists?("subscribed:timeline:#{account_id}:notifications")
   end
 end

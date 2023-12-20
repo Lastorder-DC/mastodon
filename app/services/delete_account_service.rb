@@ -8,8 +8,11 @@ class DeleteAccountService < BaseService
     account_pins
     active_relationships
     aliases
+    antennas
     block_relationships
     blocked_by_relationships
+    bookmark_categories
+    circles
     conversation_mutes
     conversations
     custom_filters
@@ -26,6 +29,7 @@ class DeleteAccountService < BaseService
     passive_relationships
     report_notes
     scheduled_statuses
+    scheduled_expiration_statuses
     status_pins
   ).freeze
 
@@ -37,6 +41,8 @@ class DeleteAccountService < BaseService
     account_notes
     account_pins
     aliases
+    antenna_accounts
+    circle_accounts
     conversation_mutes
     conversations
     custom_filters
@@ -51,6 +57,7 @@ class DeleteAccountService < BaseService
     notifications
     owned_lists
     scheduled_statuses
+    scheduled_expiration_statuses
     status_pins
   )
 
@@ -147,6 +154,7 @@ class DeleteAccountService < BaseService
     purge_polls!
     purge_generated_notifications!
     purge_favourites!
+    purge_emoji_reactions!
     purge_bookmarks!
     purge_feeds!
     purge_other_associations!
@@ -165,7 +173,7 @@ class DeleteAccountService < BaseService
   end
 
   def purge_media_attachments!
-    @account.media_attachments.reorder(nil).find_each do |media_attachment|
+    @account.media_attachments.find_each do |media_attachment|
       next if keep_account_record? && reported_status_ids.include?(media_attachment.status_id)
 
       media_attachment.destroy
@@ -193,6 +201,16 @@ class DeleteAccountService < BaseService
     end
   end
 
+  def purge_emoji_reactions!
+    @account.emoji_reactions.in_batches do |reactions|
+      reactions.each do |reaction|
+        reaction.status.refresh_emoji_reactions_grouped_by_name!
+      end
+      Chewy.strategy.current.update(StatusesIndex, reactions.pluck(:status_id)) if Chewy.enabled?
+      reactions.delete_all
+    end
+  end
+
   def purge_bookmarks!
     @account.bookmarks.in_batches do |bookmarks|
       Chewy.strategy.current.update(StatusesIndex, bookmarks.pluck(:status_id)) if Chewy.enabled?
@@ -211,6 +229,7 @@ class DeleteAccountService < BaseService
 
     FeedManager.instance.clean_feeds!(:home, [@account.id])
     FeedManager.instance.clean_feeds!(:list, @account.owned_lists.pluck(:id))
+    FeedManager.instance.clean_feeds!(:antenna, @account.antennas.pluck(:id))
   end
 
   def purge_profile!

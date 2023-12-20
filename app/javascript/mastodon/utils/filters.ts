@@ -7,7 +7,7 @@ export const toServerSideType = (columnType: string) => {
     case 'account':
       return columnType;
     default:
-      if (columnType.includes('list:')) {
+      if (columnType.includes('list:') || columnType.includes('antenna:')) {
         return 'home';
       } else {
         return 'public'; // community, account, hashtag

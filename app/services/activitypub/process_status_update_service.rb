@@ -5,12 +5,14 @@ class ActivityPub::ProcessStatusUpdateService < BaseService
   include Redisable
   include Lockable
 
+  class AbortError < ::StandardError; end
+
   def call(status, activity_json, object_json, request_id: nil)
     raise ArgumentError, 'Status has unsaved changes' if status.changed?
 
     @activity_json             = activity_json
     @json                      = object_json
-    @status_parser             = ActivityPub::Parser::StatusParser.new(@json)
+    @status_parser             = ActivityPub::Parser::StatusParser.new(@json, account: status.account)
     @uri                       = @status_parser.uri
     @status                    = status
     @account                   = status.account
@@ -22,11 +24,17 @@ class ActivityPub::ProcessStatusUpdateService < BaseService
     return @status if !expected_type? || already_updated_more_recently?
 
     if @status_parser.edited_at.present? && (@status.edited_at.nil? || @status_parser.edited_at > @status.edited_at)
+      read_metadata
+      return @status unless valid_status?
+
       handle_explicit_update!
     else
       handle_implicit_update!
     end
 
+    @status
+  rescue AbortError
+    @status.reload
     @status
   end
 
@@ -43,9 +51,11 @@ class ActivityPub::ProcessStatusUpdateService < BaseService
         update_poll!
         update_immediate_attributes!
         update_metadata!
+        validate_status_mentions!
         create_edits!
       end
 
+      update_references!
       download_media_files!
       queue_poll_notifications!
 
@@ -73,7 +83,7 @@ class ActivityPub::ProcessStatusUpdateService < BaseService
     as_array(@json['attachment']).each do |attachment|
       media_attachment_parser = ActivityPub::Parser::MediaAttachmentParser.new(attachment)
 
-      next if media_attachment_parser.remote_url.blank? || @next_media_attachments.size > 4
+      next if media_attachment_parser.remote_url.blank? || @next_media_attachments.size > MediaAttachment::ACTIVITYPUB_STATUS_ATTACHMENT_MAX
 
       begin
         media_attachment   = previous_media_attachments.find { |previous_media_attachment| previous_media_attachment.remote_url == media_attachment_parser.remote_url }
@@ -96,8 +106,6 @@ class ActivityPub::ProcessStatusUpdateService < BaseService
         Rails.logger.debug { "Invalid URL in attachment: #{e}" }
       end
     end
-
-    added_media_attachments = @next_media_attachments - previous_media_attachments
 
     @status.ordered_media_attachment_ids = @next_media_attachments.map(&:id)
 
@@ -152,6 +160,19 @@ class ActivityPub::ProcessStatusUpdateService < BaseService
     end
   end
 
+  def valid_status?
+    !Admin::NgWord.reject?("#{@status_parser.spoiler_text}\n#{@status_parser.text}") && !Admin::NgWord.hashtag_reject?(@raw_tags.size)
+  end
+
+  def validate_status_mentions!
+    raise AbortError if mention_to_stranger? && Admin::NgWord.stranger_mention_reject?("#{@status.spoiler_text}\n#{@status.text}")
+  end
+
+  def mention_to_stranger?
+    @status.mentions.map(&:account).to_a.any? { |mentioned_account| mentioned_account.id != @status.account.id && !mentioned_account.following?(@status.account) } ||
+      (@status.thread.present? && @status.thread.account.id != @status.account.id && !@status.thread.account.following?(@status.account))
+  end
+
   def update_immediate_attributes!
     @status.text         = @status_parser.text || ''
     @status.spoiler_text = @status_parser.spoiler_text || ''
@@ -165,21 +186,23 @@ class ActivityPub::ProcessStatusUpdateService < BaseService
     @status.save!
   end
 
-  def update_metadata!
+  def read_metadata
     @raw_tags     = []
     @raw_mentions = []
     @raw_emojis   = []
 
     as_array(@json['tag']).each do |tag|
       if equals_or_includes?(tag['type'], 'Hashtag')
-        @raw_tags << tag['name']
+        @raw_tags << tag['name'] if tag['name'].present?
       elsif equals_or_includes?(tag['type'], 'Mention')
-        @raw_mentions << tag['href']
+        @raw_mentions << tag['href'] if tag['href'].present?
       elsif equals_or_includes?(tag['type'], 'Emoji')
         @raw_emojis << tag
       end
     end
+  end
 
+  def update_metadata!
     update_tags!
     update_mentions!
     update_emojis!
@@ -229,16 +252,29 @@ class ActivityPub::ProcessStatusUpdateService < BaseService
 
       emoji = CustomEmoji.find_by(shortcode: custom_emoji_parser.shortcode, domain: @account.domain)
 
-      next unless emoji.nil? || custom_emoji_parser.image_remote_url != emoji.image_remote_url || (custom_emoji_parser.updated_at && custom_emoji_parser.updated_at >= emoji.updated_at)
+      next unless emoji.nil? ||
+                  custom_emoji_parser.image_remote_url != emoji.image_remote_url ||
+                  (custom_emoji_parser.updated_at && custom_emoji_parser.updated_at >= emoji.updated_at) ||
+                  custom_emoji_parser.license != emoji.license
 
       begin
         emoji ||= CustomEmoji.new(domain: @account.domain, shortcode: custom_emoji_parser.shortcode, uri: custom_emoji_parser.uri)
         emoji.image_remote_url = custom_emoji_parser.image_remote_url
+        emoji.license = custom_emoji_parser.license
+        emoji.is_sensitive = custom_emoji_parser.is_sensitive
+        emoji.aliases = custom_emoji_parser.aliases
         emoji.save
       rescue Seahorse::Client::NetworkingError => e
         Rails.logger.warn "Error storing emoji: #{e}"
       end
     end
+  end
+
+  def update_references!
+    references = @json['references'].nil? ? [] : ActivityPub::FetchReferencesService.new.call(@status, @json['references'])
+    quote = @json['quote'] || @json['quoteUrl'] || @json['quoteURL'] || @json['_misskey_quote']
+
+    ProcessReferencesService.call_service_without_error(@status, [], references, [quote].compact)
   end
 
   def expected_type?
@@ -282,7 +318,7 @@ class ActivityPub::ProcessStatusUpdateService < BaseService
   end
 
   def reset_preview_card!
-    @status.preview_cards.clear
+    @status.reset_preview_card!
     LinkCrawlWorker.perform_in(rand(1..59).seconds, @status.id)
   end
 

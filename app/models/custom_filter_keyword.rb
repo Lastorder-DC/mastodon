@@ -7,7 +7,7 @@
 #  id               :bigint(8)        not null, primary key
 #  custom_filter_id :bigint(8)        not null
 #  keyword          :text             default(""), not null
-#  whole_word       :boolean          default(TRUE), not null
+#  whole_word       :boolean          default(FALSE), not null
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #

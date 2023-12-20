@@ -10,7 +10,7 @@ import {
   deleteAnnouncement,
 } from './announcements';
 import { updateConversations } from './conversations';
-import { updateNotifications, expandNotifications } from './notifications';
+import { updateNotifications, expandNotifications, updateEmojiReactions } from './notifications';
 import { updateStatus } from './statuses';
 import {
   updateTimeline,
@@ -22,6 +22,7 @@ import {
   fillPublicTimelineGaps,
   fillCommunityTimelineGaps,
   fillListTimelineGaps,
+  fillAntennaTimelineGaps,
 } from './timelines';
 
 /**
@@ -102,6 +103,10 @@ export const connectTimelineStream = (timelineId, channelName, params = {}, opti
           // @ts-expect-error
           dispatch(updateNotifications(JSON.parse(data.payload), messages, locale));
           break;
+        case 'emoji_reaction':
+          // @ts-expect-error
+          dispatch(updateEmojiReactions(JSON.parse(data.payload), getState().getIn(['meta', 'me'])));
+          break;
         case 'conversation':
           // @ts-expect-error
           dispatch(updateConversations(JSON.parse(data.payload)));
@@ -181,3 +186,10 @@ export const connectDirectStream = () =>
  */
 export const connectListStream = listId =>
   connectTimelineStream(`list:${listId}`, 'list', { list: listId }, { fillGaps: () => fillListTimelineGaps(listId) });
+
+/**
+ * @param {string} antennaId
+ * @returns {function(): void}
+ */
+export const connectAntennaStream = antennaId =>
+  connectTimelineStream(`antenna:${antennaId}`, 'antenna', { antenna: antennaId }, { fillGaps: () => fillAntennaTimelineGaps(antennaId) });

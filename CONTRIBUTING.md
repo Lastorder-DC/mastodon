@@ -1,46 +1,36 @@
-# Contributing
+# CONTRIBUTING
 
-Thank you for considering contributing to Mastodon 🐘
+kmyblueは、コミュニティの意見も聞くには聞きますが導入する・しないは管理人が決定します。
 
-You can contribute in the following ways:
+## バグ報告
 
-- Finding and reporting bugs
-- Translating the Mastodon interface into various languages
-- Contributing code to Mastodon by fixing bugs or implementing features
-- Improving the documentation
+バグについて、最新よりも過去のバージョンへの対応は特別な場合以外は行いません。
 
-If your contributions are accepted into Mastodon, you can request to be paid through [our OpenCollective](https://opencollective.com/mastodon).
+以下のいずれかの方法で報告してください。
 
-## Bug reports
+- [GitHub Issues](https://github.com/kmycode/mastodon/issues)
+- [kmyblue開発者への連絡](https://kmy.blue/@askyq)
+- [kmyblue開発者へのメール](https://kmy.blue/about)
 
-Bug reports and feature suggestions must use descriptive and concise titles and be submitted to [GitHub Issues](https://github.com/mastodon/mastodon/issues). Please use the search function to make sure that you are not submitting duplicates, and that a similar report or request has not already been resolved or rejected.
+## 翻訳、プルリクエスト
 
-## Translations
+新しい機能や既存機能の修正については、プルリクエストのためにコードを作成する前に、まずGitHub Issuesで機能の提案を行いkmyblue開発者の考えを聞くことをおすすめします。バグ修正、翻訳、テストコードなどは基本受け入れますが、依存モジュールのバージョンアップについては本家Mastodonよりも先に行かないようにしてください。
 
-You can submit translations via [Crowdin](https://crowdin.com/project/mastodon). They are periodically merged into the codebase.
+プルリクエストのタイトルには、プルリクエストの内容が明確になるようなものを設定してください。
 
-[![Crowdin](https://d322cqt584bo4o.cloudfront.net/mastodon/localized.svg)](https://crowdin.com/project/mastodon)
+### kmyblueの開発方針
 
-## Pull requests
+下記のものに矛盾がなければ、あとは管理人の意向次第です。
 
-**Please use clean, concise titles for your pull requests.** Unless the pull request is about refactoring code, updating dependencies or other internal tasks, assume that the person reading the pull request title is not a programmer or Mastodon developer, but instead a Mastodon user or server administrator, and **try to describe your change or fix from their perspective**. We use commit squashing, so the final commit in the main branch will carry the title of the pull request, and commits from the main branch are fed into the changelog. The changelog is separated into [keepachangelog.com categories](https://keepachangelog.com/en/1.0.0/), and while that spec does not prescribe how the entries ought to be named, for easier sorting, start your pull request titles using one of the verbs "Add", "Change", "Deprecate", "Remove", or "Fix" (present tense).
+- **自分の投稿を見せたくない人に見せない**
+- **他人の見たくない投稿を見ない**
+- ただし本家Mastodonで上記原則に矛盾した機能が追加された場合は従う
+- 画面を騒がしくするような機能（絵文字を大きく表示するなど）は追加しないか、控えめにする。ただし他のソフトウェアにも導入され利用者が多くいる場合などは別途判断して、オプトアウト可能な設定項目とともに追加する
+- 負荷を著しく上げるような機能はできるだけ追加しない
 
-Example:
+kmyblueが意図的に実装していない機能は、例えば以下のものがあります。詳しい理由が知りたい場合は[この記事を参照するか](https://note.com/kmycode/n/n463410b5e03c)、別途お問い合わせください。もちろん明確な根拠がある場合、あなたはこれに抗議する権利を有しますが、あなたがこのkmyblueをフォークして新しいリポジトリを作るほうがより自由でしょう。
 
-| Not ideal                            | Better                                                        |
-| ------------------------------------ | ------------------------------------------------------------- |
-| Fixed NoMethodError in RemovalWorker | Fix nil error when removing statuses caused by race condition |
-
-It is not always possible to phrase every change in such a manner, but it is desired.
-
-**The smaller the set of changes in the pull request is, the quicker it can be reviewed and merged.** Splitting tasks into multiple smaller pull requests is often preferable.
-
-**Pull requests that do not pass automated checks may not be reviewed**. In particular, you need to keep in mind:
-
-- Unit and integration tests (rspec, jest)
-- Code style rules (rubocop, eslint)
-- Normalization of locale files (i18n-tasks)
-
-## Documentation
-
-The [Mastodon documentation](https://docs.joinmastodon.org) is a statically generated site. You can [submit merge requests to mastodon/documentation](https://github.com/mastodon/documentation).
+- 引用機能
+- お気に入り一覧の公開
+- ブックマーク分類の公開
+- 他のサーバーの投稿に対して他のサーバーのアカウントが行った絵文字リアクションの受け入れ

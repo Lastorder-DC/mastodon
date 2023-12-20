@@ -4,6 +4,8 @@ class ActivityPub::Activity::Delete < ActivityPub::Activity
   def perform
     if @account.uri == object_uri
       delete_person
+    elsif object_uri == ActivityPub::TagManager::COLLECTIONS[:public]
+      delete_friend
     else
       delete_note
     end
@@ -38,8 +40,20 @@ class ActivityPub::Activity::Delete < ActivityPub::Activity
       return if @status.nil?
 
       forwarder.forward! if forwarder.forwardable?
+      forward_for_conversation
       delete_now!
     end
+  end
+
+  def forward_for_conversation
+    return unless @status.conversation.present? && @status.conversation.local? && @json['signature'].present?
+
+    ActivityPub::ForwardConversationWorker.perform_async(Oj.dump(@json), @status.id, true)
+  end
+
+  def delete_friend
+    friend = FriendDomain.find_by(domain: @account.domain)
+    friend&.destroy
   end
 
   def forwarder

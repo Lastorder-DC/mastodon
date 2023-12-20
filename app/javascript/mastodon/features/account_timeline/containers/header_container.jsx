@@ -164,6 +164,35 @@ const mapDispatchToProps = (dispatch, { intl }) => ({
     }));
   },
 
+  onAddToAntenna (account) {
+    dispatch(openModal({
+      modalType: 'ANTENNA_ADDER',
+      modalProps: {
+        accountId: account.get('id'),
+        isExclude: false,
+      },
+    }));
+  },
+
+  onAddToExcludeAntenna (account) {
+    dispatch(openModal({
+      modalType: 'ANTENNA_ADDER',
+      modalProps: {
+        accountId: account.get('id'),
+        isExclude: true,
+      },
+    }));
+  },
+
+  onAddToCircle (account) {
+    dispatch(openModal({
+      modalType: 'CIRCLE_ADDER',
+      modalProps: {
+        accountId: account.get('id'),
+      },
+    }));
+  },
+
   onChangeLanguages (account) {
     dispatch(openModal({
       modalType: 'SUBSCRIBED_LANGUAGES',
@@ -178,7 +207,7 @@ const mapDispatchToProps = (dispatch, { intl }) => ({
       modalType: 'IMAGE',
       modalProps: {
         src: account.get('avatar'),
-        alt: account.get('acct'),
+        alt: '',
       },
     }));
   },

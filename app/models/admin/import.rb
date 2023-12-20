@@ -34,7 +34,7 @@ class Admin::Import
         field&.strip
       when '#severity'
         field&.strip&.to_sym
-      when '#reject_media', '#reject_reports', '#obfuscate'
+      when '#reject_media', '#reject_favourite', '#reject_reply', '#reject_reports', '#obfuscate'
         ActiveModel::Type::Boolean.new.cast(field)
       else
         field

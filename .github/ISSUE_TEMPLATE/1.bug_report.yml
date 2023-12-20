@@ -1,0 +1,74 @@
+name: バグ報告
+description: kmyblueのバグ報告（ただし情報改竄、秘密情報の漏洩、システムの破損などが発生するバグは、こちらではなく「Security」タブよりセキュリティインシデントとして報告してください）
+labels: [bug]
+body:
+  - type: textarea
+    attributes:
+      label: バグの再現手順
+      description: どのように操作したらバグが発生したのか、バグが発生する直前までの手順を順番に詳しく教えてください
+      value: |
+        1.
+        2.
+        3.
+        ...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 期待する動作
+      description: どのように動いてほしかったですか？
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 実際の動作
+      description: どのようなバグが発生しましたか？
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 詳しい情報
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: バグが発生したkmyblueサーバーのドメイン
+      description: サーバー固有の問題の可能性もありますので、プライバシー上可能な範囲内で、できるだけ書いてください
+      placeholder: kmy.blue
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: バグが発生したkmyblueのバージョン
+      description: |
+        Mastodonではなくkmyblueのバージョンを記述してください。例えばバージョン表記が `v4.2.0+kmyblue.5.1-LTS` の場合、バージョンは `5.1`になります
+
+        バージョンは、PCだと画面左下、スマホだと概要画面の一番下に書いてあります
+      placeholder: '5.1'
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: ブラウザの名前
+      description: |
+        ブラウザの名前を書いてください。可能であればバージョンも併記してください
+      placeholder: Firefox 105.0.3
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: OS
+      description: |
+        あなたのOSと、できればバージョンも教えてください。スマホの場合は、「Android」「iPhone」にバージョンをつけてください
+      placeholder: Windows11
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: その他の詳細情報
+      description: |
+        あなたの環境が特殊な場合、詳しいことを教えてください（例: VPS、tor、学内LANなど）
+
+        サーバー管理者の場合は、Ruby、Node.jsのバージョン、Cloudflareの使用可否なども可能なら書いてください
+    validations:
+      required: false

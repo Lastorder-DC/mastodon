@@ -4,9 +4,9 @@ require 'sidekiq_unique_jobs/web'
 require 'sidekiq-scheduler/web'
 
 class RedirectWithVary < ActionDispatch::Routing::PathRedirect
-  def serve(...)
-    super.tap do |_, headers, _|
-      headers['Vary'] = 'Origin, Accept'
+  def build_response(req)
+    super.tap do |response|
+      response.headers['Vary'] = 'Origin, Accept'
     end
   end
 end
@@ -24,14 +24,21 @@ Rails.application.routes.draw do
     /home
     /public
     /public/local
+    /public/local/fixed
     /public/remote
     /conversations
     /lists/(*any)
+    /antennasw/(*any)
+    /antennast/(*any)
+    /circles/(*any)
     /notifications
     /favourites
+    /emoji_reactions
     /bookmarks
+    /bookmark_categories/(*any)
     /pinned
-    /start
+    /reaction_deck
+    /start/(*any)
     /directory
     /explore/(*any)
     /search
@@ -63,12 +70,12 @@ Rails.application.routes.draw do
   end
 
   get '.well-known/host-meta', to: 'well_known/host_meta#show', as: :host_meta, defaults: { format: 'xml' }
-  get '.well-known/nodeinfo', to: 'well_known/nodeinfo#index', as: :nodeinfo, defaults: { format: 'json' }
+  get '.well-known/nodeinfo', to: 'well_known/node_info#index', as: :nodeinfo, defaults: { format: 'json' }
   get '.well-known/webfinger', to: 'well_known/webfinger#show', as: :webfinger
   get '.well-known/change-password', to: redirect('/auth/edit')
   get '.well-known/proxy', to: redirect { |_, request| "/authorize_interaction?#{request.params.to_query}" }
 
-  get '/nodeinfo/2.0', to: 'well_known/nodeinfo#show', as: :nodeinfo_schema
+  get '/nodeinfo/2.0', to: 'well_known/node_info#show', as: :nodeinfo_schema
 
   get 'manifest', to: 'manifests#show', defaults: { format: 'json' }
   get 'intent', to: 'intents#show'
@@ -80,6 +87,8 @@ Rails.application.routes.draw do
     resource :inbox, only: [:create], module: :activitypub
     resource :outbox, only: [:show], module: :activitypub
   end
+
+  get '/invite/:invite_code', constraints: ->(req) { req.format == :json }, to: 'api/v1/invites#show'
 
   devise_scope :user do
     get '/invite/:invite_code', to: 'auth/registrations#new', as: :public_invite
@@ -96,10 +105,10 @@ Rails.application.routes.draw do
 
   devise_for :users, path: 'auth', format: false, controllers: {
     omniauth_callbacks: 'auth/omniauth_callbacks',
-    sessions:           'auth/sessions',
-    registrations:      'auth/registrations',
-    passwords:          'auth/passwords',
-    confirmations:      'auth/confirmations',
+    sessions: 'auth/sessions',
+    registrations: 'auth/registrations',
+    passwords: 'auth/passwords',
+    confirmations: 'auth/confirmations',
   }
 
   # rubocop:disable Style/FormatStringToken - those do not go through the usual formatting functions and are not safe to correct
@@ -119,6 +128,7 @@ Rails.application.routes.draw do
       end
 
       resources :replies, only: [:index], module: :activitypub
+      resources :references, only: [:index], module: :activitypub
     end
 
     resources :followers, only: [:index], controller: :follower_accounts
@@ -132,6 +142,7 @@ Rails.application.routes.draw do
   end
 
   resource :inbox, only: [:create], module: :activitypub
+  resources :contexts, only: [:show], module: :activitypub
 
   get '/:encoded_at(*path)', to: redirect("/@%{path}"), constraints: { encoded_at: /%40/ }
 
@@ -174,6 +185,7 @@ Rails.application.routes.draw do
       end
     end
   end
+  resources :antennas, except: [:show]
 
   resource :relationships, only: [:show, :update]
   resource :statuses_cleanup, controller: :statuses_cleanup, only: [:show, :update]

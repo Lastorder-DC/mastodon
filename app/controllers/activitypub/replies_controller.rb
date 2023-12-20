@@ -33,7 +33,7 @@ class ActivityPub::RepliesController < ActivityPub::BaseController
 
   def set_replies
     @replies = only_other_accounts? ? Status.where.not(account_id: @account.id).joins(:account).merge(Account.without_suspended) : @account.statuses
-    @replies = @replies.where(in_reply_to_id: @status.id, visibility: [:public, :unlisted])
+    @replies = @replies.where(in_reply_to_id: @status.id, visibility: [:public, :unlisted, :public_unlisted, :login])
     @replies = @replies.paginate_by_min_id(DESCENDANTS_LIMIT, params[:min_id])
   end
 

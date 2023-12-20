@@ -166,6 +166,11 @@
 .emoji-mart-category .emoji-mart-emoji {
   cursor: pointer;
 
+  &.emoji-mart-emoji-custom img {
+    width: auto !important;
+    min-width: 22px;
+  }
+
   span {
     z-index: 1;
     position: relative;

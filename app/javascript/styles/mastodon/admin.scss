@@ -1061,6 +1061,13 @@ a.name-tag,
     margin-bottom: 10px;
   }
 
+  .listname {
+    color: $dark-text-color;
+    font-weight: bold;
+    font-size: 14px;
+    margin-left: 16px;
+  }
+
   .expiration {
     font-size: 13px;
   }

@@ -1,0 +1,20 @@
+%p= t 'admin.friend_servers.edit.description'
+%hr.spacer/
+
+.fields-group
+  = f.input :domain, as: :string, wrapper: :with_label, required: true, disabled: !friend.id.nil?, label: t('admin.friend_servers.edit.domain')
+
+.fields-group
+  = f.input :inbox_url, as: :string, wrapper: :with_label, label: t('admin.friend_servers.edit.inbox_url'), hint: t('admin.friend_servers.edit.inbox_url_hint')
+
+.fields-group
+  = f.input :available, as: :boolean, wrapper: :with_label, label: t('admin.friend_servers.edit.available')
+
+.fields-group
+  = f.input :delivery_local, as: :boolean, wrapper: :with_label, label: t('admin.friend_servers.edit.delivery_local'), hint: t('admin.friend_servers.edit.delivery_local_hint')
+
+.fields-group
+  = f.input :pseudo_relay, as: :boolean, wrapper: :with_label, label: t('admin.friend_servers.edit.pseudo_relay'), hint: t('admin.friend_servers.edit.pseudo_relay_hint')
+
+.fields-group
+  = f.input :allow_all_posts, as: :boolean, wrapper: :with_label, label: t('admin.friend_servers.edit.allow_all_posts'), hint: t('admin.friend_servers.edit.allow_all_posts_hint')

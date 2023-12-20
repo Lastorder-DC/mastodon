@@ -57,6 +57,34 @@ RSpec.describe StatusPolicy, type: :model do
         expect(subject).to_not permit(viewer, status)
       end
 
+      it 'grants access when limited and account is viewer' do
+        status.visibility = :limited
+
+        expect(subject).to permit(status.account, status)
+      end
+
+      it 'grants access when limited and viewer is mentioned' do
+        status.visibility = :limited
+        status.mentions = [Fabricate(:mention, account: alice)]
+
+        expect(subject).to permit(alice, status)
+      end
+
+      it 'grants access when limited and non-owner viewer is mentioned and mentions are loaded' do
+        status.visibility = :limited
+        status.mentions = [Fabricate(:mention, account: bob)]
+        status.mentions.load
+
+        expect(subject).to permit(bob, status)
+      end
+
+      it 'denies access when limited and viewer is not mentioned' do
+        viewer = Fabricate(:account)
+        status.visibility = :limited
+
+        expect(subject).to_not permit(viewer, status)
+      end
+
       it 'grants access when private and account is viewer' do
         status.visibility = :private
 
@@ -83,6 +111,58 @@ RSpec.describe StatusPolicy, type: :model do
         status.visibility = :private
 
         expect(subject).to_not permit(viewer, status)
+      end
+    end
+  end
+
+  context 'with the permission of show_mentioned_users?' do
+    permissions :show_mentioned_users? do
+      it 'grants access when public and account is viewer' do
+        status.visibility = :public
+
+        expect(subject).to permit(status.account, status)
+      end
+
+      it 'grants access when public and account is not viewer' do
+        status.visibility = :public
+
+        expect(subject).to_not permit(bob, status)
+      end
+
+      it 'grants access when limited and no conversation ancestor_status and account is viewer' do
+        status.visibility = :limited
+        status.conversation = Fabricate(:conversation)
+
+        expect(subject).to permit(status.account, status)
+      end
+
+      it 'grants access when limited and my conversation and account is viewer' do
+        status.visibility = :limited
+        status.conversation = Fabricate(:conversation, ancestor_status: status)
+
+        expect(subject).to permit(status.account, status)
+      end
+
+      it 'grants access when limited and another conversation and account is viewer' do
+        status.visibility = :limited
+        status.conversation = Fabricate(:conversation, ancestor_status: Fabricate(:status, account: bob))
+
+        expect(subject).to_not permit(status.account, status)
+      end
+
+      it 'grants access when limited and viewer is mentioned' do
+        status.visibility = :limited
+        status.mentions = [Fabricate(:mention, account: bob)]
+
+        expect(subject).to_not permit(bob, status)
+      end
+
+      it 'grants access when limited and non-owner viewer is mentioned and mentions are loaded' do
+        status.visibility = :limited
+        status.mentions = [Fabricate(:mention, account: bob)]
+        status.mentions.load
+
+        expect(subject).to_not permit(bob, status)
       end
     end
   end
@@ -135,6 +215,48 @@ RSpec.describe StatusPolicy, type: :model do
         status.account = block.target_account
 
         expect(subject).to_not permit(block.account, status)
+      end
+    end
+  end
+
+  context 'with the permission of emoji_reaction?' do
+    permissions :emoji_reaction? do
+      it 'grants access when viewer is not blocked' do
+        follow         = Fabricate(:follow)
+        status.account = follow.target_account
+
+        expect(subject).to permit(follow.account, status)
+      end
+
+      it 'denies when viewer is blocked' do
+        block          = Fabricate(:block)
+        status.account = block.target_account
+
+        expect(subject).to_not permit(block.account, status)
+      end
+    end
+  end
+
+  context 'with the permission of quote?' do
+    permissions :quote? do
+      it 'grants access when viewer is not blocked' do
+        follow         = Fabricate(:follow)
+        status.account = follow.target_account
+
+        expect(subject).to permit(follow.account, status)
+      end
+
+      it 'denies when viewer is blocked' do
+        block          = Fabricate(:block)
+        status.account = block.target_account
+
+        expect(subject).to_not permit(block.account, status)
+      end
+
+      it 'denies when private visibility' do
+        status.visibility = :private
+
+        expect(subject).to_not permit(Fabricate(:account), status)
       end
     end
   end

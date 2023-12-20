@@ -8,10 +8,11 @@ class REST::InstanceSerializer < ActiveModel::Serializer
   end
 
   include RoutingHelper
+  include KmyblueCapabilitiesHelper
 
   attributes :domain, :title, :version, :source_url, :description,
              :usage, :thumbnail, :languages, :configuration,
-             :registrations
+             :registrations, :fedibird_capabilities
 
   has_one :contact, serializer: ContactSerializer
   has_many :rules, serializer: REST::RuleSerializer
@@ -48,13 +49,19 @@ class REST::InstanceSerializer < ActiveModel::Serializer
         status: object.status_page_url,
       },
 
+      vapid: {
+        public_key: Rails.configuration.x.vapid_public_key,
+      },
+
       accounts: {
         max_featured_tags: FeaturedTag::LIMIT,
       },
 
       statuses: {
         max_characters: StatusLengthValidator::MAX_CHARS,
-        max_media_attachments: 4,
+        max_media_attachments: MediaAttachment::LOCAL_STATUS_ATTACHMENT_MAX,
+        max_media_attachments_with_poll: MediaAttachment::LOCAL_STATUS_ATTACHMENT_MAX_WITH_POLL,
+        max_media_attachments_from_activitypub: MediaAttachment::ACTIVITYPUB_STATUS_ATTACHMENT_MAX,
         characters_reserved_per_url: StatusLengthValidator::URL_PLACEHOLDER_CHARS,
       },
 
@@ -72,10 +79,24 @@ class REST::InstanceSerializer < ActiveModel::Serializer
         max_characters_per_option: PollValidator::MAX_OPTION_CHARS,
         min_expiration: PollValidator::MIN_EXPIRATION,
         max_expiration: PollValidator::MAX_EXPIRATION,
+        allow_image: true,
       },
 
       translation: {
         enabled: TranslationService.configured?,
+      },
+
+      emoji_reactions: {
+        max_reactions: EmojiReaction::EMOJI_REACTION_LIMIT,
+        max_reactions_per_account: EmojiReaction::EMOJI_REACTION_PER_ACCOUNT_LIMIT,
+      },
+
+      reaction_deck: {
+        max_emojis: User::REACTION_DECK_MAX,
+      },
+
+      reactions: {
+        max_reactions: EmojiReaction::EMOJI_REACTION_PER_ACCOUNT_LIMIT,
       },
     }
   end

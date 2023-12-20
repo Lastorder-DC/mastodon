@@ -17,7 +17,7 @@ import {
 } from 'mastodon/actions/accounts';
 import { openModal } from 'mastodon/actions/modal';
 import { Avatar } from 'mastodon/components/avatar';
-import Button from 'mastodon/components/button';
+import { Button } from 'mastodon/components/button';
 import { DisplayName } from 'mastodon/components/display_name';
 import { ShortNumber } from 'mastodon/components/short_number';
 import { autoPlayGif, me, unfollowModal } from 'mastodon/initial_state';
@@ -102,7 +102,7 @@ const mapDispatchToProps = (dispatch, { intl }) => ({
 class AccountCard extends ImmutablePureComponent {
 
   static propTypes = {
-    account: ImmutablePropTypes.map.isRequired,
+    account: ImmutablePropTypes.record.isRequired,
     intl: PropTypes.object.isRequired,
     onFollow: PropTypes.func.isRequired,
     onBlock: PropTypes.func.isRequired,
@@ -202,14 +202,14 @@ class AccountCard extends ImmutablePureComponent {
         <div className='account-card__actions'>
           <div className='account-card__counters'>
             <div className='account-card__counters__item'>
-              <ShortNumber value={account.get('statuses_count')} />
+              <ShortNumber value={account.get('statuses_count')} isHide={account.getIn(['other_settings', 'hide_statuses_count']) || false} />
               <small>
                 <FormattedMessage id='account.posts' defaultMessage='Posts' />
               </small>
             </div>
 
             <div className='account-card__counters__item'>
-              <ShortNumber value={account.get('followers_count')} />{' '}
+              <ShortNumber value={account.get('followers_count')} isHide={account.getIn(['other_settings', 'hide_followers_count']) || false} />{' '}
               <small>
                 <FormattedMessage
                   id='account.followers'
@@ -219,7 +219,7 @@ class AccountCard extends ImmutablePureComponent {
             </div>
 
             <div className='account-card__counters__item'>
-              <ShortNumber value={account.get('following_count')} />{' '}
+              <ShortNumber value={account.get('following_count')} isHide={account.getIn(['other_settings', 'hide_following_count']) || false} />{' '}
               <small>
                 <FormattedMessage
                   id='account.following'

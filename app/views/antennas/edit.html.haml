@@ -1,0 +1,9 @@
+- content_for :page_title do
+  = t('antennas.edit.title')
+
+= simple_form_for @antenna, url: antenna_path(@antenna), method: :put do |f|
+  = render 'shared/error_messages', object: @antenna
+  = render 'antenna_fields', f: f, lists: @lists
+
+  .actions
+    = f.button :button, t('generic.save_changes'), type: :submit

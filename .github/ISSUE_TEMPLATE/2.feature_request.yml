@@ -1,0 +1,16 @@
+name: 機能要望
+description: 機能の提案
+labels: [enhancement]
+body:
+  - type: textarea
+    attributes:
+      label: 欲しい機能
+      description: 欲しい機能の詳細を書いてください
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 必要性
+      description: この機能はあなたにとってなぜ必要でしょうか？どういった状況で使われるものですか？
+    validations:
+      required: true

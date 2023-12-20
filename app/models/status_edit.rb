@@ -15,6 +15,7 @@
 #  media_descriptions           :text             is an Array
 #  poll_options                 :string           is an Array
 #  sensitive                    :boolean
+#  markdown                     :boolean          default(FALSE)
 #
 
 class StatusEdit < ApplicationRecord
@@ -39,9 +40,9 @@ class StatusEdit < ApplicationRecord
   belongs_to :status
   belongs_to :account, optional: true
 
-  default_scope { order(id: :asc) }
+  scope :ordered, -> { order(id: :asc) }
 
-  delegate :local?, :application, :edited?, :edited_at,
+  delegate :local?, :application, :edited?, :edited_at, :language,
            :discarded?, :visibility, to: :status
 
   def emojis

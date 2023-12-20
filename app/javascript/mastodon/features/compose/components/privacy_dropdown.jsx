@@ -5,10 +5,22 @@ import { injectIntl, defineMessages } from 'react-intl';
 
 import classNames from 'classnames';
 
+
+import { ReactComponent as CircleIcon } from '@material-symbols/svg-600/outlined/account_circle.svg';
+import { ReactComponent as AlternateEmailIcon } from '@material-symbols/svg-600/outlined/alternate_email.svg';
+import { ReactComponent as PublicUnlistedIcon } from '@material-symbols/svg-600/outlined/cloud.svg';
+import { ReactComponent as MutualIcon } from '@material-symbols/svg-600/outlined/compare_arrows.svg';
+import { ReactComponent as LoginIcon } from '@material-symbols/svg-600/outlined/key.svg';
+import { ReactComponent as LockIcon } from '@material-symbols/svg-600/outlined/lock.svg';
+import { ReactComponent as LockOpenIcon } from '@material-symbols/svg-600/outlined/no_encryption.svg';
+import { ReactComponent as PublicIcon } from '@material-symbols/svg-600/outlined/public.svg';
+import { ReactComponent as ReplyIcon } from '@material-symbols/svg-600/outlined/reply.svg';
 import { supportsPassiveEvents } from 'detect-passive-events';
 import Overlay from 'react-overlays/Overlay';
 
+
 import { Icon }  from 'mastodon/components/icon';
+import { enableLoginPrivacy, enableLocalPrivacy } from 'mastodon/initial_state';
 
 import { IconButton } from '../../../components/icon_button';
 
@@ -17,8 +29,18 @@ const messages = defineMessages({
   public_long: { id: 'privacy.public.long', defaultMessage: 'Visible for all' },
   unlisted_short: { id: 'privacy.unlisted.short', defaultMessage: 'Unlisted' },
   unlisted_long: { id: 'privacy.unlisted.long', defaultMessage: 'Visible for all, but opted-out of discovery features' },
+  public_unlisted_short: { id: 'privacy.public_unlisted.short', defaultMessage: 'Public unlisted' },
+  public_unlisted_long: { id: 'privacy.public_unlisted.long', defaultMessage: 'Visible for all without GTL' },
+  login_short: { id: 'privacy.login.short', defaultMessage: 'Login only' },
+  login_long: { id: 'privacy.login.long', defaultMessage: 'Login user only' },
   private_short: { id: 'privacy.private.short', defaultMessage: 'Followers only' },
   private_long: { id: 'privacy.private.long', defaultMessage: 'Visible for followers only' },
+  mutual_short: { id: 'privacy.mutual.short', defaultMessage: 'Mutual' },
+  mutual_long: { id: 'privacy.mutual.long', defaultMessage: 'Mutual follows only' },
+  circle_short: { id: 'privacy.circle.short', defaultMessage: 'Circle' },
+  circle_long: { id: 'privacy.circle.long', defaultMessage: 'Circle members only' },
+  reply_short: { id: 'privacy.reply.short', defaultMessage: 'Reply' },
+  reply_long: { id: 'privacy.reply.long', defaultMessage: 'Reply to limited post' },
   direct_short: { id: 'privacy.direct.short', defaultMessage: 'Mentioned people only' },
   direct_long: { id: 'privacy.direct.long', defaultMessage: 'Visible for mentioned users only' },
   change_privacy: { id: 'privacy.change', defaultMessage: 'Adjust status privacy' },
@@ -114,7 +136,7 @@ class PrivacyDropdownMenu extends PureComponent {
   setFocusRef = c => {
     this.focusedItem = c;
   };
-
+  
   render () {
     const { style, items, value } = this.props;
 
@@ -123,7 +145,7 @@ class PrivacyDropdownMenu extends PureComponent {
         {items.map(item => (
           <div role='option' tabIndex={0} key={item.value} data-index={item.value} onKeyDown={this.handleKeyDown} onClick={this.handleClick} className={classNames('privacy-dropdown__option', { active: item.value === value })} aria-selected={item.value === value} ref={item.value === value ? this.setFocusRef : null}>
             <div className='privacy-dropdown__option__icon'>
-              <Icon id={item.icon} fixedWidth />
+              <Icon id={item.icon} icon={item.iconComponent} />
             </div>
 
             <div className='privacy-dropdown__option__content'>
@@ -147,6 +169,7 @@ class PrivacyDropdown extends PureComponent {
     value: PropTypes.string.isRequired,
     onChange: PropTypes.func.isRequired,
     noDirect: PropTypes.bool,
+    replyToLimited: PropTypes.bool,
     container: PropTypes.func,
     disabled: PropTypes.bool,
     intl: PropTypes.object.isRequired,
@@ -222,15 +245,29 @@ class PrivacyDropdown extends PureComponent {
     const { intl: { formatMessage } } = this.props;
 
     this.options = [
-      { icon: 'globe', value: 'public', text: formatMessage(messages.public_short), meta: formatMessage(messages.public_long) },
-      { icon: 'unlock', value: 'unlisted', text: formatMessage(messages.unlisted_short), meta: formatMessage(messages.unlisted_long) },
-      { icon: 'lock', value: 'private', text: formatMessage(messages.private_short), meta: formatMessage(messages.private_long) },
+      { icon: 'globe', iconComponent: PublicIcon, value: 'public', text: formatMessage(messages.public_short), meta: formatMessage(messages.public_long) },
+      { icon: 'cloud', iconComponent: PublicUnlistedIcon, value: 'public_unlisted', text: formatMessage(messages.public_unlisted_short), meta: formatMessage(messages.public_unlisted_long) },
+      { icon: 'key', iconComponent: LoginIcon, value: 'login', text: formatMessage(messages.login_short), meta: formatMessage(messages.login_long) },
+      { icon: 'unlock', iconComponent: LockOpenIcon, value: 'unlisted', text: formatMessage(messages.unlisted_short), meta: formatMessage(messages.unlisted_long) },
+      { icon: 'lock', iconComponent: LockIcon, value: 'private', text: formatMessage(messages.private_short), meta: formatMessage(messages.private_long) },
+      { icon: 'exchange', iconComponent: MutualIcon, value: 'mutual', text: formatMessage(messages.mutual_short), meta: formatMessage(messages.mutual_long) },
+      { icon: 'user-circle', iconComponent: CircleIcon, value: 'circle', text: formatMessage(messages.circle_short), meta: formatMessage(messages.circle_long) },
     ];
 
     if (!this.props.noDirect) {
       this.options.push(
-        { icon: 'at', value: 'direct', text: formatMessage(messages.direct_short), meta: formatMessage(messages.direct_long) },
+        { icon: 'at', iconComponent: AlternateEmailIcon, value: 'direct', text: formatMessage(messages.direct_short), meta: formatMessage(messages.direct_long) },
       );
+    }
+
+    this.selectableOptions = [...this.options];
+
+    if (!enableLoginPrivacy) {
+      this.selectableOptions = this.selectableOptions.filter((opt) => opt.value !== 'login');
+    }
+
+    if (!enableLocalPrivacy) {
+      this.selectableOptions = this.selectableOptions.filter((opt) => opt.value !== 'public_unlisted');
     }
   }
 
@@ -247,36 +284,47 @@ class PrivacyDropdown extends PureComponent {
   };
 
   render () {
-    const { value, container, disabled, intl } = this.props;
+    const { value, container, disabled, intl, replyToLimited } = this.props;
     const { open, placement } = this.state;
 
-    const valueOption = this.options.find(item => item.value === value);
+    if (replyToLimited) {
+      if (!this.selectableOptions.some((op) => op.value === 'reply')) {
+        this.selectableOptions.unshift(
+          { icon: 'reply', iconComponent: ReplyIcon, value: 'reply', text: intl.formatMessage(messages.reply_short), meta: intl.formatMessage(messages.reply_long) },
+        );
+      }
+    } else {
+      if (this.selectableOptions.some((op) => op.value === 'reply')) {
+        this.selectableOptions = this.selectableOptions.filter((op) => op.value !== 'reply');
+      }
+    }
+
+    const valueOption = this.selectableOptions.find(item => item.value === value) || this.selectableOptions[0];
 
     return (
-      <div className={classNames('privacy-dropdown', placement, { active: open })} onKeyDown={this.handleKeyDown}>
-        <div className={classNames('privacy-dropdown__value', { active: this.options.indexOf(valueOption) === (placement === 'bottom' ? 0 : (this.options.length - 1)) })} ref={this.setTargetRef}>
-          <IconButton
-            className='privacy-dropdown__value-icon'
-            icon={valueOption.icon}
-            title={intl.formatMessage(messages.change_privacy)}
-            size={18}
-            expanded={open}
-            active={open}
-            inverted
-            onClick={this.handleToggle}
-            onMouseDown={this.handleMouseDown}
-            onKeyDown={this.handleButtonKeyDown}
-            style={{ height: null, lineHeight: '27px' }}
-            disabled={disabled}
-          />
-        </div>
+      <div ref={this.setTargetRef} onKeyDown={this.handleKeyDown}>
+        <IconButton
+          className='privacy-dropdown__value-icon'
+          icon={valueOption.icon}
+          iconComponent={valueOption.iconComponent}
+          title={intl.formatMessage(messages.change_privacy)}
+          size={18}
+          expanded={open}
+          active={open}
+          inverted
+          onClick={this.handleToggle}
+          onMouseDown={this.handleMouseDown}
+          onKeyDown={this.handleButtonKeyDown}
+          style={{ height: null, lineHeight: '27px' }}
+          disabled={disabled}
+        />
 
-        <Overlay show={open} placement={'bottom'} flip target={this.findTarget} container={container} popperConfig={{ strategy: 'fixed', onFirstUpdate: this.handleOverlayEnter }}>
+        <Overlay show={open} placement={placement} flip target={this.findTarget} container={container} popperConfig={{ strategy: 'fixed', onFirstUpdate: this.handleOverlayEnter }}>
           {({ props, placement }) => (
             <div {...props}>
               <div className={`dropdown-animation privacy-dropdown__dropdown ${placement}`}>
                 <PrivacyDropdownMenu
-                  items={this.options}
+                  items={this.selectableOptions}
                   value={value}
                   onClose={this.handleClose}
                   onChange={this.handleChange}

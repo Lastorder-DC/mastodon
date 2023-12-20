@@ -7,14 +7,14 @@ class ActivityPub::ActorSerializer < ActivityPub::Serializer
   context :security
 
   context_extensions :manually_approves_followers, :featured, :also_known_as,
-                     :moved_to, :property_value, :discoverable, :olm, :suspended,
-                     :memorial, :indexable
+                     :moved_to, :property_value, :discoverable, :olm, :suspended, :searchable_by, :subscribable_by,
+                     :other_setting, :memorial, :indexable
 
   attributes :id, :type, :following, :followers,
              :inbox, :outbox, :featured, :featured_tags,
              :preferred_username, :name, :summary,
              :url, :manually_approves_followers,
-             :discoverable, :indexable, :published, :memorial
+             :discoverable, :indexable, :published, :memorial, :searchable_by, :subscribable_by, :other_setting
 
   has_one :public_key, serializer: ActivityPub::PublicKeySerializer
 
@@ -96,19 +96,27 @@ class ActivityPub::ActorSerializer < ActivityPub::Serializer
   end
 
   def discoverable
-    object.suspended? ? false : (object.discoverable || false)
+    if object.local?
+      object.user&.setting_discoverable_local ? false : original_discoverable
+    else
+      original_discoverable
+    end
+  end
+
+  def original_discoverable
+    object.unavailable? ? false : (object.discoverable || false)
   end
 
   def indexable
-    object.suspended? ? false : (object.indexable || false)
+    object.unavailable? ? false : (object.indexable || false)
   end
 
   def name
-    object.suspended? ? object.username : (object.display_name.presence || object.username)
+    object.unavailable? ? object.username : (object.display_name.presence || object.username)
   end
 
   def summary
-    object.suspended? ? '' : account_bio_format(object)
+    object.unavailable? ? '' : account_bio_format(object)
   end
 
   def icon
@@ -132,23 +140,23 @@ class ActivityPub::ActorSerializer < ActivityPub::Serializer
   end
 
   def avatar_exists?
-    !object.suspended? && object.avatar?
+    !object.unavailable? && object.avatar?
   end
 
   def header_exists?
-    !object.suspended? && object.header?
+    !object.unavailable? && object.header?
   end
 
   def manually_approves_followers
-    object.suspended? ? false : object.locked
+    object.unavailable? ? false : object.locked
   end
 
   def virtual_tags
-    object.suspended? ? [] : (object.emojis + object.tags)
+    object.unavailable? ? [] : (object.emojis + object.tags)
   end
 
   def virtual_attachments
-    object.suspended? ? [] : object.fields
+    object.unavailable? ? [] : object.fields
   end
 
   def moved_to
@@ -156,15 +164,34 @@ class ActivityPub::ActorSerializer < ActivityPub::Serializer
   end
 
   def moved?
-    !object.suspended? && object.moved?
+    !object.unavailable? && object.moved?
   end
 
   def also_known_as?
-    !object.suspended? && !object.also_known_as.empty?
+    !object.unavailable? && !object.also_known_as.empty?
   end
 
   def published
     object.created_at.midnight.iso8601
+  end
+
+  def searchable_by
+    ActivityPub::TagManager.instance.account_searchable_by(object)
+  end
+
+  def subscribable_by
+    ActivityPub::TagManager.instance.subscribable_by(object)
+  end
+
+  def other_setting
+    config = object.public_settings
+    config.map do |k, v|
+      {
+        type: 'PropertyValue',
+        name: k,
+        value: v,
+      }
+    end
   end
 
   class CustomEmojiSerializer < ActivityPub::EmojiSerializer

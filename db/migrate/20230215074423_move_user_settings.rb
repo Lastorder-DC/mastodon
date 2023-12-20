@@ -7,8 +7,13 @@ class MoveUserSettings < ActiveRecord::Migration[6.1]
 
   MAPPING = {
     default_privacy: 'default_privacy',
+    default_searchability: 'default_searchability',
     default_sensitive: 'web.default_sensitive',
     default_language: 'default_language',
+    public_post_to_unlisted: 'public_post_to_unlisted',
+    reject_public_unlisted_subscription: 'reject_public_unlisted_subscription',
+    reject_unlisted_subscription: 'reject_unlisted_subscription',
+    send_without_domain_blocks: 'send_without_domain_blocks',
     noindex: 'noindex',
     theme: 'theme',
     trends: 'web.trends',
@@ -17,6 +22,7 @@ class MoveUserSettings < ActiveRecord::Migration[6.1]
     delete_modal: 'web.delete_modal',
     auto_play_gif: 'web.auto_play',
     display_media: 'web.display_media',
+    display_media_expand: 'web.display_media_expand',
     expand_spoilers: 'web.expand_content_warnings',
     reduce_motion: 'web.reduce_motion',
     disable_swiping: 'web.disable_swiping',

@@ -4,12 +4,16 @@ class SearchQueryTransformer < Parslet::Transform
   SUPPORTED_PREFIXES = %w(
     has
     is
+    my
     language
     from
     before
     after
     during
     in
+    domain
+    order
+    searchability
   ).freeze
 
   class Query
@@ -18,6 +22,7 @@ class SearchQueryTransformer < Parslet::Transform
 
       @clauses = clauses
       @options = options
+      @searchability = options[:searchability]&.to_sym || :public
 
       flags_from_clauses!
     end
@@ -32,10 +37,22 @@ class SearchQueryTransformer < Parslet::Transform
       search
     end
 
+    def order_by
+      return @order_by if @order_by
+
+      @order_by = 'desc'
+      order_clauses.each { |clause| @order_by = clause.term }
+      @order_by
+    end
+
+    def valid
+      must_clauses.any? || must_not_clauses.any? || filter_clauses.any?
+    end
+
     private
 
     def clauses_by_operator
-      @clauses_by_operator ||= @clauses.compact.chunk(&:operator).to_h
+      @clauses_by_operator ||= @clauses.compact.group_by(&:operator).to_h
     end
 
     def flags_from_clauses!
@@ -54,45 +71,140 @@ class SearchQueryTransformer < Parslet::Transform
       clauses_by_operator.fetch(:filter, [])
     end
 
+    def order_clauses
+      clauses_by_operator.fetch(:order, [])
+    end
+
     def indexes
       case @flags['in']
       when 'library'
         [StatusesIndex]
+      when 'public'
+        [PublicStatusesIndex]
       else
-        [PublicStatusesIndex, StatusesIndex]
+        @options[:current_account].user&.setting_use_public_index ? [PublicStatusesIndex, StatusesIndex] : [StatusesIndex]
       end
     end
 
     def default_filter
+      definition_should = [
+        public_index,
+        searchability_limited,
+      ]
+      definition_should << searchability_public if %i(public public_unlisted).include?(@searchability)
+      definition_should << searchability_private if %i(public public_unlisted unlisted private).include?(@searchability)
+      definition_should << searchable_by_me if %i(public public_unlisted unlisted private direct).include?(@searchability)
+      definition_should << self_posts if %i(public public_unlisted unlisted private direct).exclude?(@searchability)
+
       {
         bool: {
-          should: [
-            {
-              term: {
-                _index: PublicStatusesIndex.index_name,
-              },
-            },
-            {
-              bool: {
-                must: [
-                  {
-                    term: {
-                      _index: StatusesIndex.index_name,
-                    },
-                  },
-                  {
-                    term: {
-                      searchable_by: @options[:current_account].id,
-                    },
-                  },
-                ],
-              },
-            },
-          ],
-
+          should: definition_should,
           minimum_should_match: 1,
         },
       }
+    end
+
+    def public_index
+      {
+        term: {
+          _index: PublicStatusesIndex.index_name,
+        },
+      }
+    end
+
+    def searchable_by_me
+      {
+        bool: {
+          must: [
+            {
+              term: { _index: StatusesIndex.index_name },
+            },
+            {
+              term: { searchable_by: @options[:current_account].id },
+            },
+          ],
+          must_not: [
+            {
+              term: { searchability: 'limited' },
+            },
+          ],
+        },
+      }
+    end
+
+    def self_posts
+      {
+        bool: {
+          must: [
+            {
+              term: { _index: StatusesIndex.index_name },
+            },
+            {
+              term: { account_id: @options[:current_account].id },
+            },
+          ],
+        },
+      }
+    end
+
+    def searchability_public
+      {
+        bool: {
+          must: [
+            {
+              term: { _index: StatusesIndex.index_name },
+            },
+            {
+              term: { searchability: 'public' },
+            },
+          ],
+        },
+      }
+    end
+
+    def searchability_private
+      {
+        bool: {
+          must: [
+            {
+              term: { _index: StatusesIndex.index_name },
+            },
+            {
+              term: { searchability: 'private' },
+            },
+            {
+              terms: { account_id: following_account_ids },
+            },
+          ],
+        },
+      }
+    end
+
+    def searchability_limited
+      {
+        bool: {
+          must: [
+            {
+              term: { _index: StatusesIndex.index_name },
+            },
+            {
+              term: { searchability: 'limited' },
+            },
+            {
+              term: { account_id: @options[:current_account].id },
+            },
+          ],
+        },
+      }
+    end
+
+    def following_account_ids
+      return @following_account_ids if defined?(@following_account_ids)
+
+      account_exists_sql     = Account.where('accounts.id = follows.target_account_id').where(searchability: %w(public public_unlisted private)).reorder(nil).select(1).to_sql
+      status_exists_sql      = Status.where('statuses.account_id = follows.target_account_id').where(reblog_of_id: nil).where(searchability: %w(public public_unlisted private)).reorder(nil).select(1).to_sql
+      following_accounts     = Follow.where(account_id: @options[:current_account].id).merge(Account.where("EXISTS (#{account_exists_sql})").or(Account.where("EXISTS (#{status_exists_sql})")))
+      @following_account_ids = following_accounts.pluck(:target_account_id)
     end
   end
 
@@ -123,7 +235,9 @@ class SearchQueryTransformer < Parslet::Transform
       if @term.start_with?('#')
         { match: { tags: { query: @term, operator: 'and' } } }
       else
-        { multi_match: { type: 'most_fields', query: @term, fields: ['text', 'text.stemmed'], operator: 'and' } }
+        # Memo for checking when manually merge
+        # { multi_match: { type: 'most_fields', query: @term, fields: ['text', 'text.stemmed'], operator: 'and' } }
+        { match_phrase: { text: { query: @term } } }
       end
     end
   end
@@ -144,11 +258,12 @@ class SearchQueryTransformer < Parslet::Transform
   class PrefixClause
     attr_reader :operator, :prefix, :term
 
-    def initialize(prefix, operator, term, options = {})
+    def initialize(prefix, operator, term, options = {}) # rubocop:disable Metrics/CyclomaticComplexity
       @prefix = prefix
       @negated = operator == '-'
       @options = options
       @operator = :filter
+      @statuses_index_only = false
 
       case prefix
       when 'has', 'is'
@@ -163,6 +278,10 @@ class SearchQueryTransformer < Parslet::Transform
         @filter = :account_id
         @type = :term
         @term = account_id_from_term(term)
+      when 'domain'
+        @filter = :domain
+        @type = :term
+        @term = domain_from_term(term)
       when 'before'
         @filter = :created_at
         @type = :range
@@ -178,6 +297,40 @@ class SearchQueryTransformer < Parslet::Transform
       when 'in'
         @operator = :flag
         @term = term
+      when 'my'
+        @type = :term
+        @term = @options[:current_account]&.id
+        @statuses_index_only = true
+        case term
+        when 'favourited', 'favorited', 'fav'
+          @filter = :favourited_by
+        when 'boosted', 'bt'
+          @filter = :reblogged_by
+        when 'replied', 'mentioned', 're'
+          @filter = :mentioned_by
+        when 'referenced', 'ref'
+          @filter = :referenced_by
+        when 'emoji_reacted', 'stamped', 'stamp'
+          @filter = :emoji_reacted_by
+        when 'bookmarked', 'bm'
+          @filter = :bookmarked_by
+        when 'categoried', 'bmc'
+          @filter = :bookmark_categoried_by
+        when 'voted', 'vote'
+          @filter = :voted_by
+        when 'interacted', 'act'
+          @filter = :searchable_by
+        else
+          raise "Unknown prefix: my:#{term}"
+        end
+      when 'order'
+        @operator = :order
+        @term = case term
+                when 'asc'
+                  term
+                else
+                  'desc'
+                end
       else
         raise "Unknown prefix: #{prefix}"
       end
@@ -203,6 +356,12 @@ class SearchQueryTransformer < Parslet::Transform
       # If the account is not found, we want to return empty results, so return
       # an ID that does not exist
       account&.id || -1
+    end
+
+    def domain_from_term(term)
+      return '' if ['local', 'me', Rails.configuration.x.local_domain].include?(term)
+
+      term
     end
 
     def language_code_from_term(term)
@@ -245,6 +404,6 @@ class SearchQueryTransformer < Parslet::Transform
   end
 
   rule(query: sequence(:clauses)) do
-    Query.new(clauses, current_account: current_account)
+    Query.new(clauses, current_account: current_account, searchability: searchability)
   end
 end

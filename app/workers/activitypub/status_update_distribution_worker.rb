@@ -8,22 +8,46 @@ class ActivityPub::StatusUpdateDistributionWorker < ActivityPub::DistributionWor
     @status  = Status.find(status_id)
     @account = @status.account
 
-    distribute!
+    if @status.limited_visibility?
+      distribute_limited!
+    else
+      distribute!
+    end
   rescue ActiveRecord::RecordNotFound
     true
   end
 
   protected
 
-  def activity
+  def inboxes_for_limited
+    @inboxes_for_limited ||= @status.mentioned_accounts.inboxes
+  end
+
+  def build_activity(for_misskey: false, for_friend: false)
     ActivityPub::ActivityPresenter.new(
       id: [ActivityPub::TagManager.instance.uri_for(@status), '#updates/', @status.edited_at.to_i].join,
       type: 'Update',
       actor: ActivityPub::TagManager.instance.uri_for(@status.account),
       published: @status.edited_at,
-      to: ActivityPub::TagManager.instance.to(@status),
-      cc: ActivityPub::TagManager.instance.cc(@status),
+      to: for_friend ? ActivityPub::TagManager.instance.to_for_friend(@status) : ActivityPub::TagManager.instance.to(@status),
+      cc: for_misskey ? ActivityPub::TagManager.instance.cc_for_misskey(@status) : ActivityPub::TagManager.instance.cc(@status),
       virtual_object: @status
     )
+  end
+
+  def activity
+    build_activity
+  end
+
+  def activity_for_misskey
+    build_activity(for_misskey: true)
+  end
+
+  def activity_for_friend
+    build_activity(for_friend: true)
+  end
+
+  def always_sign
+    @status.limited_visibility?
   end
 end

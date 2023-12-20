@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 describe SearchQueryTransformer do
-  subject { described_class.new.apply(parser, current_account: account) }
+  subject { described_class.new.apply(parser, current_account: account, searchability: :public) }
 
   let(:account) { Fabricate(:account) }
   let(:parser) { SearchQueryParser.new.parse(query) }

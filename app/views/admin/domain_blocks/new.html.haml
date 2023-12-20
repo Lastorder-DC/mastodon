@@ -11,6 +11,10 @@
     .fields-row__column.fields-row__column-6.fields-group
       = f.input :severity, collection: DomainBlock.severities.keys, wrapper: :with_label, include_blank: false, label_method: ->(type) { t(".severity.#{type}") }, hint: t('.severity.desc_html')
 
+  = render 'domain_block_list', f: f
+
+  %h4= I18n.t('admin.domain_blocks.headers.mastodon_default')
+
   .fields-group
     = f.input :reject_media, as: :boolean, wrapper: :with_label, label: I18n.t('admin.domain_blocks.reject_media'), hint: I18n.t('admin.domain_blocks.reject_media_hint')
 
@@ -25,6 +29,12 @@
 
   .field-group
     = f.input :public_comment, wrapper: :with_label, label: I18n.t('admin.domain_blocks.public_comment'), hint: t('admin.domain_blocks.public_comment_hint'), as: :string
+
+  .fields-group
+    = f.input :hidden, as: :boolean, wrapper: :with_label, label: I18n.t('admin.domain_blocks.hidden'), hint: I18n.t('admin.domain_blocks.hidden_hint')
+
+  .fields-group
+    = f.input :hidden_anonymous, kmyblue: true, as: :boolean, wrapper: :with_label, label: I18n.t('admin.domain_blocks.hidden_anonymous'), hint: I18n.t('admin.domain_blocks.hidden_anonymous_hint')
 
   .actions
     = f.button :button, t('.create'), type: :submit

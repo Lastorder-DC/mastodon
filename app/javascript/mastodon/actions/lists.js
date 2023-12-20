@@ -1,3 +1,5 @@
+// Kmyblue tracking marker: copied circles.js, antennas.js
+
 import api from '../api';
 
 import { showAlertForError } from './alerts';
@@ -151,10 +153,15 @@ export const createListFail = error => ({
   error,
 });
 
-export const updateList = (id, title, shouldReset, isExclusive, replies_policy) => (dispatch, getState) => {
+export const updateList = (id, title, shouldReset, isExclusive, replies_policy, notify) => (dispatch, getState) => {
   dispatch(updateListRequest(id));
 
-  api(getState).put(`/api/v1/lists/${id}`, { title, replies_policy, exclusive: typeof isExclusive === 'undefined' ? undefined : !!isExclusive }).then(({ data }) => {
+  api(getState).put(`/api/v1/lists/${id}`, {
+    title,
+    replies_policy,
+    exclusive: typeof isExclusive === 'undefined' ? undefined : !!isExclusive,
+    notify: typeof notify === 'undefined' ? undefined : !!notify,
+  }).then(({ data }) => {
     dispatch(updateListSuccess(data));
 
     if (shouldReset) {
@@ -238,7 +245,6 @@ export const fetchListSuggestions = q => (dispatch, getState) => {
   const params = {
     q,
     resolve: false,
-    limit: 4,
     following: true,
   };
 

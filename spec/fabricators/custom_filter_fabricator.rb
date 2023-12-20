@@ -5,4 +5,6 @@ Fabricator(:custom_filter) do
   expires_at nil
   phrase     'discourse'
   context    %w(home notifications)
+  exclude_follows false
+  exclude_localusers false
 end

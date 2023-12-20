@@ -11,6 +11,7 @@ class SearchService < BaseService
     @offset    = options[:type].blank? ? 0 : options[:offset].to_i
     @resolve   = options[:resolve] || false
     @following = options[:following] || false
+    @searchability = options[:searchability] || account&.user&.setting_default_searchability_of_search.to_s || 'public'
 
     default_results.tap do |results|
       next if @query.blank? || @limit.zero?
@@ -48,7 +49,8 @@ class SearchService < BaseService
       offset: @offset,
       account_id: @options[:account_id],
       min_id: @options[:min_id],
-      max_id: @options[:max_id]
+      max_id: @options[:max_id],
+      searchability: @searchability
     )
   end
 

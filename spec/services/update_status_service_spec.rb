@@ -23,11 +23,11 @@ RSpec.describe UpdateStatusService, type: :service do
   end
 
   context 'when text changes' do
-    let!(:status) { Fabricate(:status, text: 'Foo') }
+    let(:status) { Fabricate(:status, text: 'Foo') }
     let(:preview_card) { Fabricate(:preview_card) }
 
     before do
-      status.preview_cards << preview_card
+      PreviewCardsStatus.create(status: status, preview_card: preview_card)
       subject.call(status, status.account_id, text: 'Bar')
     end
 
@@ -45,11 +45,11 @@ RSpec.describe UpdateStatusService, type: :service do
   end
 
   context 'when content warning changes' do
-    let!(:status) { Fabricate(:status, text: 'Foo', spoiler_text: '') }
+    let(:status) { Fabricate(:status, text: 'Foo', spoiler_text: '') }
     let(:preview_card) { Fabricate(:preview_card) }
 
     before do
-      status.preview_cards << preview_card
+      PreviewCardsStatus.create(status: status, preview_card: preview_card)
       subject.call(status, status.account_id, text: 'Foo', spoiler_text: 'Bar')
     end
 
@@ -111,7 +111,7 @@ RSpec.describe UpdateStatusService, type: :service do
     end
   end
 
-  context 'when poll changes' do
+  context 'when poll changes', :sidekiq_fake do
     let(:account) { Fabricate(:account) }
     let!(:status) { Fabricate(:status, text: 'Foo', account: account, poll_attributes: { options: %w(Foo Bar), account: account, multiple: false, hide_totals: false, expires_at: 7.days.from_now }) }
     let!(:poll)   { status.poll }
@@ -120,9 +120,7 @@ RSpec.describe UpdateStatusService, type: :service do
     before do
       status.update(poll: poll)
       VoteService.new.call(voter, poll, [0])
-      Sidekiq::Testing.fake! do
-        subject.call(status, status.account_id, text: 'Foo', poll: { options: %w(Bar Baz Foo), expires_in: 5.days.to_i })
-      end
+      subject.call(status, status.account_id, text: 'Foo', poll: { options: %w(Bar Baz Foo), expires_in: 5.days.to_i })
     end
 
     it 'updates poll' do
@@ -166,6 +164,39 @@ RSpec.describe UpdateStatusService, type: :service do
     end
   end
 
+  context 'when personal_limited mentions in text change' do
+    let!(:account) { Fabricate(:account) }
+    let!(:bob) { Fabricate(:account, username: 'bob') }
+    let!(:status) { PostStatusService.new.call(account, text: 'Hello', visibility: 'circle', circle_id: Fabricate(:circle, account: account).id) }
+
+    before do
+      subject.call(status, status.account_id, text: 'Hello @bob')
+    end
+
+    it 'changes mentions' do
+      expect(status.active_mentions.pluck(:account_id)).to eq [bob.id]
+    end
+
+    it 'changes visibilities' do
+      expect(status.visibility).to eq 'limited'
+      expect(status.limited_scope).to eq 'circle'
+    end
+  end
+
+  context 'when personal_limited in text change' do
+    let!(:account) { Fabricate(:account) }
+    let!(:status) { PostStatusService.new.call(account, text: 'Hello', visibility: 'circle', circle_id: Fabricate(:circle, account: account).id) }
+
+    before do
+      subject.call(status, status.account_id, text: 'AAA')
+    end
+
+    it 'not changing visibilities' do
+      expect(status.visibility).to eq 'limited'
+      expect(status.limited_scope).to eq 'personal'
+    end
+  end
+
   context 'when hashtags in text change' do
     let!(:account) { Fabricate(:account) }
     let!(:status) { PostStatusService.new.call(account, text: 'Hello #foo') }
@@ -184,5 +215,104 @@ RSpec.describe UpdateStatusService, type: :service do
     allow(ActivityPub::DistributionWorker).to receive(:perform_async)
     subject.call(status, status.account_id, text: 'Bar')
     expect(ActivityPub::DistributionWorker).to have_received(:perform_async)
+  end
+
+  describe 'ng word is set' do
+    let(:account) { Fabricate(:account) }
+    let(:status) { PostStatusService.new.call(account, text: 'ohagi') }
+
+    it 'hit ng words' do
+      text = 'ng word test'
+      Form::AdminSettings.new(ng_words: 'test').save
+
+      expect { subject.call(status, status.account_id, text: text) }.to raise_error(Mastodon::ValidationError)
+    end
+
+    it 'not hit ng words' do
+      text = 'ng word aiueo'
+      Form::AdminSettings.new(ng_words: 'test').save
+
+      status2 = subject.call(status, status.account_id, text: text)
+
+      expect(status2).to be_persisted
+      expect(status2.text).to eq text
+    end
+
+    it 'hit ng words for mention' do
+      Fabricate(:account, username: 'ohagi', domain: nil)
+      text = 'ng word test @ohagi'
+      Form::AdminSettings.new(ng_words_for_stranger_mention: 'test', stranger_mention_from_local_ng: '1').save
+
+      expect { subject.call(status, status.account_id, text: text) }.to raise_error(Mastodon::ValidationError)
+      expect(status.reload.text).to_not eq text
+      expect(status.mentioned_accounts.pluck(:username)).to_not include 'ohagi'
+    end
+
+    it 'hit ng words for mention but local posts are not checked' do
+      Fabricate(:account, username: 'ohagi', domain: nil)
+      text = 'ng word test @ohagi'
+      Form::AdminSettings.new(ng_words_for_stranger_mention: 'test', stranger_mention_from_local_ng: '0').save
+
+      status2 = subject.call(status, status.account_id, text: text)
+
+      expect(status2).to be_persisted
+      expect(status2.text).to eq text
+    end
+
+    it 'hit ng words for mention to follower' do
+      mentioned = Fabricate(:account, username: 'ohagi', domain: nil)
+      mentioned.follow!(account)
+      text = 'ng word test @ohagi'
+      Form::AdminSettings.new(ng_words_for_stranger_mention: 'test', stranger_mention_from_local_ng: '1').save
+
+      status2 = subject.call(status, status.account_id, text: text)
+
+      expect(status2).to be_persisted
+      expect(status2.text).to eq text
+    end
+
+    it 'hit ng words for reply' do
+      text = 'ng word test'
+      Form::AdminSettings.new(ng_words_for_stranger_mention: 'test', stranger_mention_from_local_ng: '1').save
+
+      status = PostStatusService.new.call(account, text: 'hello', thread: Fabricate(:status))
+
+      expect { subject.call(status, status.account_id, text: text) }.to raise_error(Mastodon::ValidationError)
+      expect(status.reload.text).to_not eq text
+    end
+
+    it 'hit ng words for reply to follower' do
+      mentioned = Fabricate(:account, username: 'ohagi', domain: nil)
+      mentioned.follow!(account)
+      text = 'ng word test'
+      Form::AdminSettings.new(ng_words_for_stranger_mention: 'test', stranger_mention_from_local_ng: '1').save
+
+      status = PostStatusService.new.call(account, text: 'hello', thread: Fabricate(:status, account: mentioned))
+
+      status = subject.call(status, status.account_id, text: text)
+
+      expect(status).to be_persisted
+      expect(status.text).to eq text
+    end
+
+    it 'using hashtag under limit' do
+      text = '#a #b'
+      Form::AdminSettings.new(post_hash_tags_max: 2).save
+
+      subject.call(status, status.account_id, text: text)
+
+      expect(status.reload.tags.count).to eq 2
+      expect(status.text).to eq text
+    end
+
+    it 'using hashtag over limit' do
+      text = '#a #b #c'
+      Form::AdminSettings.new(post_hash_tags_max: 2).save
+
+      expect { subject.call(status, status.account_id, text: text) }.to raise_error Mastodon::ValidationError
+
+      expect(status.reload.tags.count).to eq 0
+      expect(status.text).to_not eq text
+    end
   end
 end

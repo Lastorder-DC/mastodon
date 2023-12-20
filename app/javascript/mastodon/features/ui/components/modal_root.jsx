@@ -11,6 +11,11 @@ import {
   EmbedModal,
   ListEditor,
   ListAdder,
+  AntennaEditor,
+  AntennaAdder,
+  CircleEditor,
+  CircleAdder,
+  BookmarkCategoryAdder,
   CompareHistoryModal,
   FilterModal,
   InteractionModal,
@@ -45,8 +50,13 @@ export const MODAL_COMPONENTS = {
   'ACTIONS': () => Promise.resolve({ default: ActionsModal }),
   'EMBED': EmbedModal,
   'LIST_EDITOR': ListEditor,
+  'ANTENNA_EDITOR': AntennaEditor,
+  'CIRCLE_EDITOR': CircleEditor,
   'FOCAL_POINT': () => Promise.resolve({ default: FocalPointModal }),
   'LIST_ADDER': ListAdder,
+  'ANTENNA_ADDER': AntennaAdder,
+  'CIRCLE_ADDER': CircleAdder,
+  'BOOKMARK_CATEGORY_ADDER': BookmarkCategoryAdder,
   'COMPARE_HISTORY': CompareHistoryModal,
   'FILTER': FilterModal,
   'SUBSCRIBED_LANGUAGES': SubscribedLanguagesModal,
@@ -117,7 +127,7 @@ export default class ModalRoot extends PureComponent {
             <BundleContainer fetchComponent={MODAL_COMPONENTS[type]} loading={this.renderLoading(type)} error={this.renderError} renderDelay={200}>
               {(SpecificComponent) => {
                 const ref = typeof SpecificComponent !== 'function' ? this.setModalRef : undefined;
-                return <SpecificComponent {...props} onChangeBackgroundColor={this.setBackgroundColor} onClose={this.handleClose} ref={ref} />
+                return <SpecificComponent {...props} onChangeBackgroundColor={this.setBackgroundColor} onClose={this.handleClose} ref={ref} />;
               }}
             </BundleContainer>
 

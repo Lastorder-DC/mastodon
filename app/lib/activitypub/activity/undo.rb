@@ -9,7 +9,7 @@ class ActivityPub::Activity::Undo < ActivityPub::Activity
       undo_accept
     when 'Follow'
       undo_follow
-    when 'Like'
+    when 'Like', 'EmojiReaction', 'EmojiReact'
       undo_like
     when 'Block'
       undo_block
@@ -87,6 +87,8 @@ class ActivityPub::Activity::Undo < ActivityPub::Activity
   end
 
   def undo_follow
+    return remove_follow_from_friend if friend_follow?
+
     target_account = account_from_uri(target_uri)
 
     return if target_account.nil? || !target_account.local?
@@ -100,7 +102,19 @@ class ActivityPub::Activity::Undo < ActivityPub::Activity
     end
   end
 
-  def undo_like
+  def remove_follow_from_friend
+    friend.destroy_without_signal!
+  end
+
+  def friend
+    @friend ||= FriendDomain.find_by(domain: @account.domain) if @account.domain.present? && @object['object'] == ActivityPub::TagManager::COLLECTIONS[:public]
+  end
+
+  def friend_follow?
+    friend.present?
+  end
+
+  def undo_like_original
     status = status_from_uri(target_uri)
 
     return if status.nil? || !status.account.local?
@@ -110,6 +124,61 @@ class ActivityPub::Activity::Undo < ActivityPub::Activity
       favourite&.destroy
     else
       delete_later!(object_uri)
+    end
+  end
+
+  def undo_like
+    @original_status = status_from_uri(target_uri)
+
+    return if @original_status.nil?
+
+    if shortcode.present?
+      emoji_tag = @object['tag'].is_a?(Array) ? @object['tag']&.first : @object['tag']
+
+      emoji = nil
+      if emoji_tag.present? && emoji_tag['id'].present?
+        domain = URI.split(emoji_tag['id'])[2]
+        domain = nil if domain == Rails.configuration.x.local_domain || domain == Rails.configuration.x.web_domain
+        emoji = CustomEmoji.find_by(shortcode: shortcode, domain: domain) if emoji_tag.present? && emoji_tag['id'].present?
+      end
+
+      emoji_reaction = @original_status.emoji_reactions.where(account: @account, name: shortcode, custom_emoji: emoji).first
+
+      if emoji_reaction
+        emoji_reaction.destroy
+        write_stream(emoji_reaction)
+      end
+    else
+      undo_like_original
+    end
+  end
+
+  def write_stream(emoji_reaction)
+    emoji_group = @original_status.emoji_reactions_grouped_by_name
+                                  .find { |reaction_group| reaction_group['name'] == emoji_reaction.name && (!reaction_group.key?(:domain) || reaction_group['domain'] == emoji_reaction.custom_emoji&.domain) }
+    if emoji_group
+      emoji_group['status_id'] = @original_status.id.to_s
+    else
+      # name: emoji_reaction.name, count: 0, domain: emoji_reaction.domain
+      emoji_group = { 'name' => emoji_reaction.name, 'count' => 0, 'account_ids' => [], 'status_id' => @original_status.id.to_s }
+      emoji_group['domain'] = emoji_reaction.custom_emoji.domain if emoji_reaction.custom_emoji
+    end
+    DeliveryEmojiReactionWorker.perform_async(render_emoji_reaction(emoji_group), @original_status.id, emoji_reaction.account_id) if @original_status.local? || Setting.streaming_other_servers_emoji_reaction
+  end
+
+  def render_emoji_reaction(emoji_group)
+    @render_emoji_reaction ||= Oj.dump(event: :emoji_reaction, payload: emoji_group.to_json)
+  end
+
+  def shortcode
+    return @shortcode if defined?(@shortcode)
+
+    @shortcode = begin
+      if @object['_misskey_reaction'] == '⭐'
+        nil
+      else
+        @object['content']&.delete(':')
+      end
     end
   end
 

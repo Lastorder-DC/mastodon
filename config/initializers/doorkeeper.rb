@@ -99,6 +99,7 @@ Doorkeeper.configure do
                   :push,
                   :'admin:read',
                   :'admin:read:accounts',
+                  :'admin:read:media_attachments',
                   :'admin:read:reports',
                   :'admin:read:domain_allows',
                   :'admin:read:domain_blocks',
@@ -107,6 +108,7 @@ Doorkeeper.configure do
                   :'admin:read:canonical_email_blocks',
                   :'admin:write',
                   :'admin:write:accounts',
+                  :'admin:write:media_attachments',
                   :'admin:write:reports',
                   :'admin:write:domain_allows',
                   :'admin:write:domain_blocks',
@@ -169,7 +171,7 @@ Doorkeeper.configure do
   # Under some circumstances you might want to have applications auto-approved,
   # so that the user skips the authorization step.
   # For example if dealing with a trusted application.
-  skip_authorization do |resource_owner, client|
+  skip_authorization do |_resource_owner, client|
     client.application.superapp?
   end
 

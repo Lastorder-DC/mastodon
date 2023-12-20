@@ -1,5 +1,6 @@
 :ruby
   hide_show_thread ||= false
+  grouped_emoji_reactions ||= Oj.load(status.status_stat&.emoji_reactions || '', mode: :strict) || []
 
 .status{ class: "status-#{status.visibility}" }
   .status__info
@@ -23,7 +24,7 @@
         %span.display-name
           %bdi
             %strong.display-name__html.p-name.emojify= display_name(status.account, custom_emojify: true, autoplay: prefers_autoplay?)
-          = ' '
+          &nbsp;
           %span.display-name__account
             = acct(status.account)
             = fa_icon('lock') if status.account.locked?
@@ -51,6 +52,13 @@
   - if !status.in_reply_to_id.nil? && status.in_reply_to_account_id == status.account.id && !hide_show_thread
     = link_to ActivityPub::TagManager.instance.url_for(status), class: 'status__content__read-more-button', target: stream_link_target, rel: 'noopener noreferrer' do
       = t 'statuses.show_thread'
+
+  - if grouped_emoji_reactions.size.positive?
+    .status__emoji-reactions-bar
+      - grouped_emoji_reactions.each do |reaction|
+        %button.emoji-reactions-bar__button
+          %span.emojify= prerender_custom_emojis_from_hash(emoji_name_format(reaction, status), reaction)
+          %span.count= reaction['count']
 
   .status__action-bar
     %span.status__action-bar-button.icon-button.icon-button--with-counter

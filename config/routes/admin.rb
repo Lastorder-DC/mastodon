@@ -32,6 +32,9 @@ namespace :admin do
 
   resources :action_logs, only: [:index]
   resources :warning_presets, except: [:new, :show]
+  resource :ng_words, only: [:show, :create]
+  resource :sensitive_words, only: [:show, :create]
+  resource :special_instances, only: [:show, :create]
 
   resources :announcements, except: [:show] do
     member do
@@ -64,6 +67,15 @@ namespace :admin do
     member do
       post :enable
       post :disable
+    end
+  end
+
+  resources :friend_servers, only: [:index, :new, :edit, :create, :update, :destroy] do
+    member do
+      post :follow
+      post :unfollow
+      post :accept
+      post :reject
     end
   end
 
@@ -129,6 +141,14 @@ namespace :admin do
     resource :action, only: [:new, :create], controller: 'account_actions'
 
     resources :statuses, only: [:index, :show] do
+      member do
+        post :remove_history
+        post :remove_media
+        post :force_sensitive
+        post :force_cw
+        post :remove_status
+      end
+
       collection do
         post :batch
       end
@@ -148,7 +168,7 @@ namespace :admin do
     resource :role, only: [:show, :update], controller: 'users/roles'
   end
 
-  resources :custom_emojis, only: [:index, :new, :create] do
+  resources :custom_emojis, only: [:index, :new, :create, :edit, :update] do
     collection do
       post :batch
     end

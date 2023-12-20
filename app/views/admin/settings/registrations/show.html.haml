@@ -24,5 +24,8 @@
   .fields-group
     = f.input :closed_registrations_message, as: :text, wrapper: :with_block_label, input_html: { rows: 2 }
 
+  .fields-group
+    = f.input :registration_button_message, as: :text, kmyblue: true, hint: false, wrapper: :with_label, input_html: { rows: 2 }
+
   .actions
     = f.button :button, t('generic.save_changes'), type: :submit

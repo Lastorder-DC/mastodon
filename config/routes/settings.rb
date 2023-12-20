@@ -10,6 +10,7 @@ namespace :settings do
   namespace :preferences do
     resource :appearance, only: [:show, :update], controller: :appearance
     resource :notifications, only: [:show, :update]
+    resource :reaching, only: [:show, :update], controller: :reaching
     resource :other, only: [:show, :update], controller: :other
   end
 
@@ -62,6 +63,7 @@ namespace :settings do
   resource :migration, only: [:show, :create]
   resource :verification, only: :show
   resource :privacy, only: [:show, :update], controller: 'privacy'
+  resource :privacy_extra, only: [:show, :update], controller: 'privacy_extra'
 
   namespace :migration do
     resource :redirect, only: [:new, :create, :destroy]

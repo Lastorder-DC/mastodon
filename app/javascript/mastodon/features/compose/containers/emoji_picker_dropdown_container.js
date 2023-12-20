@@ -1,10 +1,15 @@
-import { Map as ImmutableMap } from 'immutable';
+import { Map as ImmutableMap, List as ImmutableList } from 'immutable';
 import { connect } from 'react-redux';
 import { createSelector } from 'reselect';
 
+import { isHideItem } from 'mastodon/initial_state';
+
 import { useEmoji } from '../../../actions/emojis';
 import { changeSetting } from '../../../actions/settings';
+import { unicodeMapping } from '../../emoji/emoji_unicode_mapping_light';
 import EmojiPickerDropdown from '../components/emoji_picker_dropdown';
+
+
 
 const perLine = 8;
 const lines   = 2;
@@ -28,20 +33,44 @@ const DEFAULTS = [
   'ok_hand',
 ];
 
-const getFrequentlyUsedEmojis = createSelector([
-  state => state.getIn(['settings', 'frequentlyUsedEmojis'], ImmutableMap()),
-], emojiCounters => {
-  let emojis = emojiCounters
-    .keySeq()
-    .sort((a, b) => emojiCounters.get(a) - emojiCounters.get(b))
-    .reverse()
-    .slice(0, perLine * lines)
-    .toArray();
+const RECENT_SIZE = DEFAULTS.length;
 
-  if (emojis.length < DEFAULTS.length) {
-    let uniqueDefaults = DEFAULTS.filter(emoji => !emojis.includes(emoji));
-    emojis = emojis.concat(uniqueDefaults.slice(0, DEFAULTS.length - emojis.length));
+const getFrequentlyUsedEmojis = createSelector([
+  state => { return {
+    emojiCounters: state.getIn(['settings', 'frequentlyUsedEmojis'], ImmutableMap()),
+    reactionDeck: state.get('reaction_deck', ImmutableList()),
+  }; },
+], data => {
+  const { emojiCounters, reactionDeck } = data;
+
+  let deckEmojis = reactionDeck
+    .toArray()
+    .map((e) => e.get('name'))
+    .filter((e) => e)
+    .map((e) => unicodeMapping[e] ? unicodeMapping[e].shortCode : e);
+  deckEmojis = [...new Set(deckEmojis)];
+
+  let emojis;
+  if (!isHideItem('recent_emojis')) {
+    emojis = emojiCounters
+      .keySeq()
+      .filter((ee) => deckEmojis.indexOf(ee) < 0)
+      .sort((a, b) => emojiCounters.get(a) - emojiCounters.get(b))
+      .reverse()
+      .slice(0, perLine * lines)
+      .toArray();
+
+    if (emojis.length < RECENT_SIZE) {
+      let uniqueDefaults = DEFAULTS.filter(emoji => !emojis.includes(emoji));
+      emojis = emojis.concat(uniqueDefaults.slice(0, RECENT_SIZE - emojis.length));
+    }
+  } else {
+    emojis = [];
   }
+
+  emojis = deckEmojis.concat(emojis);
+
+  if (emojis.length <= 0) emojis = ['+1'];
 
   return emojis;
 });

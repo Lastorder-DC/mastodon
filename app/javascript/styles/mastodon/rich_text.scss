@@ -1,3 +1,4 @@
+.account__header__bio,
 .status__content__text,
 .e-content,
 .reply-indicator__content {
@@ -9,6 +10,32 @@
 
     &:last-child {
       margin-bottom: 0;
+    }
+  }
+
+  code,
+  pre {
+    font-family: monospace;
+  }
+
+  code {
+    margin: 0 8px;
+  }
+
+  pre {
+    padding: 4px 8px;
+
+    span.ellipsis::after {
+      content: '';
+    }
+
+    span.invisible {
+      display: inline;
+      font-size: inherit;
+      line-height: inherit;
+      width: inherit;
+      height: inherit;
+      position: static;
     }
   }
 
@@ -53,6 +80,24 @@
 
   ol {
     list-style-type: decimal;
+  }
+
+  sup {
+    vertical-align: super;
+  }
+
+  .emojione {
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.2);
+    }
+  }
+}
+
+.status__content__text {
+  a.kmy-dangerous-link {
+    color: red !important;
   }
 }
 

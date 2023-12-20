@@ -5,9 +5,23 @@ import { defineMessages, injectIntl } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
+import { ReactComponent as CirclesIcon } from '@material-symbols/svg-600/outlined/account_circle-fill.svg';
+import { ReactComponent as AlternateEmailIcon } from '@material-symbols/svg-600/outlined/alternate_email.svg';
+import { ReactComponent as BookmarksIcon } from '@material-symbols/svg-600/outlined/bookmarks-fill.svg';
+import { ReactComponent as PeopleIcon } from '@material-symbols/svg-600/outlined/group.svg';
+import { ReactComponent as HomeIcon } from '@material-symbols/svg-600/outlined/home-fill.svg';
+import { ReactComponent as ListAltIcon } from '@material-symbols/svg-600/outlined/list_alt.svg';
+import { ReactComponent as MoreHorizIcon } from '@material-symbols/svg-600/outlined/more_horiz.svg';
+import { ReactComponent as PublicIcon } from '@material-symbols/svg-600/outlined/public.svg';
+import { ReactComponent as SearchIcon } from '@material-symbols/svg-600/outlined/search.svg';
+import { ReactComponent as SettingsIcon } from '@material-symbols/svg-600/outlined/settings-fill.svg';
+import { ReactComponent as StarIcon } from '@material-symbols/svg-600/outlined/star-fill.svg';
+import { ReactComponent as TagIcon } from '@material-symbols/svg-600/outlined/tag.svg';
+import { ReactComponent as AntennaIcon } from '@material-symbols/svg-600/outlined/wifi.svg';
+
 import { WordmarkLogo } from 'mastodon/components/logo';
-import NavigationPortal from 'mastodon/components/navigation_portal';
-import { timelinePreview, trendsEnabled } from 'mastodon/initial_state';
+import { NavigationPortal } from 'mastodon/components/navigation_portal';
+import { enableDtlMenu, timelinePreview, trendsEnabled, dtlTag, enableLocalTimeline, isHideItem } from 'mastodon/initial_state';
 import { transientSingleColumn } from 'mastodon/is_mobile';
 
 import ColumnLink from './column_link';
@@ -21,11 +35,15 @@ const messages = defineMessages({
   home: { id: 'tabs_bar.home', defaultMessage: 'Home' },
   notifications: { id: 'tabs_bar.notifications', defaultMessage: 'Notifications' },
   explore: { id: 'explore.title', defaultMessage: 'Explore' },
+  local: { id: 'column.local', defaultMessage: 'Local' },
+  deepLocal: { id: 'column.deep_local', defaultMessage: 'Deep' },
   firehose: { id: 'column.firehose', defaultMessage: 'Live feeds' },
   direct: { id: 'navigation_bar.direct', defaultMessage: 'Private mentions' },
   favourites: { id: 'navigation_bar.favourites', defaultMessage: 'Favorites' },
   bookmarks: { id: 'navigation_bar.bookmarks', defaultMessage: 'Bookmarks' },
   lists: { id: 'navigation_bar.lists', defaultMessage: 'Lists' },
+  antennas: { id: 'navigation_bar.antennas', defaultMessage: 'Antennas' },
+  circles: { id: 'navigation_bar.circles', defaultMessage: 'Circles' },
   preferences: { id: 'navigation_bar.preferences', defaultMessage: 'Preferences' },
   followsAndFollowers: { id: 'navigation_bar.follows_and_followers', defaultMessage: 'Follows and followers' },
   about: { id: 'navigation_bar.about', defaultMessage: 'About' },
@@ -37,7 +55,6 @@ const messages = defineMessages({
 class NavigationPanel extends Component {
 
   static contextTypes = {
-    router: PropTypes.object.isRequired,
     identity: PropTypes.object.isRequired,
   };
 
@@ -46,12 +63,22 @@ class NavigationPanel extends Component {
   };
 
   isFirehoseActive = (match, location) => {
-    return match || location.pathname.startsWith('/public');
+    return (match || location.pathname.startsWith('/public')) && !location.pathname.endsWith('/fixed');
+  };
+
+  isAntennasActive = (match, location) => {
+    return (match || location.pathname.startsWith('/antennast'));
   };
 
   render () {
     const { intl } = this.props;
     const { signedIn, disabledAccountId } = this.context.identity;
+
+    const explorer = (trendsEnabled ? (
+      <ColumnLink transparent to='/explore' icon='hashtag' iconComponent={TagIcon} text={intl.formatMessage(messages.explore)} />
+    ) : (
+      <ColumnLink transparent to='/search' icon='search' iconComponent={SearchIcon} text={intl.formatMessage(messages.search)} />
+    ));
 
     let banner = undefined;
 
@@ -72,27 +99,63 @@ class NavigationPanel extends Component {
         </div>
 
         {banner &&
-          <div class='navigation-panel__banner'>
+          <div className='navigation-panel__banner'>
             {banner}
           </div>
         }
 
         {signedIn && (
           <>
-            <ColumnLink transparent to='/home' icon='home' text={intl.formatMessage(messages.home)} />
+            <ColumnLink transparent to='/home' icon='home' iconComponent={HomeIcon} text={intl.formatMessage(messages.home)} />
             <ColumnLink transparent to='/notifications' icon={<NotificationsCounterIcon className='column-link__icon' />} text={intl.formatMessage(messages.notifications)} />
-            <FollowRequestsColumnLink />
           </>
         )}
 
-        {trendsEnabled ? (
-          <ColumnLink transparent to='/explore' icon='hashtag' text={intl.formatMessage(messages.explore)} />
-        ) : (
-          <ColumnLink transparent to='/search' icon='search' text={intl.formatMessage(messages.search)} />
+        {signedIn && enableLocalTimeline && (
+          <ColumnLink transparent to='/public/local/fixed' icon='users' iconComponent={PeopleIcon} text={intl.formatMessage(messages.local)} />
         )}
 
-        {(signedIn || timelinePreview) && (
-          <ColumnLink transparent to='/public/local' isActive={this.isFirehoseActive} icon='globe' text={intl.formatMessage(messages.firehose)} />
+        {signedIn && enableDtlMenu && dtlTag && (
+          <ColumnLink transparent to={`/tags/${dtlTag}`} icon='users' iconComponent={PeopleIcon} text={intl.formatMessage(messages.deepLocal)} />
+        )}
+
+        {!signedIn && explorer}
+
+        {signedIn && (
+          <ColumnLink transparent to='/public' isActive={this.isFirehoseActive} icon='globe' iconComponent={PublicIcon} text={intl.formatMessage(messages.firehose)} />
+        )}
+
+        {(!signedIn && timelinePreview) && (
+          <ColumnLink transparent to={enableLocalTimeline ? '/public/local' : '/public'} isActive={this.isFirehoseActive} icon='globe' iconComponent={PublicIcon} text={intl.formatMessage(messages.firehose)} />
+        )}
+
+        {signedIn && (
+          <>
+            <ListPanel />
+            <hr />
+          </>
+        )}
+
+        {signedIn && (
+          <>
+            <ColumnLink transparent to='/lists' icon='list-ul' iconComponent={ListAltIcon} text={intl.formatMessage(messages.lists)} />
+            <ColumnLink transparent to='/antennasw' icon='wifi' iconComponent={AntennaIcon} text={intl.formatMessage(messages.antennas)} isActive={this.isAntennasActive} />
+            <ColumnLink transparent to='/circles' icon='user-circle' iconComponent={CirclesIcon} text={intl.formatMessage(messages.circles)} />
+            <FollowRequestsColumnLink />
+            <ColumnLink transparent to='/conversations' icon='at' iconComponent={AlternateEmailIcon} text={intl.formatMessage(messages.direct)} />
+          </>
+        )}
+
+        {signedIn && explorer}
+
+        {signedIn && (
+          <>
+            <ColumnLink transparent to='/bookmark_categories' icon='bookmarks' iconComponent={BookmarksIcon} text={intl.formatMessage(messages.bookmarks)} />
+            { !isHideItem('favourite_menu') && <ColumnLink transparent to='/favourites' icon='star' iconComponent={StarIcon} text={intl.formatMessage(messages.favourites)} /> }
+            <hr />
+
+            <ColumnLink transparent href='/settings/preferences' icon='cog' iconComponent={SettingsIcon} text={intl.formatMessage(messages.preferences)} />
+          </>
         )}
 
         {!signedIn && (
@@ -102,24 +165,9 @@ class NavigationPanel extends Component {
           </div>
         )}
 
-        {signedIn && (
-          <>
-            <ColumnLink transparent to='/conversations' icon='at' text={intl.formatMessage(messages.direct)} />
-            <ColumnLink transparent to='/bookmarks' icon='bookmark' text={intl.formatMessage(messages.bookmarks)} />
-            <ColumnLink transparent to='/favourites' icon='star' text={intl.formatMessage(messages.favourites)} />
-            <ColumnLink transparent to='/lists' icon='list-ul' text={intl.formatMessage(messages.lists)} />
-
-            <ListPanel />
-
-            <hr />
-
-            <ColumnLink transparent href='/settings/preferences' icon='cog' text={intl.formatMessage(messages.preferences)} />
-          </>
-        )}
-
         <div className='navigation-panel__legal'>
           <hr />
-          <ColumnLink transparent to='/about' icon='ellipsis-h' text={intl.formatMessage(messages.about)} />
+          <ColumnLink transparent to='/about' icon='ellipsis-h' iconComponent={MoreHorizIcon} text={intl.formatMessage(messages.about)} />
         </div>
 
         <NavigationPortal />

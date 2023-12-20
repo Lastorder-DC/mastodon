@@ -73,4 +73,51 @@ RSpec.describe ActivityPub::Activity::Delete do
       end
     end
   end
+
+  context 'when the status is limited post and has conversation' do
+    subject { described_class.new(json, sender) }
+
+    let(:conversation) { Fabricate(:conversation, ancestor_status: status) }
+
+    before do
+      status.update(conversation: conversation, visibility: :limited)
+      status.mentions << Fabricate(:mention, silent: true, account: Fabricate(:account, protocol: :activitypub, domain: 'example.com', inbox_url: 'https://example.com/actor/inbox', shared_inbox_url: 'https://example.com/inbox'))
+      status.save
+      stub_request(:post, 'https://example.com/inbox').to_return(status: 200)
+      subject.perform
+    end
+
+    it 'forwards to parent status holder' do
+      expect(a_request(:post, 'https://example.com/inbox').with(body: hash_including({
+        type: 'Delete',
+        signature: 'foo',
+      }))).to have_been_made.once
+    end
+  end
+
+  context 'when given a friend server' do
+    subject { described_class.new(json, sender) }
+
+    before do
+      Fabricate(:friend_domain, domain: 'abc.com', inbox_url: 'https://abc.com/inbox', passive_state: :accepted)
+      stub_request(:post, 'https://abc.com/inbox')
+    end
+
+    let(:sender) { Fabricate(:account, domain: 'abc.com', url: 'https://abc.com/#actor') }
+
+    let(:json) do
+      {
+        '@context': 'https://www.w3.org/ns/activitystreams',
+        id: 'foo',
+        type: 'Delete',
+        actor: ActivityPub::TagManager.instance.uri_for(sender),
+        object: 'https://www.w3.org/ns/activitystreams#Public',
+      }.with_indifferent_access
+    end
+
+    it 'marks the friend as deleted' do
+      subject.perform
+      expect(FriendDomain.find_by(domain: 'abc.com')).to be_nil
+    end
+  end
 end

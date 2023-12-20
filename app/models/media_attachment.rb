@@ -33,6 +33,11 @@ class MediaAttachment < ApplicationRecord
   self.inheritance_column = nil
 
   include Attachmentable
+  include RoutingHelper
+
+  LOCAL_STATUS_ATTACHMENT_MAX = 4
+  LOCAL_STATUS_ATTACHMENT_MAX_WITH_POLL = 4
+  ACTIVITYPUB_STATUS_ATTACHMENT_MAX = 16
 
   enum type: { image: 0, gifv: 1, video: 2, unknown: 3, audio: 4 }
   enum processing: { queued: 0, in_progress: 1, complete: 2, failed: 3 }, _prefix: true
@@ -205,12 +210,11 @@ class MediaAttachment < ApplicationRecord
   validates :thumbnail, absence: true, if: -> { local? && !audio_or_video? }
 
   scope :attached,   -> { where.not(status_id: nil).or(where.not(scheduled_status_id: nil)) }
-  scope :unattached, -> { where(status_id: nil, scheduled_status_id: nil) }
-  scope :local,      -> { where(remote_url: '') }
-  scope :remote,     -> { where.not(remote_url: '') }
   scope :cached,     -> { remote.where.not(file_file_name: nil) }
-
-  default_scope { order(id: :asc) }
+  scope :local,      -> { where(remote_url: '') }
+  scope :ordered,    -> { order(id: :asc) }
+  scope :remote,     -> { where.not(remote_url: '') }
+  scope :unattached, -> { where(status_id: nil, scheduled_status_id: nil) }
 
   attr_accessor :skip_download
 
@@ -270,6 +274,10 @@ class MediaAttachment < ApplicationRecord
 
   def delay_processing_for_attachment?(attachment_name)
     delay_processing? && attachment_name == :file
+  end
+
+  def url
+    full_asset_url(file.url(:original))
   end
 
   before_create :set_unknown_type

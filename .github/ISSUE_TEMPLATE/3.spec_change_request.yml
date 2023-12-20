@@ -1,0 +1,28 @@
+name: 仕様変更・改善要望
+description: 既存の仕様や挙動変更の要望
+labels: [specchange]
+body:
+  - type: markdown
+    attributes:
+      value: 意図したものとは明らかに異なる挙動をしているものはバグとして、もともと仕様として決められた動きをしているものを変更したいときはこちらでお願いします
+  - type: textarea
+    attributes:
+      label: 挙動を変更してほしい機能や動作
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 現在の挙動
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 変更してほしい新しい挙動
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 必要性
+      description: この変更はあなたにとってなぜ必要でしょうか？どういった状況で使われるものですか？
+    validations:
+      required: true

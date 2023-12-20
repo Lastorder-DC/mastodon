@@ -21,6 +21,17 @@ module RecommendedComponent
   end
 end
 
+module KmyblueComponent
+  def kmyblue(_wrapper_options = nil)
+    return unless options[:kmyblue]
+
+    key = options[:kmyblue].is_a?(Symbol) ? options[:kmyblue] : :kmyblue
+    options[:label_text] = ->(raw_label_text, _required_label_text, _label_present) { safe_join([raw_label_text, ' ', content_tag(:span, I18n.t(key, scope: 'simple_form'), class: key)]) }
+
+    nil
+  end
+end
+
 module WarningHintComponent
   def warning_hint(_wrapper_options = nil)
     @warning_hint ||= begin
@@ -31,6 +42,7 @@ end
 
 SimpleForm.include_component(AppendComponent)
 SimpleForm.include_component(RecommendedComponent)
+SimpleForm.include_component(KmyblueComponent)
 SimpleForm.include_component(WarningHintComponent)
 
 SimpleForm.setup do |config|
@@ -89,6 +101,7 @@ SimpleForm.setup do |config|
 
     b.wrapper tag: :div, class: :label_input do |ba|
       ba.optional :recommended
+      ba.optional :kmyblue
       ba.use :label
 
       ba.wrapper tag: :div, class: :label_input__wrapper do |bb|
@@ -104,7 +117,18 @@ SimpleForm.setup do |config|
 
   config.wrappers :with_floating_label, class: [:input, :with_floating_label], hint_class: :field_with_hint, error_class: :field_with_errors do |b|
     b.use :html5
-    b.use :label_input, wrap_with: { tag: :div, class: :label_input }
+
+    b.wrapper tag: :div, class: :label_input do |ba|
+      ba.optional :recommended
+      ba.optional :kmyblue
+      ba.use :label
+
+      ba.wrapper tag: :div, class: :label_input__wrapper do |bb|
+        bb.use :input
+        bb.optional :append, wrap_with: { tag: :div, class: 'label_input__append' }
+      end
+    end
+
     b.use :hint,  wrap_with: { tag: :span, class: :hint }
     b.use :error, wrap_with: { tag: :span, class: :error }
   end
@@ -164,7 +188,7 @@ SimpleForm.setup do |config|
   # config.item_wrapper_class = nil
 
   # How the label text should be generated altogether with the required text.
-  config.label_text = lambda { |label, required, explicit_label| "#{label} #{required}" }
+  config.label_text = lambda { |label, required, _explicit_label| "#{label} #{required}" }
 
   # You can define the class to use on all labels. Default is nil.
   # config.label_class = nil

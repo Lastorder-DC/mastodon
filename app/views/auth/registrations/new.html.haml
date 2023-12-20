@@ -26,19 +26,22 @@
     = f.input :confirm_password, as: :string, placeholder: t('simple_form.labels.defaults.honeypot', label: t('simple_form.labels.defaults.password')), required: false, input_html: { 'aria-label': t('simple_form.labels.defaults.honeypot', label: t('simple_form.labels.defaults.password')), autocomplete: 'off' }, hint: false
     = f.input :website, as: :url, wrapper: :with_label, label: t('simple_form.labels.defaults.honeypot', label: 'Website'), required: false, input_html: { 'aria-label': t('simple_form.labels.defaults.honeypot', label: 'Website'), autocomplete: 'off' }
 
-  - if approved_registrations? && !@invite.present?
+  - if approved_registrations? && @invite.blank?
     %p.lead= t('auth.sign_up.manual_review', domain: site_hostname)
 
     .fields-group
       = f.simple_fields_for :invite_request, resource.invite_request || resource.build_invite_request do |invite_request_fields|
         = invite_request_fields.input :text, as: :text, wrapper: :with_block_label, required: Setting.require_invite_text, label: false, hint: false
 
-
   = hidden_field_tag :accept, params[:accept]
   = f.input :invite_code, as: :hidden
 
   .fields-group
     = f.input :agreement, as: :boolean, wrapper: :with_label, label: t('auth.privacy_policy_agreement_html', rules_path: about_more_path, privacy_policy_path: privacy_policy_path), required: true
+
+  - if Setting.registration_button_message.present?
+    %div
+      = Setting.registration_button_message
 
   .actions
     = f.button :button, @invite.present? ? t('auth.register') : sign_up_message, type: :submit

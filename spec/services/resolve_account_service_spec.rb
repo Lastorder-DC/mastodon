@@ -9,10 +9,12 @@ RSpec.describe ResolveAccountService, type: :service do
     stub_request(:get, 'https://example.com/.well-known/host-meta').to_return(status: 404)
     stub_request(:get, 'https://quitter.no/avatar/7477-300-20160211190340.png').to_return(request_fixture('avatar.txt'))
     stub_request(:get, 'https://ap.example.com/.well-known/webfinger?resource=acct:foo@ap.example.com').to_return(request_fixture('activitypub-webfinger.txt'))
+    stub_request(:get, 'https://ap.example.com/.well-known/nodeinfo').to_return(body: '{}')
     stub_request(:get, 'https://ap.example.com/users/foo').to_return(request_fixture('activitypub-actor.txt'))
     stub_request(:get, 'https://ap.example.com/users/foo.atom').to_return(request_fixture('activitypub-feed.txt'))
     stub_request(:get, %r{https://ap\.example\.com/users/foo/\w+}).to_return(status: 404)
     stub_request(:get, 'https://example.com/.well-known/webfinger?resource=acct:hoge@example.com').to_return(status: 410)
+    stub_request(:get, 'https://example.com/.well-known/nodeinfo').to_return(status: 410)
   end
 
   context 'when using skip_webfinger' do
@@ -135,12 +137,27 @@ RSpec.describe ResolveAccountService, type: :service do
     before do
       webfinger = { subject: 'acct:foo@evil.example.com', links: [{ rel: 'self', href: 'https://ap.example.com/users/foo', type: 'application/activity+json' }] }
       stub_request(:get, 'https://redirected.example.com/.well-known/webfinger?resource=acct:Foo@redirected.example.com').to_return(body: Oj.dump(webfinger), headers: { 'Content-Type': 'application/jrd+json' })
+      stub_request(:get, 'https://redirected.example.com/.well-known/nodeinfo').to_return(body: '{}')
       webfinger2 = { subject: 'acct:foo@ap.example.com', links: [{ rel: 'self', href: 'https://ap.example.com/users/foo', type: 'application/activity+json' }] }
       stub_request(:get, 'https://evil.example.com/.well-known/webfinger?resource=acct:foo@evil.example.com').to_return(body: Oj.dump(webfinger2), headers: { 'Content-Type': 'application/jrd+json' })
+      stub_request(:get, 'https://evil.example.com/.well-known/nodeinfo').to_return(body: '{}')
     end
 
     it 'does not return a new remote account' do
       expect(subject.call('Foo@redirected.example.com')).to be_nil
+    end
+  end
+
+  context 'with webfinger response subject missing a host value' do
+    let(:body) { Oj.dump({ subject: 'user@' }) }
+    let(:url) { 'https://host.example/.well-known/webfinger?resource=acct:user@host.example' }
+
+    before do
+      stub_request(:get, url).to_return(status: 200, body: body)
+    end
+
+    it 'returns nil with incomplete subject in response' do
+      expect(subject.call('user@host.example')).to be_nil
     end
   end
 

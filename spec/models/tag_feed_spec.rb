@@ -59,12 +59,78 @@ describe TagFeed, type: :service do
       expect(results).to_not include status_tagged_with_cats
     end
 
+    it 'can restrict to local but local timeline is disabled' do
+      Form::AdminSettings.new(enable_local_timeline: '0').save
+      results = described_class.new(tag_cats, nil, any: [tag_dogs.name], local: true).get(20)
+      expect(results).to_not include status_tagged_with_cats
+    end
+
     it 'allows replies to be included' do
       original = Fabricate(:status)
       status = Fabricate(:status, tags: [tag_cats], in_reply_to_id: original.id)
 
       results = described_class.new(tag_cats, nil).get(20)
       expect(results).to include(status)
+    end
+
+    it 'public_unlisted post returns' do
+      status_tagged_with_cats.update(visibility: :public_unlisted)
+      results = described_class.new(tag_cats, nil).get(20)
+      expect(results).to include status_tagged_with_cats
+    end
+
+    it 'unlisted post not returns' do
+      status_tagged_with_cats.update(visibility: :unlisted)
+      results = described_class.new(tag_cats, nil).get(20)
+      expect(results).to_not include status_tagged_with_cats
+    end
+
+    it 'unlisted post not returns with account' do
+      status_tagged_with_cats.update(visibility: :unlisted)
+      results = described_class.new(tag_cats, account).get(20)
+      expect(results).to_not include status_tagged_with_cats
+    end
+
+    it 'unlisted/public_searchability post returns' do
+      status_tagged_with_cats.update(visibility: :unlisted, searchability: :public)
+      results = described_class.new(tag_cats, nil).get(20)
+      expect(results).to include status_tagged_with_cats
+    end
+
+    it 'unlisted/public_unlisted_searchability post returns' do
+      status_tagged_with_cats.update(visibility: :unlisted, searchability: :public_unlisted)
+      results = described_class.new(tag_cats, nil).get(20)
+      expect(results).to include status_tagged_with_cats
+    end
+
+    it 'unlisted/public_searchability post returns with account' do
+      status_tagged_with_cats.update(visibility: :unlisted, searchability: :public)
+      results = described_class.new(tag_cats, account).get(20)
+      expect(results).to include status_tagged_with_cats
+    end
+
+    it 'unlisted/public_unlisted_searchability post returns with account' do
+      status_tagged_with_cats.update(visibility: :unlisted, searchability: :public_unlisted)
+      results = described_class.new(tag_cats, account).get(20)
+      expect(results).to include status_tagged_with_cats
+    end
+
+    it 'private post not returns' do
+      status_tagged_with_cats.update(visibility: :private, searchability: :public)
+      results = described_class.new(tag_cats, nil).get(20)
+      expect(results).to_not include status_tagged_with_cats
+    end
+
+    it 'private, public_unlisted post not returns' do
+      status_tagged_with_cats.update(visibility: :private, searchability: :public_unlisted)
+      results = described_class.new(tag_cats, nil).get(20)
+      expect(results).to_not include status_tagged_with_cats
+    end
+
+    it 'private post not returns with account' do
+      status_tagged_with_cats.update(visibility: :private, searchability: :public)
+      results = described_class.new(tag_cats, account).get(20)
+      expect(results).to_not include status_tagged_with_cats
     end
   end
 end

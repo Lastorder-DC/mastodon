@@ -29,6 +29,30 @@
   .fields-group
     = f.input :noindex, as: :boolean, wrapper: :with_label, label: t('admin.settings.default_noindex.title'), hint: t('admin.settings.default_noindex.desc_html')
 
+  %h4= t('admin.settings.discovery.emoji_reactions')
+
+  .fields-group
+    = f.input :enable_emoji_reaction, as: :boolean, wrapper: :with_label, kmyblue: true, hint: false
+
+  .fields-group
+    = f.input :receive_other_servers_emoji_reaction, as: :boolean, wrapper: :with_label, kmyblue: true
+
+  .fields-group
+    = f.input :streaming_other_servers_emoji_reaction, as: :boolean, wrapper: :with_label, kmyblue: true
+
+  %h4= t('admin.settings.discovery.visibilities')
+
+  .fields-group
+    = f.input :enable_public_unlisted_visibility, as: :boolean, wrapper: :with_label, kmyblue: true, hint: false
+
+  .fields-group
+    = f.input :enable_local_timeline, as: :boolean, wrapper: :with_label, kmyblue: true
+
+  %h4= t('admin.settings.discovery.friend_servers')
+
+  .fields-group
+    = f.input :unlocked_friend, as: :boolean, wrapper: :with_label, kmyblue: true, hint: false
+
   %h4= t('admin.settings.discovery.publish_statistics')
 
   .fields-group
@@ -42,7 +66,10 @@
   %h4= t('admin.settings.security.federation_authentication')
 
   .fields-group
-    = f.input :authorized_fetch, as: :boolean, wrapper: :with_label, label: t('admin.settings.security.authorized_fetch'), warning_hint: authorized_fetch_overridden? ? t('admin.settings.security.authorized_fetch_overridden_hint') : nil, hint: t('admin.settings.security.authorized_fetch_hint'), disabled: authorized_fetch_overridden?, recommended: authorized_fetch_overridden? ? :overridden : nil
+    = f.input :authorized_fetch, as: :boolean, wrapper: :with_label, label: t('admin.settings.security.authorized_fetch'), warning_hint: discovery_warning_hint_text, hint: discovery_hint_text, disabled: authorized_fetch_overridden?, recommended: discovery_recommended_value
+
+  .fields-group
+    = f.input :check_lts_version_only, as: :boolean, wrapper: :with_label, kmyblue: true, hint: false
 
   %h4= t('admin.settings.discovery.follow_recommendations')
 

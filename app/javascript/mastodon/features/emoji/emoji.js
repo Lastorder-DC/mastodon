@@ -4,7 +4,7 @@ import { assetHost } from 'mastodon/utils/config';
 
 import { autoPlayGif } from '../../initial_state';
 
-import unicodeMapping from './emoji_unicode_mapping_light';
+import { unicodeMapping } from './emoji_unicode_mapping_light';
 
 const trie = new Trie(Object.keys(unicodeMapping));
 
@@ -146,6 +146,8 @@ export const buildCustomEmojis = (customEmojis) => {
     const shortcode = emoji.get('shortcode');
     const url       = autoPlayGif ? emoji.get('url') : emoji.get('static_url');
     const name      = shortcode.replace(':', '');
+    const aliases   = emoji.get('aliases');
+    const keywords  = aliases ? [name, ...aliases] : [name];
 
     emojis.push({
       id: name,
@@ -153,7 +155,7 @@ export const buildCustomEmojis = (customEmojis) => {
       short_names: [name],
       text: '',
       emoticons: [],
-      keywords: [name],
+      keywords,
       imageUrl: url,
       custom: true,
       customCategory: emoji.get('category'),

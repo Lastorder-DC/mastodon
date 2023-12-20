@@ -5,7 +5,6 @@
   = button_tag t('generic.save_changes'), class: 'button', form: 'edit_policy'
 
 = simple_form_for @policy, url: statuses_cleanup_path, method: :put, html: { id: 'edit_policy' } do |f|
-
   .fields-row
     .fields-row__column.fields-row__column-6.fields-group
       = f.input :enabled, as: :boolean, wrapper: :with_label, label: t('statuses_cleanup.enabled'), hint: t('statuses_cleanup.enabled_hint')
@@ -34,6 +33,10 @@
     .fields-row__column.fields-row__column-6.fields-group
       = f.input :keep_media, wrapper: :with_label, label: t('statuses_cleanup.keep_media'), hint: t('statuses_cleanup.keep_media_hint')
 
+  .fields-row
+    .fields-row__column.fields-row__column-6.fields-group
+      = f.input :keep_self_emoji, wrapper: :with_label, label: t('statuses_cleanup.keep_self_emoji'), hint: t('statuses_cleanup.keep_self_emoji_hint')
+
   %h4= t('statuses_cleanup.interaction_exceptions')
 
   .fields-row
@@ -41,5 +44,9 @@
       = f.input :min_favs, wrapper: :with_label, label: t('statuses_cleanup.min_favs'), hint: t('statuses_cleanup.min_favs_hint'), input_html: { min: 1, placeholder: t('statuses_cleanup.ignore_favs') }
     .fields-row__column.fields-row__column-6.fields-group
       = f.input :min_reblogs, wrapper: :with_label, label: t('statuses_cleanup.min_reblogs'), hint: t('statuses_cleanup.min_reblogs_hint'), input_html: { min: 1, placeholder: t('statuses_cleanup.ignore_reblogs') }
+
+  .fields-row
+    .fields-row__column.fields-row__column-6.fields-group
+      = f.input :min_emojis, wrapper: :with_label, label: t('statuses_cleanup.min_emojis'), hint: t('statuses_cleanup.min_emojis_hint'), input_html: { min: 1, placeholder: t('statuses_cleanup.ignore_emojis') }
 
   .flash-message= t('statuses_cleanup.interaction_exceptions_explanation')

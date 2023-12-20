@@ -7,6 +7,9 @@ import { Link, withRouter } from 'react-router-dom';
 
 import { connect } from 'react-redux';
 
+import { ReactComponent as RefreshIcon } from '@material-symbols/svg-600/outlined/refresh.svg';
+import { ReactComponent as SearchIcon } from '@material-symbols/svg-600/outlined/search.svg';
+
 import { openModal } from 'mastodon/actions/modal';
 import { fetchServer } from 'mastodon/actions/server';
 import { Avatar } from 'mastodon/components/avatar';
@@ -24,6 +27,7 @@ const Account = connect(state => ({
 
 const messages = defineMessages({
   search: { id: 'navigation_bar.search', defaultMessage: 'Search' },
+  reload: { id: 'navigation_bar.refresh', defaultMessage: 'Refresh' },
 });
 
 const mapStateToProps = (state) => ({
@@ -58,6 +62,11 @@ class Header extends PureComponent {
     dispatchServer();
   }
 
+  handleReload (e) {
+    e.preventDefault();
+    window.location.reload();
+  }
+
   render () {
     const { signedIn } = this.context.identity;
     const { location, openClosedRegistrationsModal, signupUrl, intl } = this.props;
@@ -67,7 +76,8 @@ class Header extends PureComponent {
     if (signedIn) {
       content = (
         <>
-          {location.pathname !== '/search' && <Link to='/search' className='button button-secondary' aria-label={intl.formatMessage(messages.search)}><Icon id='search' /></Link>}
+          {<button onClick={this.handleReload} className='button button-secondary' aria-label={intl.formatMessage(messages.reload)}><Icon id='refresh' icon={RefreshIcon} /></button>}
+          {location.pathname !== '/search' && <Link to='/search' className='button button-secondary' aria-label={intl.formatMessage(messages.search)}><Icon id='search' icon={SearchIcon} /></Link>}
           {location.pathname !== '/publish' && <Link to='/publish' className='button button-secondary'><FormattedMessage id='compose_form.publish_form' defaultMessage='New post' /></Link>}
           <Account />
         </>
@@ -76,8 +86,8 @@ class Header extends PureComponent {
 
       if (sso_redirect) {
         content = (
-            <a href={sso_redirect} data-method='post' className='button button--block button-tertiary'><FormattedMessage id='sign_in_banner.sso_redirect' defaultMessage='Login or Register' /></a>
-        )
+          <a href={sso_redirect} data-method='post' className='button button--block button-tertiary'><FormattedMessage id='sign_in_banner.sso_redirect' defaultMessage='Login or Register' /></a>
+        );
       } else {
         let signupButton;
 

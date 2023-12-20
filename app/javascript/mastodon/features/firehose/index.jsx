@@ -6,12 +6,14 @@ import { useIntl, defineMessages, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { NavLink } from 'react-router-dom';
 
+import { ReactComponent as PublicIcon } from '@material-symbols/svg-600/outlined/public.svg';
+
 import { addColumn } from 'mastodon/actions/columns';
 import { changeSetting } from 'mastodon/actions/settings';
 import { connectPublicStream, connectCommunityStream } from 'mastodon/actions/streaming';
 import { expandPublicTimeline, expandCommunityTimeline } from 'mastodon/actions/timelines';
 import { DismissableBanner } from 'mastodon/components/dismissable_banner';
-import initialState, { domain } from 'mastodon/initial_state';
+import initialState, { domain, enableLocalTimeline } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import Column from '../../components/column';
@@ -160,6 +162,7 @@ const Firehose = ({ feedType, multiColumn }) => {
     <Column bindToDocument={!multiColumn} ref={columnRef} label={intl.formatMessage(messages.title)}>
       <ColumnHeader
         icon='globe'
+        iconComponent={PublicIcon}
         active={hasUnread}
         title={intl.formatMessage(messages.title)}
         onPin={handlePin}
@@ -170,9 +173,11 @@ const Firehose = ({ feedType, multiColumn }) => {
       </ColumnHeader>
 
       <div className='account__section-headline'>
-        <NavLink exact to='/public/local'>
-          <FormattedMessage tagName='div' id='firehose.local' defaultMessage='This server' />
-        </NavLink>
+        {enableLocalTimeline && (
+          <NavLink exact to='/public/local'>
+            <FormattedMessage tagName='div' id='firehose.local' defaultMessage='This server' />
+          </NavLink>
+        )}
 
         <NavLink exact to='/public/remote'>
           <FormattedMessage tagName='div' id='firehose.remote' defaultMessage='Other servers' />
@@ -199,7 +204,7 @@ const Firehose = ({ feedType, multiColumn }) => {
       </Helmet>
     </Column>
   );
-}
+};
 
 Firehose.propTypes = {
   multiColumn: PropTypes.bool,

@@ -12,7 +12,7 @@ class ReportService < BaseService
     @rule_ids       = options.delete(:rule_ids).presence
     @options        = options
 
-    raise ActiveRecord::RecordNotFound if @target_account.suspended?
+    raise ActiveRecord::RecordNotFound if @target_account.unavailable?
 
     create_report!
     notify_staff!
@@ -42,7 +42,7 @@ class ReportService < BaseService
   def notify_staff!
     return if @report.unresolved_siblings?
 
-    User.those_who_can(:manage_reports).includes(:account).each do |u|
+    User.those_who_can(:manage_reports).includes(:account).find_each do |u|
       LocalNotificationWorker.perform_async(u.account_id, @report.id, 'Report', 'admin.report')
       AdminMailer.with(recipient: u.account).new_report(@report).deliver_later if u.allows_report_emails?
     end
@@ -82,7 +82,7 @@ class ReportService < BaseService
     # If the account making reports is remote, it is likely anonymized so we have to relax the requirements for attaching statuses.
     domain = @source_account.domain.to_s.downcase
     has_followers = @target_account.followers.where(Account.arel_table[:domain].lower.eq(domain)).exists?
-    visibility = has_followers ? %i(public unlisted private) : %i(public unlisted)
+    visibility = has_followers ? %i(public unlisted public_unlisted login private) : %i(public unlisted public_unlisted)
     scope = @target_account.statuses.with_discarded
     scope.merge!(scope.where(visibility: visibility).or(scope.where('EXISTS (SELECT 1 FROM mentions m JOIN accounts a ON m.account_id = a.id WHERE lower(a.domain) = ?)', domain)))
     # Allow missing posts to not drop reports that include e.g. a deleted post

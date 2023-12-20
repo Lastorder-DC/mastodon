@@ -1,9 +1,12 @@
 import { Map as ImmutableMap, OrderedSet as ImmutableOrderedSet } from 'immutable';
 
 import {
-  ACCOUNT_BLOCK_SUCCESS,
-  ACCOUNT_MUTE_SUCCESS,
+  blockAccountSuccess,
+  muteAccountSuccess,
 } from '../actions/accounts';
+import {
+  BOOKMARK_CATEGORY_EDITOR_ADD_SUCCESS,
+} from '../actions/bookmark_categories';
 import {
   BOOKMARKED_STATUSES_FETCH_REQUEST,
   BOOKMARKED_STATUSES_FETCH_SUCCESS,
@@ -12,6 +15,14 @@ import {
   BOOKMARKED_STATUSES_EXPAND_SUCCESS,
   BOOKMARKED_STATUSES_EXPAND_FAIL,
 } from '../actions/bookmarks';
+import {
+  EMOJI_REACTED_STATUSES_FETCH_REQUEST,
+  EMOJI_REACTED_STATUSES_FETCH_SUCCESS,
+  EMOJI_REACTED_STATUSES_FETCH_FAIL,
+  EMOJI_REACTED_STATUSES_EXPAND_REQUEST,
+  EMOJI_REACTED_STATUSES_EXPAND_SUCCESS,
+  EMOJI_REACTED_STATUSES_EXPAND_FAIL,
+} from '../actions/emoji_reactions';
 import {
   FAVOURITED_STATUSES_FETCH_REQUEST,
   FAVOURITED_STATUSES_FETCH_SUCCESS,
@@ -23,6 +34,8 @@ import {
 import {
   FAVOURITE_SUCCESS,
   UNFAVOURITE_SUCCESS,
+  EMOJIREACT_SUCCESS,
+  UNEMOJIREACT_SUCCESS,
   BOOKMARK_SUCCESS,
   UNBOOKMARK_SUCCESS,
   PIN_SUCCESS,
@@ -44,6 +57,11 @@ import {
 
 const initialState = ImmutableMap({
   favourites: ImmutableMap({
+    next: null,
+    loaded: false,
+    items: ImmutableOrderedSet(),
+  }),
+  emoji_reactions: ImmutableMap({
     next: null,
     loaded: false,
     items: ImmutableOrderedSet(),
@@ -83,11 +101,15 @@ const appendToList = (state, listType, statuses, next) => {
 };
 
 const prependOneToList = (state, listType, status) => {
+  return prependOneToListById(state, listType, status.get('id'));
+};
+
+const prependOneToListById = (state, listType, statusId) => {
   return state.updateIn([listType, 'items'], (list) => {
-    if (list.includes(status.get('id'))) {
+    if (list.includes(statusId)) {
       return list;
     } else {
-      return ImmutableOrderedSet([status.get('id')]).union(list);
+      return ImmutableOrderedSet([statusId]).union(list);
     }
   });
 };
@@ -108,6 +130,16 @@ export default function statusLists(state = initialState, action) {
     return normalizeList(state, 'favourites', action.statuses, action.next);
   case FAVOURITED_STATUSES_EXPAND_SUCCESS:
     return appendToList(state, 'favourites', action.statuses, action.next);
+  case EMOJI_REACTED_STATUSES_FETCH_REQUEST:
+  case EMOJI_REACTED_STATUSES_EXPAND_REQUEST:
+    return state.setIn(['emoji_reactions', 'isLoading'], true);
+  case EMOJI_REACTED_STATUSES_FETCH_FAIL:
+  case EMOJI_REACTED_STATUSES_EXPAND_FAIL:
+    return state.setIn(['emoji_reactions', 'isLoading'], false);
+  case EMOJI_REACTED_STATUSES_FETCH_SUCCESS:
+    return normalizeList(state, 'emoji_reactions', action.statuses, action.next);
+  case EMOJI_REACTED_STATUSES_EXPAND_SUCCESS:
+    return appendToList(state, 'emoji_reactions', action.statuses, action.next);
   case BOOKMARKED_STATUSES_FETCH_REQUEST:
   case BOOKMARKED_STATUSES_EXPAND_REQUEST:
     return state.setIn(['bookmarks', 'isLoading'], true);
@@ -132,8 +164,14 @@ export default function statusLists(state = initialState, action) {
     return prependOneToList(state, 'favourites', action.status);
   case UNFAVOURITE_SUCCESS:
     return removeOneFromList(state, 'favourites', action.status);
+  case EMOJIREACT_SUCCESS:
+    return prependOneToList(state, 'emoji_reactions', action.status);
+  case UNEMOJIREACT_SUCCESS:
+    return removeOneFromList(state, 'emoji_reactions', action.status);
   case BOOKMARK_SUCCESS:
     return prependOneToList(state, 'bookmarks', action.status);
+  case BOOKMARK_CATEGORY_EDITOR_ADD_SUCCESS:
+    return prependOneToListById(state, 'bookmarks', action.statusId);
   case UNBOOKMARK_SUCCESS:
     return removeOneFromList(state, 'bookmarks', action.status);
   case PINNED_STATUSES_FETCH_SUCCESS:
@@ -142,9 +180,9 @@ export default function statusLists(state = initialState, action) {
     return prependOneToList(state, 'pins', action.status);
   case UNPIN_SUCCESS:
     return removeOneFromList(state, 'pins', action.status);
-  case ACCOUNT_BLOCK_SUCCESS:
-  case ACCOUNT_MUTE_SUCCESS:
-    return state.updateIn(['trending', 'items'], ImmutableOrderedSet(), list => list.filterNot(statusId => action.statuses.getIn([statusId, 'account']) === action.relationship.id));
+  case blockAccountSuccess.type:
+  case muteAccountSuccess.type:
+    return state.updateIn(['trending', 'items'], ImmutableOrderedSet(), list => list.filterNot(statusId => action.payload.statuses.getIn([statusId, 'account']) === action.payload.relationship.id));
   default:
     return state;
   }

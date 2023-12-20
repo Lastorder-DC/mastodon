@@ -1,0 +1,77 @@
+.filters-list__item{ class: [(antenna.expired? || !antenna.enabled_config?) && 'expired'] }
+  = link_to edit_antenna_path(antenna), class: 'filters-list__item__title' do
+    = antenna.title
+
+    - if !antenna.enabled_config? && !antenna.stl
+      .expiration{ title: t('antennas.index.disabled') }
+        = t('antennas.index.disabled')
+    - elsif antenna.expires?
+      .expiration{ title: t('antennas.index.expires_on', date: l(antenna.expires_at)) }
+        - if antenna.expired?
+          = t('invites.expired')
+        - else
+          = t('antennas.index.expires_in', distance: distance_of_time_in_words_to_now(antenna.expires_at))
+
+  .listname
+    = antenna.list&.title || '[Insert to Home]'
+
+  .filters-list__item__permissions
+    %ul.permissions-list
+      - unless antenna.stl
+        - unless antenna.antenna_domains.empty?
+          %li.permissions-list__item
+            .permissions-list__item__icon
+              = fa_icon('sitemap')
+            .permissions-list__item__text
+              .permissions-list__item__text__title
+                = t('antennas.index.domains', count: antenna.antenna_domains.size)
+              .permissions-list__item__text__type
+                - domains = antenna.antenna_domains.map(&:name)
+                - domains = domains.take(5) + ['…'] if domains.size > 5 # TODO
+                = domains.join(', ')
+        - unless antenna.antenna_accounts.empty?
+          %li.permissions-list__item
+            .permissions-list__item__icon
+              = fa_icon('users')
+            .permissions-list__item__text
+              .permissions-list__item__text__title
+                = t('antennas.index.accounts', count: antenna.antenna_accounts.size)
+              .permissions-list__item__text__type
+                - accounts = antenna.antenna_accounts.map { |account| account.account.domain ? "@#{account.account.username}@#{account.account.domain}" : "@#{account.account.username}" }
+                - accounts = accounts.take(5) + ['…'] if accounts.size > 5 # TODO
+                = accounts.join(', ')
+        - if antenna.keywords.present?
+          %li.permissions-list__item
+            .permissions-list__item__icon
+              = fa_icon('paragraph')
+            .permissions-list__item__text
+              .permissions-list__item__text__title
+                = t('antennas.index.keywords', count: antenna.keywords.size)
+              .permissions-list__item__text__type
+                - keywords = antenna.keywords
+                - keywords = keywords.take(5) + ['…'] if keywords.size > 5 # TODO
+                = keywords.join(', ')
+        - unless antenna.antenna_tags.empty?
+          %li.permissions-list__item
+            .permissions-list__item__icon
+              = fa_icon('hashtag')
+            .permissions-list__item__text
+              .permissions-list__item__text__title
+                = t('antennas.index.tags', count: antenna.antenna_tags.size)
+              .permissions-list__item__text__type
+                - tags = antenna.antenna_tags.map { |tag| tag.tag.name }
+                - tags = tags.take(5) + ['…'] if tags.size > 5 # TODO
+                = tags.join(', ')
+
+  .announcements-list__item__action-bar
+    .announcements-list__item__meta
+      - if antenna.stl
+        = t('antennas.index.stl')
+      - elsif antenna.enabled_config_raws?
+        = t('antennas.index.contexts', contexts: antenna.context.map { |context| I18n.t("antennas.contexts.#{context}") }.join(', '))
+      - else
+        = t('antennas.errors.empty_contexts')
+
+    %div
+      = table_link_to 'pencil', t('antennas.edit.title'), edit_antenna_path(antenna)
+      = table_link_to 'times', t('antennas.index.delete'), antenna_path(antenna), method: :delete, data: { confirm: t('admin.accounts.are_you_sure') }

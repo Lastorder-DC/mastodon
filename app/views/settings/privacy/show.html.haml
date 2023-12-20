@@ -17,6 +17,13 @@
   .fields-group
     = f.input :discoverable, as: :boolean, wrapper: :with_label, recommended: true
 
+  = f.simple_fields_for :settings, current_user.settings do |ff|
+    .fields-group
+      = ff.input :discoverable_local, wrapper: :with_label, kmyblue: true, label: I18n.t('simple_form.labels.defaults.discoverable_local'), hint: I18n.t('simple_form.hints.defaults.discoverable_local')
+
+    .fields-group
+      = ff.input :noai, wrapper: :with_label, kmyblue: true, label: I18n.t('simple_form.labels.defaults.setting_noai'), hint: I18n.t('simple_form.hints.defaults.setting_noai')
+
   .fields-group
     = f.input :unlocked, as: :boolean, wrapper: :with_label
 
@@ -39,6 +46,11 @@
     = f.input :show_collections, as: :boolean, wrapper: :with_label
 
   = f.simple_fields_for :settings, current_user.settings do |ff|
+    .fields-group
+      = ff.input :hide_statuses_count, as: :boolean, wrapper: :with_label, kmyblue: true, label: I18n.t('simple_form.labels.defaults.setting_hide_statuses_count'), hint: false
+      = ff.input :hide_following_count, as: :boolean, wrapper: :with_label, kmyblue: true, label: I18n.t('simple_form.labels.defaults.setting_hide_following_count'), hint: false
+      = ff.input :hide_followers_count, as: :boolean, wrapper: :with_label, kmyblue: true, label: I18n.t('simple_form.labels.defaults.setting_hide_followers_count'), hint: false
+
     .fields-group
       = ff.input :show_application, wrapper: :with_label
 

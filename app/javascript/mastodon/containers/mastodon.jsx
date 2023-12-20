@@ -8,7 +8,9 @@ import { Provider as ReduxProvider } from 'react-redux';
 
 import { ScrollContext } from 'react-router-scroll-4';
 
+import { fetchCircles } from 'mastodon/actions/circles';
 import { fetchCustomEmojis } from 'mastodon/actions/custom_emojis';
+import { fetchReactionDeck } from 'mastodon/actions/reaction_deck';
 import { hydrateStore } from 'mastodon/actions/store';
 import { connectUserStream } from 'mastodon/actions/streaming';
 import ErrorBoundary from 'mastodon/components/error_boundary';
@@ -17,14 +19,17 @@ import UI from 'mastodon/features/ui';
 import initialState, { title as siteTitle } from 'mastodon/initial_state';
 import { IntlProvider } from 'mastodon/locales';
 import { store } from 'mastodon/store';
+import { isProduction } from 'mastodon/utils/environment';
 
-const title = process.env.NODE_ENV === 'production' ? siteTitle : `${siteTitle} (Dev)`;
+const title = isProduction() ? siteTitle : `${siteTitle} (Dev)`;
 
 const hydrateAction = hydrateStore(initialState);
 
 store.dispatch(hydrateAction);
 if (initialState.meta.me) {
   store.dispatch(fetchCustomEmojis());
+  store.dispatch(fetchReactionDeck());
+  store.dispatch(fetchCircles());
 }
 
 const createIdentityContext = state => ({

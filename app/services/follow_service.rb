@@ -36,7 +36,7 @@ class FollowService < BaseService
     # and the feeds are being merged
     mark_home_feed_as_partial! if @source_account.not_following_anyone?
 
-    if (@target_account.locked? && !@options[:bypass_locked]) || @source_account.silenced? || @target_account.activitypub?
+    if (@target_account.locked? && !@options[:bypass_locked]) || @source_account.silenced? || @target_account.activitypub? || (@source_account.bot? && @target_account.user&.setting_lock_follow_from_bot)
       request_follow!
     elsif @target_account.local?
       direct_follow!
@@ -50,7 +50,7 @@ class FollowService < BaseService
   end
 
   def following_not_possible?
-    @target_account.nil? || @target_account.id == @source_account.id || @target_account.suspended?
+    @target_account.nil? || @target_account.id == @source_account.id || @target_account.unavailable?
   end
 
   def following_not_allowed?

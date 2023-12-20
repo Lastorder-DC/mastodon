@@ -1,3 +1,6 @@
+:ruby
+  grouped_emoji_reactions ||= Oj.load(status.status_stat&.emoji_reactions || '', mode: :strict) || []
+
 .detailed-status.detailed-status--flex{ class: "detailed-status-#{status.visibility}" }
   .p-author.h-card
     = link_to ActivityPub::TagManager.instance.url_for(status.account), class: 'detailed-status__display-name u-url', target: stream_link_target, rel: 'noopener' do
@@ -36,6 +39,13 @@
   - elsif status.preview_card
     = render_card_component(status)
 
+  - if grouped_emoji_reactions.size.positive?
+    .status__emoji-reactions-bar
+      - grouped_emoji_reactions.each do |reaction|
+        %button.emoji-reactions-bar__button
+          %span.emojify= prerender_custom_emojis_from_hash(emoji_name_format(reaction, status), reaction)
+          %span.count= reaction['count']
+
   .detailed-status__meta
     %data.dt-published{ value: status.created_at.to_time.iso8601 }
     - if status.edited?
@@ -62,19 +72,19 @@
       - else
         = fa_icon('reply-all')
       %span.detailed-status__reblogs>= friendly_number_to_human status.replies_count
-      = ' '
+      &nbsp;
     ·
     - if status.public_visibility? || status.unlisted_visibility?
       %span.detailed-status__link
         = fa_icon('retweet')
         %span.detailed-status__reblogs>= friendly_number_to_human status.reblogs_count
-        = ' '
+        &nbsp;
       ·
     %span.detailed-status__link
       = fa_icon('star')
       %span.detailed-status__favorites>= friendly_number_to_human status.favourites_count
-      = ' '
+      &nbsp;
 
     - if user_signed_in?
       ·
-      = link_to t('statuses.open_in_web'), web_url("@#{status.account.pretty_acct}/#{status.id}"), class: 'detailed-status__application', target: '_blank'
+      = link_to t('statuses.open_in_web'), web_url("@#{status.account.pretty_acct}/#{status.id}"), class: 'detailed-status__application', target: '_blank', rel: 'noopener noreferrer'

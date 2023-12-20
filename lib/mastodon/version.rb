@@ -4,28 +4,50 @@ module Mastodon
   module Version
     module_function
 
+    def kmyblue_major
+      9
+    end
+
+    def kmyblue_minor
+      0
+    end
+
+    def kmyblue_flag
+      nil # 'LTS'
+    end
+
     def major
       4
     end
 
     def minor
-      2
-    end
-
-    def patch
       3
     end
 
+    def patch
+      0
+    end
+
     def default_prerelease
-      ''
+      'alpha.0'
     end
 
     def prerelease
       ENV['MASTODON_VERSION_PRERELEASE'].presence || default_prerelease
     end
 
+    def to_a_of_kmyblue
+      [kmyblue_major, kmyblue_minor].compact
+    end
+
+    def to_s_of_kmyblue
+      components = [to_a_of_kmyblue.join('.')]
+      components << "-#{kmyblue_flag}" if kmyblue_flag.present?
+      components.join
+    end
+
     def build_metadata
-      ENV.fetch('MASTODON_VERSION_METADATA', nil)
+      ['kmyblue', to_s_of_kmyblue, ENV.fetch('MASTODON_VERSION_METADATA', nil)].compact.join('.')
     end
 
     def to_a
@@ -40,7 +62,11 @@ module Mastodon
     end
 
     def gem_version
-      @gem_version ||= Gem::Version.new(to_s.split('+')[0])
+      @gem_version ||= if ENV.fetch('UPDATE_CHECK_SOURCE', 'kmyblue') == 'kmyblue'
+                         Gem::Version.new("#{kmyblue_major}.#{kmyblue_minor}")
+                       else
+                         Gem::Version.new(to_s.split('+')[0])
+                       end
     end
 
     def repository

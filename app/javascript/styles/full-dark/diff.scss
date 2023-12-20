@@ -1,0 +1,65 @@
+input[type='text'],
+input[type='search'],
+input[type='number'],
+input:not([type]),
+textarea {
+  background: $ui-base-color !important;
+  color: $primary-text-color !important;
+
+  &.setting-text {
+    border-color: $darker-text-color;
+  }
+
+  &::placeholder {
+    color: lighten($dark-text-color, 36%) !important;
+  }
+}
+
+.column-content-select__control,
+.button.button-secondary {
+  border-color: $darker-text-color !important;
+}
+
+.emoji-mart-category-label {
+  color: $primary-text-color !important;
+}
+
+.emoji-mart-bar:first-child {
+  background: lighten($classic-base-color, 36%);
+}
+
+.emoji-mart-anchor-selected {
+  color: $primary-text-color;
+}
+
+.compose-form .compose-form__warning,
+.reply-indicator__content,
+.reply-indicator__display-name,
+.reply-indicator__cancel,
+.autosuggest-textarea__suggestions__item {
+  color: $ui-base-color;
+}
+
+.column-content-select__control,
+.column-content-select__menu {
+  background: $ui-base-color !important;
+}
+
+.column-content-select__single-value {
+  color: $classic-secondary-color !important;
+}
+
+.modal-root__modal {
+  background: lighten($classic-base-color, 12%);
+}
+
+.boost-modal__action-bar,
+.confirmation-modal__action-bar,
+.mute-modal__action-bar,
+.block-modal__action-bar {
+  background: lighten($classic-base-color, 2%);
+}
+
+.searchability-dropdown__value-overlay {
+  color: #ff9bf8 !important;
+}

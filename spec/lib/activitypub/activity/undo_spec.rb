@@ -5,7 +5,8 @@ require 'rails_helper'
 RSpec.describe ActivityPub::Activity::Undo do
   subject { described_class.new(json, sender) }
 
-  let(:sender) { Fabricate(:account, domain: 'example.com') }
+  let(:sender_domain) { 'example.com' }
+  let(:sender) { Fabricate(:account, domain: sender_domain) }
 
   let(:json) do
     {
@@ -145,12 +146,49 @@ RSpec.describe ActivityPub::Activity::Undo do
         expect(sender.following?(recipient)).to be false
       end
 
+      it 'deletes follow from sender to recipient when has friend' do
+        friend = Fabricate(:friend_domain, domain: sender.domain, passive_state: :accepted)
+        subject.perform
+        expect(sender.following?(recipient)).to be false
+        expect(friend.reload.they_are_accepted?).to be true
+      end
+
       context 'with only object uri' do
         let(:object_json) { 'bar' }
 
         it 'deletes follow from sender to recipient' do
           subject.perform
           expect(sender.following?(recipient)).to be false
+        end
+      end
+
+      context 'when for a friend' do
+        let(:sender) { Fabricate(:account, domain: 'abc.com', url: 'https://abc.com/#actor') }
+        let!(:friend) { Fabricate(:friend_domain, domain: 'abc.com', passive_state: :accepted, passive_follow_activity_id: 'bar') }
+        let(:object_json) do
+          {
+            id: 'bar',
+            type: 'Follow',
+            actor: ActivityPub::TagManager.instance.uri_for(sender),
+            object: 'https://www.w3.org/ns/activitystreams#Public',
+          }
+        end
+
+        it 'deletes follow from this server to friend' do
+          subject.perform
+          expect(FriendDomain.exists?(domain: 'abc.com')).to be false
+        end
+
+        it 'when my server is pending' do
+          friend.update(active_state: :pending)
+          subject.perform
+          expect(FriendDomain.exists?(domain: 'abc.com')).to be false
+        end
+
+        it 'when my server is accepted' do
+          friend.update(active_state: :accepted)
+          subject.perform
+          expect(FriendDomain.exists?(domain: 'abc.com')).to be false
         end
       end
     end
@@ -174,6 +212,84 @@ RSpec.describe ActivityPub::Activity::Undo do
       it 'deletes favourite from sender to status' do
         subject.perform
         expect(sender.favourited?(status)).to be false
+      end
+    end
+
+    context 'with EmojiReact' do
+      let(:status) { Fabricate(:status) }
+
+      let(:content) { '😀' }
+      let(:name) { '😀' }
+      let(:tag) { nil }
+      let(:object_json) do
+        {
+          id: 'bar',
+          type: 'Like',
+          actor: ActivityPub::TagManager.instance.uri_for(sender),
+          object: ActivityPub::TagManager.instance.uri_for(status),
+          content: content,
+          tag: tag,
+        }
+      end
+      let(:custom_emoji) { nil }
+
+      before do
+        Fabricate(:favourite, account: sender, status: status)
+        Fabricate(:emoji_reaction, account: sender, status: status, name: name, custom_emoji: custom_emoji)
+      end
+
+      it 'delete emoji reaction' do
+        subject.perform
+        expect(sender.emoji_reacted?(status)).to be false
+        expect(sender.favourited?(status)).to be true
+      end
+
+      context 'with custom emoji' do
+        let(:content) { ':tinking:' }
+        let(:name) { 'tinking' }
+        let(:tag) do
+          {
+            id: custom_emoji_uri,
+            type: 'Emoji',
+            icon: {
+              url: 'http://example.com/emoji.png',
+            },
+            name: name,
+          }
+        end
+        let(:custom_emoji_domain) { 'example.com' }
+        let(:custom_emoji_uri) { "https://#{custom_emoji_domain}/aaa" }
+        let(:custom_emoji) { Fabricate(:custom_emoji, uri: custom_emoji_uri, domain: custom_emoji_domain, shortcode: name) }
+
+        it 'delete emoji reaction' do
+          subject.perform
+          expect(sender.emoji_reacted?(status)).to be false
+          expect(sender.favourited?(status)).to be true
+        end
+
+        context 'when third server' do
+          let(:sender_domain) { 'foo.bar' }
+
+          it 'delete emoji reaction' do
+            subject.perform
+            expect(sender.emoji_reacted?(status)).to be false
+            expect(sender.favourited?(status)).to be true
+          end
+        end
+
+        context 'when local' do
+          let(:custom_emoji_domain) { 'cb6e6126.ngrok.io' }
+
+          before do
+            custom_emoji.update(domain: nil, uri: nil)
+          end
+
+          it 'delete emoji reaction' do
+            subject.perform
+            expect(sender.emoji_reacted?(status)).to be false
+            expect(sender.favourited?(status)).to be true
+          end
+        end
       end
     end
   end

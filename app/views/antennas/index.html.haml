@@ -1,0 +1,8 @@
+- content_for :page_title do
+  = t('antennas.index.title')
+
+- if @antennas.empty?
+  .muted-hint.center-text= t 'antennas.index.empty'
+- else
+  .applications-list
+    = render partial: 'antenna', collection: @antennas

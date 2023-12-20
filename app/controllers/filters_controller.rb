@@ -25,7 +25,7 @@ class FiltersController < ApplicationController
     if @filter.save
       redirect_to filters_path
     else
-      render action: :new
+      render :new
     end
   end
 
@@ -33,7 +33,7 @@ class FiltersController < ApplicationController
     if @filter.update(resource_params)
       redirect_to filters_path
     else
-      render action: :edit
+      render :edit
     end
   end
 
@@ -49,7 +49,7 @@ class FiltersController < ApplicationController
   end
 
   def resource_params
-    params.require(:custom_filter).permit(:title, :expires_in, :filter_action, context: [], keywords_attributes: [:id, :keyword, :whole_word, :_destroy])
+    params.require(:custom_filter).permit(:title, :expires_in, :filter_action, :exclude_follows, :exclude_localusers, :with_quote, context: [], keywords_attributes: [:id, :keyword, :whole_word, :_destroy])
   end
 
   def set_body_classes

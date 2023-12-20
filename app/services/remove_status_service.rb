@@ -27,6 +27,7 @@ class RemoveStatusService < BaseService
       remove_from_self if @account.local?
       remove_from_followers
       remove_from_lists
+      remove_from_antennas
 
       # There is no reason to send out Undo activities when the
       # cause is that the original object has been removed, since
@@ -45,6 +46,7 @@ class RemoveStatusService < BaseService
         remove_from_public
         remove_from_media if @status.with_media?
         remove_media
+        decrement_references
       end
 
       @status.destroy! if permanently?
@@ -72,6 +74,18 @@ class RemoveStatusService < BaseService
     end
   end
 
+  def remove_from_antennas
+    Antenna.availables.where.not(list_id: 0).select(:id, :list_id, :account_id).includes(account: :user).reorder(nil).find_each do |antenna|
+      FeedManager.instance.unpush_from_list(antenna.list, @status) if antenna.list.present?
+    end
+    Antenna.availables.where(list_id: 0).select(:id, :account_id).includes(account: :user).reorder(nil).find_each do |antenna|
+      FeedManager.instance.unpush_from_home(antenna.account, @status)
+    end
+    Antenna.availables.select(:id, :account_id).includes(account: :user).reorder(nil).find_each do |antenna|
+      FeedManager.instance.unpush_from_antenna(antenna, @status)
+    end
+  end
+
   def remove_from_mentions
     # For limited visibility statuses, the mentions that determine
     # who receives them in their home feed are a subset of followers
@@ -92,15 +106,23 @@ class RemoveStatusService < BaseService
     # the author and wouldn't normally receive the delete
     # notification - so here, we explicitly send it to them
 
+    return remove_from_conversation if @status.limited_visibility? && @status.conversation.present? && !@status.conversation.local?
+
     status_reach_finder = StatusReachFinder.new(@status, unsafe: true)
 
-    ActivityPub::DeliveryWorker.push_bulk(status_reach_finder.inboxes, limit: 1_000) do |inbox_url|
+    ActivityPub::DeliveryWorker.push_bulk(status_reach_finder.all_inboxes, limit: 1_000) do |inbox_url|
       [signed_activity_json, @account.id, inbox_url]
     end
   end
 
+  def remove_from_conversation
+    return if @status.conversation.nil? || @status.conversation.inbox_url.blank?
+
+    ActivityPub::DeliveryWorker.perform_async(signed_activity_json, @account.id, @status.conversation.inbox_url)
+  end
+
   def signed_activity_json
-    @signed_activity_json ||= Oj.dump(serialize_payload(@status, @status.reblog? ? ActivityPub::UndoAnnounceSerializer : ActivityPub::DeleteSerializer, signer: @account, always_sign: true))
+    @signed_activity_json ||= Oj.dump(serialize_payload(@status, @status.reblog? ? ActivityPub::UndoAnnounceSerializer : ActivityPub::DeleteSerializer, signer: @account, always_sign_unsafe: @status.limited_visibility?))
   end
 
   def remove_reblogs
@@ -113,8 +135,14 @@ class RemoveStatusService < BaseService
     end
   end
 
+  def decrement_references
+    @status.references.reorder(nil).find_each do |ref|
+      ref.decrement_count!(:status_referred_by_count)
+    end
+  end
+
   def remove_from_hashtags
-    @account.featured_tags.where(tag_id: @status.tags.map(&:id)).each do |featured_tag|
+    @account.featured_tags.where(tag_id: @status.tags.map(&:id)).find_each do |featured_tag|
       featured_tag.decrement(@status.id)
     end
 

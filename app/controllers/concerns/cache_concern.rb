@@ -92,18 +92,10 @@ module CacheConcern
         arguments
       end
 
-      if Rails.gem_version >= Gem::Version.new('7.0')
-        def attributes_for_database(record)
-          attributes = record.attributes_for_database
-          attributes.transform_values! { |attr| attr.is_a?(::ActiveModel::Type::Binary::Data) ? attr.to_s : attr }
-          attributes
-        end
-      else
-        def attributes_for_database(record)
-          attributes = record.instance_variable_get(:@attributes).send(:attributes).transform_values(&:value_for_database)
-          attributes.transform_values! { |attr| attr.is_a?(::ActiveModel::Type::Binary::Data) ? attr.to_s : attr }
-          attributes
-        end
+      def attributes_for_database(record)
+        attributes = record.attributes_for_database
+        attributes.transform_values! { |attr| attr.is_a?(::ActiveModel::Type::Binary::Data) ? attr.to_s : attr }
+        attributes
       end
 
       def deserialize_record(class_name, attributes_from_database, new_record = false) # rubocop:disable Style/OptionalBooleanParameter
@@ -179,6 +171,16 @@ module CacheConcern
 
   def render_with_cache(**options)
     raise ArgumentError, 'Only JSON render calls are supported' unless options.key?(:json) || block_given?
+
+    if options.delete(:cancel_cache)
+      if block_given?
+        options[:json] = yield
+      elsif options[:json].is_a?(Symbol)
+        options[:json] = send(options[:json])
+      end
+
+      return render(options)
+    end
 
     key        = options.delete(:key) || [[params[:controller], params[:action]].join('/'), options[:json].respond_to?(:cache_key) ? options[:json].cache_key : nil, options[:fields].nil? ? nil : options[:fields].join(',')].compact.join(':')
     expires_in = options.delete(:expires_in) || 3.minutes

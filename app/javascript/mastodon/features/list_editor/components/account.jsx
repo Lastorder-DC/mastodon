@@ -1,3 +1,5 @@
+// Kmyblue tracking marker: copied antenna_editor/account, circle_editor/account
+
 import PropTypes from 'prop-types';
 
 import { defineMessages, injectIntl } from 'react-intl';
@@ -5,6 +7,9 @@ import { defineMessages, injectIntl } from 'react-intl';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
 import { connect } from 'react-redux';
+
+import { ReactComponent as AddIcon } from '@material-symbols/svg-600/outlined/add.svg';
+import { ReactComponent as CloseIcon } from '@material-symbols/svg-600/outlined/close.svg';
 
 import { removeFromListEditor, addToListEditor } from '../../../actions/lists';
 import { Avatar } from '../../../components/avatar';
@@ -36,7 +41,7 @@ const mapDispatchToProps = (dispatch, { accountId }) => ({
 class Account extends ImmutablePureComponent {
 
   static propTypes = {
-    account: ImmutablePropTypes.map.isRequired,
+    account: ImmutablePropTypes.record.isRequired,
     intl: PropTypes.object.isRequired,
     onRemove: PropTypes.func.isRequired,
     onAdd: PropTypes.func.isRequired,
@@ -53,9 +58,9 @@ class Account extends ImmutablePureComponent {
     let button;
 
     if (added) {
-      button = <IconButton icon='times' title={intl.formatMessage(messages.remove)} onClick={onRemove} />;
+      button = <IconButton icon='times' iconComponent={CloseIcon} title={intl.formatMessage(messages.remove)} onClick={onRemove} />;
     } else {
-      button = <IconButton icon='plus' title={intl.formatMessage(messages.add)} onClick={onAdd} />;
+      button = <IconButton icon='plus' iconComponent={AddIcon} title={intl.formatMessage(messages.add)} onClick={onAdd} />;
     }
 
     return (

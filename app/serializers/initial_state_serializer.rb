@@ -2,6 +2,7 @@
 
 class InitialStateSerializer < ActiveModel::Serializer
   include RoutingHelper
+  include DtlHelper
 
   attributes :meta, :compose, :accounts,
              :media_attachments, :settings,
@@ -35,27 +36,49 @@ class InitialStateSerializer < ActiveModel::Serializer
       trends_as_landing_page: Setting.trends_as_landing_page,
       status_page_url: Setting.status_page_url,
       sso_redirect: sso_redirect,
+      dtl_tag: dtl_enabled? ? dtl_tag_name : nil,
+      enable_local_privacy: Setting.enable_public_unlisted_visibility,
+      enable_local_timeline: Setting.enable_local_timeline,
     }
 
     if object.current_account
       store[:me]                = object.current_account.id.to_s
-      store[:unfollow_modal]    = object.current_account.user.setting_unfollow_modal
-      store[:boost_modal]       = object.current_account.user.setting_boost_modal
-      store[:delete_modal]      = object.current_account.user.setting_delete_modal
-      store[:auto_play_gif]     = object.current_account.user.setting_auto_play_gif
-      store[:display_media]     = object.current_account.user.setting_display_media
-      store[:expand_spoilers]   = object.current_account.user.setting_expand_spoilers
-      store[:reduce_motion]     = object.current_account.user.setting_reduce_motion
-      store[:disable_swiping]   = object.current_account.user.setting_disable_swiping
-      store[:advanced_layout]   = object.current_account.user.setting_advanced_layout
-      store[:use_blurhash]      = object.current_account.user.setting_use_blurhash
-      store[:use_pending_items] = object.current_account.user.setting_use_pending_items
-      store[:show_trends]       = Setting.trends && object.current_account.user.setting_trends
+      store[:unfollow_modal]    = object_account_user.setting_unfollow_modal
+      store[:boost_modal]       = object_account_user.setting_boost_modal
+      store[:delete_modal]      = object_account_user.setting_delete_modal
+      store[:auto_play_gif]     = object_account_user.setting_auto_play_gif
+      store[:display_media]     = object_account_user.setting_display_media
+      store[:display_media_expand] = object_account_user.setting_display_media_expand
+      store[:expand_spoilers] = object_account_user.setting_expand_spoilers
+      store[:enable_emoji_reaction] = object_account_user.setting_enable_emoji_reaction && Setting.enable_emoji_reaction
+      store[:enable_login_privacy] = object_account_user.setting_enable_login_privacy
+      store[:enable_dtl_menu]   = object_account_user.setting_enable_dtl_menu
+      store[:reduce_motion]     = object_account_user.setting_reduce_motion
+      store[:disable_swiping]   = object_account_user.setting_disable_swiping
+      store[:advanced_layout]   = object_account_user.setting_advanced_layout
+      store[:use_blurhash]      = object_account_user.setting_use_blurhash
+      store[:use_pending_items] = object_account_user.setting_use_pending_items
+      store[:show_trends]       = Setting.trends && object_account_user.setting_trends
+      store[:bookmark_category_needed] = object_account_user.setting_bookmark_category_needed
+      store[:simple_timeline_menu] = object_account_user.setting_simple_timeline_menu
+      store[:hide_items] = [
+        object_account_user.setting_hide_favourite_menu ? 'favourite_menu' : nil,
+        object_account_user.setting_hide_recent_emojis ? 'recent_emojis' : nil,
+        object_account_user.setting_hide_blocking_quote ? 'blocking_quote' : nil,
+        object_account_user.setting_hide_emoji_reaction_unavailable_server ? 'emoji_reaction_unavailable_server' : nil,
+        object_account_user.setting_show_emoji_reaction_on_timeline ? nil : 'emoji_reaction_on_timeline',
+        object_account_user.setting_show_quote_in_home ? nil : 'quote_in_home',
+        object_account_user.setting_show_quote_in_public ? nil : 'quote_in_public',
+      ].compact
     else
       store[:auto_play_gif] = Setting.auto_play_gif
       store[:display_media] = Setting.display_media
       store[:reduce_motion] = Setting.reduce_motion
       store[:use_blurhash]  = Setting.use_blurhash
+      store[:enable_emoji_reaction] = Setting.enable_emoji_reaction
+      store[:hide_items] = [
+        Setting.enable_emoji_reaction ? nil : 'emoji_reaction_on_timeline',
+      ].compact
     end
 
     store[:disabled_account_id] = object.disabled_account.id.to_s if object.disabled_account
@@ -70,10 +93,12 @@ class InitialStateSerializer < ActiveModel::Serializer
     store = {}
 
     if object.current_account
-      store[:me]                = object.current_account.id.to_s
-      store[:default_privacy]   = object.visibility || object.current_account.user.setting_default_privacy
-      store[:default_sensitive] = object.current_account.user.setting_default_sensitive
-      store[:default_language]  = object.current_account.user.preferred_posting_language
+      store[:me]                    = object.current_account.id.to_s
+      store[:default_privacy]       = object.visibility || object_account_user.setting_default_privacy
+      store[:stay_privacy]          = object_account_user.setting_stay_privacy
+      store[:default_searchability] = object.searchability || object_account_user.setting_default_searchability
+      store[:default_sensitive]     = object_account_user.setting_default_sensitive
+      store[:default_language]      = object_account_user.preferred_posting_language
     end
 
     store[:text] = object.text if object.text
@@ -86,14 +111,14 @@ class InitialStateSerializer < ActiveModel::Serializer
 
     ActiveRecord::Associations::Preloader.new(
       records: [object.current_account, object.admin, object.owner, object.disabled_account, object.moved_to_account].compact,
-      associations: [:account_stat, :user, { moved_to_account: [:account_stat, :user] }]
-    )
+      associations: [:account_stat, { user: :role, moved_to_account: [:account_stat, { user: :role }] }]
+    ).call
 
-    store[object.current_account.id.to_s]  = ActiveModelSerializers::SerializableResource.new(object.current_account, serializer: REST::AccountSerializer) if object.current_account
-    store[object.admin.id.to_s]            = ActiveModelSerializers::SerializableResource.new(object.admin, serializer: REST::AccountSerializer) if object.admin
-    store[object.owner.id.to_s]            = ActiveModelSerializers::SerializableResource.new(object.owner, serializer: REST::AccountSerializer) if object.owner
-    store[object.disabled_account.id.to_s] = ActiveModelSerializers::SerializableResource.new(object.disabled_account, serializer: REST::AccountSerializer) if object.disabled_account
-    store[object.moved_to_account.id.to_s] = ActiveModelSerializers::SerializableResource.new(object.moved_to_account, serializer: REST::AccountSerializer) if object.moved_to_account
+    store[object.current_account.id.to_s]  = serialized_account(object.current_account) if object.current_account
+    store[object.admin.id.to_s]            = serialized_account(object.admin) if object.admin
+    store[object.owner.id.to_s]            = serialized_account(object.owner) if object.owner
+    store[object.disabled_account.id.to_s] = serialized_account(object.disabled_account) if object.disabled_account
+    store[object.moved_to_account.id.to_s] = serialized_account(object.moved_to_account) if object.moved_to_account
 
     store
   end
@@ -107,6 +132,14 @@ class InitialStateSerializer < ActiveModel::Serializer
   end
 
   private
+
+  def object_account_user
+    object.current_account.user
+  end
+
+  def serialized_account(account)
+    ActiveModelSerializers::SerializableResource.new(account, serializer: REST::AccountSerializer)
+  end
 
   def instance_presenter
     @instance_presenter ||= InstancePresenter.new

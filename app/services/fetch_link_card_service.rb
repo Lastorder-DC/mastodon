@@ -3,6 +3,7 @@
 class FetchLinkCardService < BaseService
   include Redisable
   include Lockable
+  include FormattingHelper
 
   URL_PATTERN = %r{
     (#{Twitter::TwitterText::Regex[:valid_url_preceding_chars]})                                                                #   $1 preceding chars
@@ -19,7 +20,7 @@ class FetchLinkCardService < BaseService
     @status       = status
     @original_url = parse_urls
 
-    return if @original_url.nil? || @status.preview_cards.any?
+    return if @original_url.nil? || @status.with_preview_card? || !@status.account.link_preview?
 
     @url = @original_url.to_s
 
@@ -62,9 +63,9 @@ class FetchLinkCardService < BaseService
 
   def attach_card
     with_redis_lock("attach_card:#{@status.id}") do
-      return if @status.preview_cards.any?
+      return if @status.with_preview_card?
 
-      @status.preview_cards << @card
+      PreviewCardsStatus.create(status: @status, preview_card: @card, url: @original_url)
       Rails.cache.delete(@status)
       Trends.links.register(@status)
     end
@@ -80,7 +81,23 @@ class FetchLinkCardService < BaseService
              links.filter_map { |a| Addressable::URI.parse(a['href']) unless skip_link?(a) }.filter_map(&:normalize)
            end
 
+    exclude_urls = referenced_urls
+    urls = urls.filter { |url| exclude_urls.exclude?(url.to_s) }
+
     urls.reject { |uri| bad_url?(uri) }.first
+  end
+
+  def referenced_urls
+    unless @status.local?
+      document = Nokogiri::HTML(@status.text)
+      document.search('a[href^="http://"]', 'a[href^="https://"]').each do |link|
+        link.replace(link['href']) if link['href']
+      end
+
+      return PlainTextFormatter.new(document.to_s, false).to_s.scan(ProcessReferencesService::REFURL_EXP).pluck(3).uniq
+    end
+
+    extract_status_plain_text(@status).scan(ProcessReferencesService::REFURL_EXP).pluck(3).uniq
   end
 
   def bad_url?(uri)

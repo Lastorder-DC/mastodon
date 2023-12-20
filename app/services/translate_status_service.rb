@@ -30,7 +30,7 @@ class TranslateStatusService < BaseService
   end
 
   def permitted?
-    return false unless @status.distributable? && TranslationService.configured?
+    return false unless (@status.distributable? || @status.account.translatable_private?) && TranslationService.configured?
 
     languages[@status.language]&.include?(@target_language)
   end

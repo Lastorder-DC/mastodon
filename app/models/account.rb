@@ -50,7 +50,11 @@
 #  trendable                     :boolean
 #  reviewed_at                   :datetime
 #  requested_review_at           :datetime
+#  group_allow_private_message   :boolean
+#  searchability                 :integer          default("direct"), not null
+#  settings                      :jsonb
 #  indexable                     :boolean          default(FALSE), not null
+#  master_settings               :jsonb
 #
 
 class Account < ApplicationRecord
@@ -70,22 +74,26 @@ class Account < ApplicationRecord
   URL_PREFIX_RE = %r{\Ahttp(s?)://[^/]+}
   USERNAME_ONLY_RE = /\A#{USERNAME_RE}\z/i
 
-  include Attachmentable
-  include AccountAssociations
-  include AccountAvatar
-  include AccountFinderConcern
-  include AccountHeader
-  include AccountInteractions
-  include Paginable
-  include AccountCounters
-  include DomainNormalizable
+  include Attachmentable # Load prior to Avatar & Header concerns
+
+  include Account::Associations
+  include Account::Avatar
+  include Account::Counters
+  include Account::FinderConcern
+  include Account::Header
+  include Account::Interactions
+  include Account::Merging
+  include Account::Search
+  include Account::StatusesSearch
+  include Account::OtherSettings
+  include Account::MasterSettings
   include DomainMaterializable
-  include AccountMerging
-  include AccountSearch
-  include AccountStatusesSearch
+  include DomainNormalizable
+  include Paginable
 
   enum protocol: { ostatus: 0, activitypub: 1 }
   enum suspension_origin: { local: 0, remote: 1 }, _prefix: true
+  enum searchability: { public: 0, private: 1, direct: 2, limited: 3, unsupported: 4, public_unlisted: 10 }, _suffix: :searchability
 
   validates :username, presence: true
   validates_with UniqueUsernameValidator, if: -> { will_save_change_to_username? }
@@ -101,7 +109,7 @@ class Account < ApplicationRecord
   validates_with UnreservedUsernameValidator, if: -> { local? && will_save_change_to_username? && actor_type != 'Application' }
   validates :display_name, length: { maximum: 30 }, if: -> { local? && will_save_change_to_display_name? }
   validates :note, note_length: { maximum: 500 }, if: -> { local? && will_save_change_to_note? }
-  validates :fields, length: { maximum: 4 }, if: -> { local? && will_save_change_to_fields? }
+  validates :fields, length: { maximum: 6 }, if: -> { local? && will_save_change_to_fields? }
   validates :uri, absence: true, if: :local?, on: :create
   validates :inbox_url, absence: true, if: :local?, on: :create
   validates :shared_inbox_url, absence: true, if: :local?, on: :create
@@ -120,8 +128,8 @@ class Account < ApplicationRecord
   scope :bots, -> { where(actor_type: %w(Application Service)) }
   scope :groups, -> { where(actor_type: 'Group') }
   scope :alphabetic, -> { order(domain: :asc, username: :asc) }
-  scope :matches_username, ->(value) { where('lower((username)::text) LIKE lower(?)', "#{value}%") }
-  scope :matches_display_name, ->(value) { where(arel_table[:display_name].matches("#{value}%")) }
+  scope :matches_username, ->(value) { where('lower((username)::text) ~ lower(?)', value.to_s) }
+  scope :matches_display_name, ->(value) { where(arel_table[:display_name].matches_regexp(value.to_s)) }
   scope :matches_domain, ->(value) { where(arel_table[:domain].matches("%#{value}%")) }
   scope :without_unapproved, -> { left_outer_joins(:user).merge(User.approved.confirmed).or(remote) }
   scope :searchable, -> { without_unapproved.without_suspended.where(moved_to_account_id: nil) }
@@ -186,7 +194,27 @@ class Account < ApplicationRecord
     actor_type == 'Group'
   end
 
+  def group=(val)
+    self.actor_type = ActiveModel::Type::Boolean.new.cast(val) ? 'Group' : 'Person'
+  end
+
   alias group group?
+
+  def my_actor_type
+    if actor_type == 'Service'
+      'bot'
+    else
+      actor_type == 'Group' ? 'group' : 'person'
+    end
+  end
+
+  def my_actor_type=(val)
+    self.actor_type = if val == 'bot'
+                        'Service'
+                      else
+                        val == 'group' ? 'Group' : 'Person'
+                      end
+  end
 
   def acct
     local? ? username : "#{username}@#{domain}"
@@ -246,6 +274,9 @@ class Account < ApplicationRecord
     suspended? && deletion_request.present?
   end
 
+  alias unavailable? suspended?
+  alias permanently_unavailable? suspended_permanently?
+
   def suspend!(date: Time.now.utc, origin: :local, block_email: true)
     transaction do
       create_deletion_request!
@@ -284,6 +315,18 @@ class Account < ApplicationRecord
 
   def sign?
     true
+  end
+
+  def public_statuses_count
+    hide_statuses_count? ? 0 : statuses_count
+  end
+
+  def public_following_count
+    hide_following_count? ? 0 : following_count
+  end
+
+  def public_followers_count
+    hide_followers_count? ? 0 : followers_count
   end
 
   def previous_strikes_count
@@ -344,7 +387,7 @@ class Account < ApplicationRecord
     self[:fields] = fields
   end
 
-  DEFAULT_FIELDS_SIZE = 4
+  DEFAULT_FIELDS_SIZE = 6
 
   def build_fields
     return if fields.size >= DEFAULT_FIELDS_SIZE
@@ -480,6 +523,10 @@ class Account < ApplicationRecord
 
     generate_keys
     save!
+  end
+
+  def compute_searchability_activitypub
+    local? ? 'public' : searchability
   end
 
   private
