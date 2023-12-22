@@ -253,6 +253,10 @@ class Status < ApplicationRecord
     !quote_of_id.nil? && !quote.nil?
   end
 
+  def expires?
+    scheduled_expiration_status.present?
+  end
+
   def within_realtime_window?
     created_at >= REAL_TIME_WINDOW.ago
   end
@@ -496,7 +500,9 @@ class Status < ApplicationRecord
     end
 
     def selectable_searchabilities
-      searchabilities.keys - %w(unsupported)
+      ss = searchabilities.keys - %w(unsupported)
+      ss -= %w(public_unlisted) unless Setting.enable_public_unlisted_visibility
+      ss
     end
 
     def selectable_searchabilities_for_search

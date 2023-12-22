@@ -28,6 +28,13 @@ class StatusPolicy < ApplicationPolicy
     record.limited_visibility? ? owned_conversation? : owned?
   end
 
+  def show_activity?
+    return false unless show?
+    return true unless record.expires?
+
+    following_author_domain?
+  end
+
   def reblog?
     !requires_mention? && (!private? || owned?) && show? && !blocking_author?
   end
@@ -113,6 +120,12 @@ class StatusPolicy < ApplicationPolicy
     return false if current_account.nil?
 
     @preloaded_relations[:following] ? @preloaded_relations[:following][author.id] : current_account.following?(author)
+  end
+
+  def following_author_domain?
+    return false if current_account.nil?
+
+    author.followed_by_domain?(current_account.domain, record.created_at)
   end
 
   def author
