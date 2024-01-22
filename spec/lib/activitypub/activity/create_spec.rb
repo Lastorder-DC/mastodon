@@ -77,13 +77,6 @@ RSpec.describe ActivityPub::Activity::Create do
       follower.follow!(sender)
     end
 
-    around do |example|
-      Sidekiq::Testing.fake! do
-        example.run
-        Sidekiq::Worker.clear_all
-      end
-    end
-
     it 'correctly processes posts and inserts them in timelines', :aggregate_failures do
       # Simulate a temporary failure preventing from fetching the parent post
       stub_request(:get, object_json[:id]).to_return(status: 500)
@@ -539,15 +532,21 @@ RSpec.describe ActivityPub::Activity::Create do
                 mediaType: 'image/png',
                 url: 'http://example.com/attachment.png',
               },
+              {
+                type: 'Document',
+                mediaType: 'image/png',
+                url: 'http://example.com/emoji.png',
+              },
             ],
           }
         end
 
-        it 'creates status' do
+        it 'creates status with correctly-ordered media attachments' do
           status = sender.statuses.first
 
           expect(status).to_not be_nil
-          expect(status.media_attachments.map(&:remote_url)).to include('http://example.com/attachment.png')
+          expect(status.ordered_media_attachments.map(&:remote_url)).to eq ['http://example.com/attachment.png', 'http://example.com/emoji.png']
+          expect(status.ordered_media_attachment_ids).to be_present
         end
       end
 

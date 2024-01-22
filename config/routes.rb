@@ -4,9 +4,9 @@ require 'sidekiq_unique_jobs/web'
 require 'sidekiq-scheduler/web'
 
 class RedirectWithVary < ActionDispatch::Routing::PathRedirect
-  def serve(...)
-    super.tap do |_, headers, _|
-      headers['Vary'] = 'Origin, Accept'
+  def build_response(req)
+    super.tap do |response|
+      response.headers['Vary'] = 'Origin, Accept'
     end
   end
 end
@@ -31,7 +31,7 @@ Rails.application.routes.draw do
     /favourites
     /bookmarks
     /pinned
-    /start
+    /start/(*any)
     /directory
     /explore/(*any)
     /search
@@ -51,7 +51,7 @@ Rails.application.routes.draw do
 
   get 'health', to: 'health#show'
 
-  authenticate :user, lambda { |u| u.role&.can?(:view_devops) } do
+  authenticate :user, ->(user) { user.role&.can?(:view_devops) } do
     mount Sidekiq::Web, at: 'sidekiq', as: :sidekiq
     mount PgHero::Engine, at: 'pghero', as: :pghero
   end
@@ -63,12 +63,12 @@ Rails.application.routes.draw do
   end
 
   get '.well-known/host-meta', to: 'well_known/host_meta#show', as: :host_meta, defaults: { format: 'xml' }
-  get '.well-known/nodeinfo', to: 'well_known/nodeinfo#index', as: :nodeinfo, defaults: { format: 'json' }
+  get '.well-known/nodeinfo', to: 'well_known/node_info#index', as: :nodeinfo, defaults: { format: 'json' }
   get '.well-known/webfinger', to: 'well_known/webfinger#show', as: :webfinger
   get '.well-known/change-password', to: redirect('/auth/edit')
   get '.well-known/proxy', to: redirect { |_, request| "/authorize_interaction?#{request.params.to_query}" }
 
-  get '/nodeinfo/2.0', to: 'well_known/nodeinfo#show', as: :nodeinfo_schema
+  get '/nodeinfo/2.0', to: 'well_known/node_info#show', as: :nodeinfo_schema
 
   get 'manifest', to: 'manifests#show', defaults: { format: 'json' }
   get 'intent', to: 'intents#show'
@@ -80,6 +80,8 @@ Rails.application.routes.draw do
     resource :inbox, only: [:create], module: :activitypub
     resource :outbox, only: [:show], module: :activitypub
   end
+
+  get '/invite/:invite_code', constraints: ->(req) { req.format == :json }, to: 'api/v1/invites#show'
 
   devise_scope :user do
     get '/invite/:invite_code', to: 'auth/registrations#new', as: :public_invite
@@ -96,17 +98,17 @@ Rails.application.routes.draw do
 
   devise_for :users, path: 'auth', format: false, controllers: {
     omniauth_callbacks: 'auth/omniauth_callbacks',
-    sessions:           'auth/sessions',
-    registrations:      'auth/registrations',
-    passwords:          'auth/passwords',
-    confirmations:      'auth/confirmations',
+    sessions: 'auth/sessions',
+    registrations: 'auth/registrations',
+    passwords: 'auth/passwords',
+    confirmations: 'auth/confirmations',
   }
 
   # rubocop:disable Style/FormatStringToken - those do not go through the usual formatting functions and are not safe to correct
-  get '/users/:username', to: redirect_with_vary('/@%{username}'), constraints: lambda { |req| req.format.nil? || req.format.html? }
-  get '/users/:username/following', to: redirect_with_vary('/@%{username}/following'), constraints: lambda { |req| req.format.nil? || req.format.html? }
-  get '/users/:username/followers', to: redirect_with_vary('/@%{username}/followers'), constraints: lambda { |req| req.format.nil? || req.format.html? }
-  get '/users/:username/statuses/:id', to: redirect_with_vary('/@%{username}/%{id}'), constraints: lambda { |req| req.format.nil? || req.format.html? }
+  get '/users/:username', to: redirect_with_vary('/@%{username}'), constraints: ->(req) { req.format.nil? || req.format.html? }
+  get '/users/:username/following', to: redirect_with_vary('/@%{username}/following'), constraints: ->(req) { req.format.nil? || req.format.html? }
+  get '/users/:username/followers', to: redirect_with_vary('/@%{username}/followers'), constraints: ->(req) { req.format.nil? || req.format.html? }
+  get '/users/:username/statuses/:id', to: redirect_with_vary('/@%{username}/%{id}'), constraints: ->(req) { req.format.nil? || req.format.html? }
   # rubocop:enable Style/FormatStringToken
 
   get '/authorize_follow', to: redirect { |_, request| "/authorize_interaction?#{request.params.to_query}" }
