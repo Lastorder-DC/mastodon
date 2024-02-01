@@ -1,5 +1,5 @@
 /* Mastodon Bird UI by @rolle@mementomori.social
-   2.0.0rc */
+   2.0.0rc10 */
 
 /* CSS variables */
 :root {
@@ -965,13 +965,6 @@ body.embed .status__content a,
   stroke: var(--color-accent) !important;
 }
 
-/* Mud background colors, reply-indicator */
-.layout-multiple-columns .reply-indicator {
-  background-color: var(--color-mud);
-  color: var(--color-light-text);
-  max-height: 20vh;
-}
-
 /* Dropdown hovers */
 .layout-multiple-columns .language-dropdown__dropdown__results__item:hover,
 .layout-multiple-columns .language-dropdown__dropdown__results__item:focus {
@@ -1558,7 +1551,7 @@ body.embed .detailed-status,
   width: 100% !important;
 }
 
-.layout-single-column .media-gallery__gifv,
+.layout-multiple-columns .media-gallery__gifv,
 .layout-multiple-columns .detailed-status .audio-player,
 .layout-multiple-columns .detailed-status .media-gallery,
 .layout-multiple-columns .detailed-status .media-gallery__gifv,
@@ -1567,24 +1560,24 @@ body.embed .detailed-status,
   margin-left: 0;
 }
 
-.layout-single-column .media-gallery__preview {
+.layout-multiple-columns .media-gallery__preview {
   /* stylelint-disable-next-line */
   margin-left: 0 !important;
   /* stylelint-disable-next-line */
   width: 100% !important;
 }
 
-.layout-single-column .media-gallery > .media-gallery__item:nth-of-type(odd),
-.layout-single-column .media-gallery > .media-gallery__item:nth-of-type(odd) > a,
-.layout-single-column .media-gallery__preview:nth-of-type(odd),
+.layout-multiple-columns .media-gallery > .media-gallery__item:nth-of-type(odd),
+.layout-multiple-columns .media-gallery > .media-gallery__item:nth-of-type(odd) > a,
+.layout-multiple-columns .media-gallery__preview:nth-of-type(odd),
  {
   border-bottom-right-radius: 0;
   border-top-right-radius: 0;
 }
 
-.layout-single-column .media-gallery > .media-gallery__item:nth-of-type(even),
-.layout-single-column .media-gallery > .media-gallery__item:nth-of-type(even) > a,
-.layout-single-column .media-gallery__preview:nth-of-type(even) {
+.layout-multiple-columns .media-gallery > .media-gallery__item:nth-of-type(even),
+.layout-multiple-columns .media-gallery > .media-gallery__item:nth-of-type(even) > a,
+.layout-multiple-columns .media-gallery__preview:nth-of-type(even) {
   border-bottom-left-radius: 0;
   border-top-left-radius: 0;
 }
@@ -1973,6 +1966,7 @@ body.embed .detailed-status__meta .detailed-status__link .icon-retweet,
   font-size: var(--font-size);
 }
 
+/* stylelint-disable-next-line */
 .layout-multiple-columns .notification-admin-report .notification__report__details  strong {
   font-weight: var(--font-weight-regular);
 }
@@ -2264,14 +2258,21 @@ body.embed .detailed-status__meta .detailed-status__link .icon-retweet,
   background-size: 20px;
   display: inline-block;
   height: 24px;
-  top: 9px;
   width: 24px;
+}
+
+.layout-multiple-columns .search .search__icon .icon {
+  inset-inline-start: unset;
+  position: absolute;
+  right: 14px;
+  top: 9px;
 }
 
 .layout-multiple-columns .search .search__icon .icon-search path {
   display: none;
 }
 
+.layout-multiple-columns .search.active .search__input,
 .layout-multiple-columns input.setting-text,
 .layout-multiple-columns .search__input {
   background-color: var(--color-mud);
@@ -2867,11 +2868,45 @@ body.embed .button.logo-button:hover,
 }
 
 /* Compose form */
+.layout-multiple-columns .compose-panel .compose-form__highlightable,
 .layout-multiple-columns .compose-panel .compose-form {
   background-color: transparent;
+  border: 0;
   margin-bottom: 0;
   position: relative;
   z-index: 4;
+}
+
+/* New compose form buttons from 4.3.0-alpha 2024-01-27 */
+.layout-multiple-columns .compose-form__dropdowns {
+  gap: 10px;
+}
+
+.layout-multiple-columns .compose-form__dropdowns .dropdown-button.active,
+.layout-multiple-columns .compose-form__dropdowns .dropdown-button {
+  background-color: transparent;
+  border: 0;
+  color: var(--color-dim);
+  padding: 0;
+}
+
+.layout-multiple-columns .compose-form__dropdowns .dropdown-button.active,
+.layout-multiple-columns .compose-form__dropdowns .dropdown-button:hover,
+.layout-multiple-columns .compose-form__dropdowns .dropdown-button:focus {
+  color: var(--color-accent);
+}
+
+.layout-multiple-columns .compose-form__submit {
+  flex: unset;
+}
+
+.layout-multiple-columns .compose-form__actions {
+  justify-content: space-between;
+}
+
+.layout-multiple-columns .compose-form__actions .icon-button.active {
+  background-color: transparent;
+  color: var(--color-accent);
 }
 
 /* Footer items */
@@ -2886,8 +2921,21 @@ body.embed .button.logo-button:hover,
   overflow: visible;
 }
 
+.layout-multiple-columns .compose-form__highlightable,
+.layout-multiple-columns .compose-panel .compose-form,
+.layout-multiple-columns .compose-panel,
+.layout-multiple-columns .compose-form__autosuggest-wrapper {
+  overflow: visible;
+}
+
+.layout-multiple-columns .compose-form__footer {
+  gap: 4px;
+  padding-bottom: 6px;
+}
+
 /* Compose form and reply indicator box, see https://mastodo.fi/@rmattila74/110140863513856240 */
 @media (min-width: 889px) {
+  .layout-multiple-columns .compose-form__highlightable .autosuggest-textarea__textarea,
   .layout-multiple-columns .compose-form .autosuggest-textarea__textarea {
     /* stylelint-disable-next-line */
     max-height: 20vh !important;  /* stylelint-disable-next-line */
@@ -2896,6 +2944,9 @@ body.embed .button.logo-button:hover,
   }
 
   /* Add slight background color for the compose form */
+  /* stylelint-disable-next-line no-duplicate-selectors */
+  .layout-multiple-columns .compose-form__highlightable,
+  .layout-multiple-columns .compose-form__highlightable .compose-form__buttons-wrapper,
   .layout-multiple-columns .compose-form .compose-form__autosuggest-wrapper,
   .layout-multiple-columns .compose-form .compose-form__buttons-wrapper {
     background-color: var(--color-bg-compose-form);
@@ -2905,13 +2956,16 @@ body.embed .button.logo-button:hover,
   }
 
   /* Smooth color transition on focus */
+  .layout-multiple-columns .compose-form__highlightable:focus-within,
   .layout-multiple-columns .compose-form .compose-form__autosuggest-wrapper:focus-within,
-  .layout-multiple-columns .compose-form .compose-form__autosuggest-wrapper:focus-within ~ .compose-form__buttons-wrapper {
+  .layout-multiple-columns .compose-form .compose-form__autosuggest-wrapper:focus-within ~ .compose-form__buttons-wrapper,
+  .layout-multiple-columns .compose-form__highlightable .compose-form__autosuggest-wrapper:focus-within ~ .compose-form__buttons-wrapper {
     background-color: var(--color-bg-compose-form-focus);
     border-color: var(--color-bg-compose-form-focus);
   }
 
   /* Fixes bottom row padding when there's a background */
+  .layout-multiple-columns .compose-form__highlightable .compose-form__buttons-wrapper,
   .layout-multiple-columns .compose-form .compose-form__buttons-wrapper {
     padding: calc(var(--gap-default) / 2);
   }
@@ -2919,15 +2973,10 @@ body.embed .button.logo-button:hover,
   .layout-multiple-columns .navigation-bar + .compose-form {
     padding-top: 10px;
   }
-
-  .layout-multiple-columns .compose-form .emoji-picker-dropdown {
-    inset-inline-end: 3px;
-    position: absolute;
-    top: 3px;
-  }
 }
 
 @media (min-width: 889px) and (max-height: 1000px) {
+  .layout-multiple-columns .compose-form__highlightable .autosuggest-textarea__textarea,
   .layout-multiple-columns .compose-form .autosuggest-textarea__textarea {
     /* stylelint-disable-next-line */
     max-height: 10vh !important;
@@ -3206,6 +3255,7 @@ body.embed .button.logo-button:hover,
 }
 
 /* ...except for these icons, we kinda like them as they are */
+.layout-multiple-columns .icon-user-plus.column-link__icon,
 .layout-multiple-columns .icon.icon-undefined path,
 .layout-multiple-columns .icon.icon-users path,
 .layout-multiple-columns .account__header__tabs__buttons .icon.icon-user-plus path,
@@ -4016,7 +4066,7 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
  * ---------------------------------------
  */
 
- @keyframes boost-animate {
+@keyframes boost-animate {
   100% {
     background-position: -7770px;
   }
@@ -4055,7 +4105,25 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
 
   /* Offset in numbered item */
   .layout-multiple-columns.no-reduce-motion .status__action-bar .icon-button.icon-button--with-counter.active:focus .icon-retweet {
-    left: -84px;
+    left: -92px;
+  }
+
+  /* Offset fixes for especially multiple column view */
+  .layout-multiple-columns.no-reduce-motion .detailed-status__button .icon-button.active:focus .icon-retweet,
+  .layout-multiple-columns.no-reduce-motion .status .icon-button.icon-button--with-counter.star-icon.activate {
+    transform: translate(2px, -2px);
+  }
+
+  /* stylelint-disable-next-line */
+  .layout-multiple-columns.no-reduce-motion .status .icon-button.icon-button--with-counter.star-icon.activate .icon-star + .icon-button__counter > .animated-number {
+    top: 2px;
+    transform: translateX(10px);
+  }
+
+  /* stylelint-disable-next-line */
+  .layout-multiple-columns.no-reduce-motion .status__action-bar .icon-button.icon-button--with-counter.active:focus .icon-retweet + .icon-button__counter > .animated-number {
+    top: 0;
+    transform: translateX(13px);
   }
 }
 
@@ -4183,16 +4251,23 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
 /* stylelint-disable-next-line */
 .layout-multiple-columns.no-reduce-motion .status .icon-button.star-icon.activate .icon-star {
   left: -27px;
+  top: -40px;
 }
 
 /* stylelint-disable-next-line */
 .layout-multiple-columns.no-reduce-motion .status .icon-button.icon-button--with-counter.star-icon.activate .icon-star {
   left: -38px;
+  top: -38px;
 }
 
 /* stylelint-disable-next-line */
 .layout-multiple-columns.no-reduce-motion .detailed-status__action-bar .icon-button.star-icon.activate .icon-star {
   left: -29px;
+  top: -41px;
+}
+
+.layout-multiple-columns.no-reduce-motion .detailed-status__action-bar {
+  height: 25.5px;
 }
 
 @media screen and (max-width: 889px) {
@@ -4876,7 +4951,7 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
 
 /* Advanced web interface specific styles */
 
-/* Make the side input last in order */
+/* Make the side input first in order */
 .layout-multiple-columns .drawer {
   order: 0;
   padding: 0 10px;
