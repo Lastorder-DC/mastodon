@@ -4988,3 +4988,8 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
 .layout-multiple-columns .column-settings__hashtags .column-select__multi-value {
   background-color: var(--color-bg-75);
 }
+
+/* Remove follow suggestions */
+.inline-follow-suggestions {
+  display: none;
+}

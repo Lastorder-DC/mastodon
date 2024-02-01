@@ -5067,3 +5067,8 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
 }
 
 2/2: If you prefer stars remove this line too */
+
+/* Remove follow suggestions */
+.inline-follow-suggestions {
+  display: none;
+}
