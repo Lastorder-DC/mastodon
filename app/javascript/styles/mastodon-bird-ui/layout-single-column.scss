@@ -2458,7 +2458,7 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
 }
 
 /* Hide labels that show "Website", "YouTube", etc. */
-.layout-single-column .account__header__bio .account__header__fields dl:has(dt[title*="github" i], dt[title*="유튜브" i], dt[title*="사이트" i], dt[title*="트위치" i], dt[title*="트위터" i], dt[title*="디스코드" i], dt[title*="linkedin" i], dt[title*="인스타" i], dt[title="IG"], dt[title~="마스토돈 계정" i], dt[title~="마스토돈 계정" i], dt[title~="account" i], dt[title="부계정" i], dt[title*="마스토돈" i], dt[title*="masto" i], dt[title*="ko-fi" i], dt[title*="kofi" i], dt[title*="페이팔" i], dt[title*="patreon" i], dt[title*="스레드" i], dt[title*="bluesky" i], dt[title*="nostr" i], dt[title*="밴드캠프" i], dt[title*="페이스북" i], dt[title*="friendica" i], dt[title*="pronouns" i], dt[title*="wordpress" i], dt[title*="페북" i]) dt {
+.layout-single-column .account__header__bio .account__header__fields dl:has(dt[title*="github" i], dt[title*="유튜브" i], dt[title*="사이트" i], dt[title*="트위치" i], dt[title*="트위터" i], dt[title*="디스코드" i], dt[title*="linkedin" i], dt[title*="인스타" i], dt[title="IG"], dt[title~="마스토돈 계정" i], dt[title~="마스토돈 계정" i], dt[title~="account" i], dt[title="부계정" i], dt[title*="마스토돈" i], dt[title*="masto" i], dt[title*="ko-fi" i], dt[title*="kofi" i], dt[title*="페이팔" i], dt[title*="patreon" i], dt[title*="스레드" i], dt[title*="블루스카이" i], dt[title*="nostr" i], dt[title*="밴드캠프" i], dt[title*="페이스북" i], dt[title*="friendica" i], dt[title*="pronouns" i], dt[title*="wordpress" i], dt[title*="페북" i]) dt {
   display: none;
 }
 
