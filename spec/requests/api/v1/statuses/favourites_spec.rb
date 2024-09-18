@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'Favourites', :sidekiq_inline do
+RSpec.describe 'Favourites', :inline_jobs do
   let(:user)    { Fabricate(:user) }
   let(:scopes)  { 'write:favourites' }
   let(:token)   { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: scopes) }
@@ -28,7 +28,7 @@ RSpec.describe 'Favourites', :sidekiq_inline do
       it 'returns json with updated attributes' do
         subject
 
-        expect(body_as_json).to match(
+        expect(response.parsed_body).to match(
           a_hash_including(id: status.id.to_s, favourites_count: 1, favourited: true)
         )
       end
@@ -95,7 +95,7 @@ RSpec.describe 'Favourites', :sidekiq_inline do
       it 'returns json with updated attributes' do
         subject
 
-        expect(body_as_json).to match(
+        expect(response.parsed_body).to match(
           a_hash_including(id: status.id.to_s, favourites_count: 0, favourited: false)
         )
       end
@@ -118,7 +118,7 @@ RSpec.describe 'Favourites', :sidekiq_inline do
       it 'returns json with updated attributes' do
         subject
 
-        expect(body_as_json).to match(
+        expect(response.parsed_body).to match(
           a_hash_including(id: status.id.to_s, favourites_count: 0, favourited: false)
         )
       end

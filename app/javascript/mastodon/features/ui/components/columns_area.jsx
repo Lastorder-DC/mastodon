@@ -10,7 +10,7 @@ import { scrollRight } from '../../../scroll';
 import BundleContainer from '../containers/bundle_container';
 import {
   Compose,
-  Notifications,
+  NotificationsWrapper,
   HomeTimeline,
   CommunityTimeline,
   PublicTimeline,
@@ -32,7 +32,7 @@ import NavigationPanel from './navigation_panel';
 const componentMap = {
   'COMPOSE': Compose,
   'HOME': HomeTimeline,
-  'NOTIFICATIONS': Notifications,
+  'NOTIFICATIONS': NotificationsWrapper,
   'PUBLIC': PublicTimeline,
   'REMOTE': PublicTimeline,
   'COMMUNITY': CommunityTimeline,
@@ -63,8 +63,8 @@ export default class ColumnsArea extends ImmutablePureComponent {
     children: PropTypes.node,
   };
 
-  // Corresponds to (max-width: $no-gap-breakpoint + 285px - 1px) in SCSS
-  mediaQuery = 'matchMedia' in window && window.matchMedia('(max-width: 1174px)');
+  // Corresponds to (max-width: $no-gap-breakpoint - 1px) in SCSS
+  mediaQuery = 'matchMedia' in window && window.matchMedia('(max-width: 1206px)');
 
   state = {
     renderComposePanel: !(this.mediaQuery && this.mediaQuery.matches),

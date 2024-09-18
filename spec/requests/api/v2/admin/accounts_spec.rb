@@ -76,14 +76,15 @@ RSpec.describe 'API V2 Admin Accounts' do
     end
 
     def body_json_ids
-      body_as_json.map { |a| a[:id].to_i }
+      response.parsed_body.map { |a| a[:id].to_i }
     end
 
     context 'with limit param' do
       let(:params) { { limit: 1 } }
 
       it 'sets the correct pagination headers' do
-        expect(response.headers['Link'].find_link(%w(rel next)).href).to eq api_v2_admin_accounts_url(limit: 1, max_id: admin_account.id)
+        expect(response)
+          .to include_pagination_headers(next: api_v2_admin_accounts_url(limit: 1, max_id: admin_account.id))
       end
     end
   end

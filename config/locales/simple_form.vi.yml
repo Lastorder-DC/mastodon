@@ -3,6 +3,7 @@ vi:
   simple_form:
     hints:
       account:
+        attribution_domains_as_text: Bảo vệ khỏi những sự gán ghép sai.
         discoverable: Các tút và hồ sơ công khai của bạn có thể được giới thiệu hoặc đề xuất ở nhiều khu vực khác nhau của Mastodon và hồ sơ của bạn có thể được đề xuất cho những người dùng khác.
         display_name: Tên đầy đủ hoặc biệt danh đều được.
         fields: Trang blog của bạn, nghề nghiệp, tuổi hoặc bất cứ thứ gì.
@@ -130,7 +131,7 @@ vi:
         name: Bạn có thể thay đổi cách viết hoa các chữ cái để giúp nó dễ đọc hơn
       user:
         chosen_languages: Chỉ hiển thị những tút viết bằng các ngôn ngữ sau
-        role: Vai trò kiểm soát những quyền mà người dùng có
+        role: Vai trò kiểm soát những quyền mà người dùng có.
       user_role:
         color: Màu được sử dụng cho vai trò trong toàn bộ giao diện người dùng, dưới dạng RGB ở định dạng hex
         highlighted: Vai trò sẽ hiển thị công khai
@@ -143,6 +144,7 @@ vi:
         url: Nơi những sự kiện được gửi đến
     labels:
       account:
+        attribution_domains_as_text: Chỉ cho phép các website đặc biệt
         discoverable: Cho phép khám phá hồ sơ
         fields:
           name: Nhãn
@@ -211,6 +213,7 @@ vi:
         setting_default_privacy: Kiểu đăng
         setting_default_sensitive: Đánh dấu media nhạy cảm
         setting_delete_modal: Hỏi trước khi xóa tút
+        setting_disable_hover_cards: Tắt thẻ xem trước hồ sơ
         setting_disable_swiping: Không dùng chuyển động vuốt
         setting_display_media: Media nhạy cảm
         setting_display_media_default: Mặc định
@@ -242,11 +245,13 @@ vi:
           warn: Ẩn kèm theo cảnh báo
       form_admin_settings:
         activity_api_enabled: Công khai số liệu thống kê tổng hợp về hoạt động của người dùng trong API
+        app_icon: Biểu tượng ứng dụng
         backups_retention_period: Thời hạn lưu trữ nội dung người dùng sao lưu
         bootstrap_timeline_accounts: Luôn đề xuất những người này đến người mới
         closed_registrations_message: Thông báo tùy chỉnh khi tắt đăng ký
         content_cache_retention_period: Khoảng thời gian lưu giữ nội dung máy chủ khác
         custom_css: Tùy chỉnh CSS
+        favicon: Favicon
         mascot: Tùy chỉnh linh vật (kế thừa)
         media_cache_retention_period: Thời hạn lưu trữ cache media
         peers_api_enabled: Công khai danh sách các máy chủ được phát hiện trong API
@@ -311,7 +316,7 @@ vi:
         listable: Cho phép xuất hiện trong tìm kiếm và đề xuất
         name: Hashtag
         trendable: Cho phép hashtag này lên xu hướng
-        usable: Cho phép dùng trong tút
+        usable: Cho phép dùng hashtag này khi soạn tút
       user:
         role: Vai trò
         time_zone: Múi giờ
