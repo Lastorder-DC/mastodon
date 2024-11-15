@@ -35,7 +35,7 @@ module Mastodon
     def to_s
       components = [to_a.join('.')]
       components << "-#{prerelease}" if prerelease.present?
-      components << "+#{build_metadata}" if build_metadata.present?
+      components << "+occm#{build_metadata}" if build_metadata.present?
       components.join
     end
 
@@ -50,7 +50,7 @@ module Mastodon
     end
 
     def repository
-      ENV.fetch('GITHUB_REPOSITORY', 'mastodon/mastodon')
+      ENV.fetch('GITHUB_REPOSITORY', 'Lastorder-DC/mastodon')
     end
 
     def source_base_url
