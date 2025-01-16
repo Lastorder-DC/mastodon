@@ -47,6 +47,7 @@ Rails.application.configure do
   config.force_ssl = true
   # Skip http-to-https redirect for the default health check endpoint.
   config.ssl_options = {
+    hsts: { preload: true },
     redirect: {
       exclude: ->(request) { request.path.start_with?('/health') || request.headers['Host'].end_with?('.onion') || request.headers['Host'].end_with?('.i2p') },
     },
