@@ -1,6 +1,6 @@
 /* Mastodon Bird UI by @rolle@mementomori.social
    Edit for OCCMv3 by Lastorder-DC
-   2.0.0 */
+   2.1.2rc6 */
 
 /* CSS variables */
 :root {
@@ -670,11 +670,6 @@ body.layout-multiple-columns {
   display: inherit;
 }
 
-/* Hide empty status cards alltogether (Mastodon 4.1.5-2023-07-29) */
-.layout-multiple-columns .status-card:has(.icon-file-text) {
-  display: none;
-}
-
 /* Hide empty YouTube description */
 .layout-multiple-columns .status-card__description:empty {
   display: none;
@@ -782,6 +777,12 @@ body.layout-multiple-columns {
   background-color: var(--color-dark);
   border-color: var(--color-dark);
   color: var(--color-light-text);
+}
+
+/* Setting boxes */
+.layout-multiple-columns .column-header__collapsible-inner {
+  background-color: var(--color-bg);
+  border-color: var(--color-border);
 }
 
 /* Column-header border */
@@ -1042,7 +1043,7 @@ body .content-warning {
   color: var(--color-light-purple);
   display: grid;
   font-size: var(--font-size-mid);
-  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 3fr) minmax(88px, 1fr);
   padding: 10px 16px;
   white-space: unset;
 }
@@ -1063,8 +1064,8 @@ body .content-warning .link-button {
   font-size: var(--font-size-mid);
   font-weight: var(--font-weight-semibold);
   justify-self: flex-end;
-  min-width: 65px;
   text-align: right;
+  white-space: nowrap;
 }
 
 /* New content warnings in 4.3.0.beta.1-mementomods-2024-08-23 */
@@ -1660,7 +1661,13 @@ body.embed .detailed-status,
   width: 100% !important;
 }
 
+.layout-multiple-columns .media-gallery:has(.spoiler-button) .media-gallery__preview {
+  /* stylelint-disable-next-line */
+  width: 100% !important;
+}
+
 .layout-multiple-columns .media-gallery__gifv,
+.layout-multiple-columns .media-gallery__preview,
 .layout-multiple-columns .detailed-status .audio-player,
 .layout-multiple-columns .detailed-status .media-gallery,
 .layout-multiple-columns .detailed-status .media-gallery__gifv,
@@ -1676,10 +1683,13 @@ body.embed .detailed-status,
   width: 100% !important;
 }
 
+.layout-multiple-columns .media-gallery__item {
+  outline: 0;
+}
+
 .layout-multiple-columns .media-gallery > .media-gallery__item:nth-of-type(odd),
 .layout-multiple-columns .media-gallery > .media-gallery__item:nth-of-type(odd) > a,
-.layout-multiple-columns .media-gallery__preview:nth-of-type(odd)
- {
+.layout-multiple-columns .media-gallery__preview:nth-of-type(odd) {
   border-bottom-right-radius: 0;
   border-top-right-radius: 0;
 }
@@ -2378,6 +2388,12 @@ body.embed .detailed-status__meta .detailed-status__link .icon-retweet,
   opacity: 1;
 }
 
+/* Search icon fix for 4.4.0-alpha.1+mementomods-2024-12-15 changes */
+.layout-multiple-columns .search__icon {
+  right: 0;
+  top: 0;
+}
+
 /* Search */
 .layout-multiple-columns .search .search__icon .icon-search {
   background-image: var(--icon-search);
@@ -3060,9 +3076,24 @@ body.embed .button.logo-button:hover,
   z-index: 4;
 }
 
+body .compose-form .compose-form__uploads {
+  margin-left: 0;
+  margin-top: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 /* New compose form buttons from 4.3.0-alpha 2024-01-27 */
 .layout-multiple-columns .compose-form__dropdowns {
   gap: 10px;
+}
+
+.layout-multiple-columns .compose-form .media-gallery__item,
+.layout-multiple-columns .compose-form .compose-form__uploads,
+.layout-multiple-columns .compose-form .media-gallery {
+  border: 0;
+  border-radius: 0;
+  outline: 0;
 }
 
 .layout-multiple-columns .compose-form__dropdowns .dropdown-button.active,
@@ -3330,7 +3361,10 @@ body.embed .button.logo-button:hover,
 .layout-multiple-columns .load-more path,
 .layout-multiple-columns .account__domain-pill__popout__parts > div:nth-child(2) path,
 .layout-multiple-columns .column-header__button .icon-sliders > path,
-.compose-form .icon-close > path {
+.compose-form .icon-close > path,
+.layout-multiple-columns .item-list .lists__item__title path,
+.layout-multiple-columns .lists__item .icon-button.active path,
+.layout-multiple-columns .dialog-modal__content .lists__item__title path {
   display: none;
 }
 
@@ -3440,6 +3474,13 @@ body.embed .button.logo-button:hover,
 .layout-multiple-columns .column-header__button .icon-sliders {
   --size-icon: 20px;
   background-image: var(--icon-sliders);
+}
+
+.layout-multiple-columns .column-header__button.active .icon-sliders {
+  /* Use contrast icon */
+  background-image: var(--icon-sliders-contrast);
+  /* Disable rotate */
+  transform: none;
 }
 
 /* Administration icon */
@@ -3752,10 +3793,6 @@ body.embed .button.logo-button:hover,
     padding: 0;
   }
 
-  .layout-multiple-columns .columns-area__panels__pane--navigational .navigation-panel .flex-spacer {
-    display: none;
-  }
-
   .layout-multiple-columns .columns-area__panels__pane--navigational .navigation-panel__menu {
     flex-direction: row;
     flex-wrap: nowrap;
@@ -3953,6 +3990,11 @@ body.embed .button.logo-button:hover,
   overflow: hidden;
 }
 
+/* Fix double border on media */
+.layout-multiple-columns .media-gallery .media-gallery__item .media-gallery__gifv {
+  border: 0;
+}
+
 /* Exception for your own profile media gallery */
 .layout-multiple-columns .account-gallery__container .media-gallery__gifv {
   border-radius: 0;
@@ -4039,7 +4081,6 @@ body.embed .entry .detailed-status {
 /* Threaded line, actually */
 .layout-multiple-columns .status__line {
   border-inline-start: 2px solid var(--color-thread-line);
-  -webkit-border-start: 2px solid var(--color-thread-line);
 }
 
 .layout-multiple-columns .status__line--full::before {
@@ -4218,6 +4259,7 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
 .layout-multiple-columns .notification-group--favourite .icon-star,
 .layout-multiple-columns .notification-favourite .icon-star {
   background-image: var(--icon-heart-notification);
+  background-repeat: no-repeat;
 }
 
 .layout-multiple-columns .notification__filter-bar .icon-star,
@@ -4312,6 +4354,14 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
   height: 25.5px;
 }
 
+.layout-multiple-columns.no-reduce-motion .star-icon.icon-button--with-counter.activate .icon-button__counter {
+  margin-left: 20px;
+}
+
+.animated-number {
+  z-index: 99;
+}
+
 @media screen and (max-width: 889px) {
   /* stylelint-disable-next-line */
   .layout-multiple-columns.no-reduce-motion .status .icon-button.star-icon.activate .icon-star {
@@ -4353,6 +4403,7 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
 .layout-multiple-columns .notification-group--favourite .icon-star,
 .layout-multiple-columns .notification-favourite .icon-star {
   background-image: var(--icon-star-notification);
+  background-repeat: no-repeat;
 }
 
 .layout-multiple-columns .notification__filter-bar .active .icon-star {
@@ -4392,6 +4443,7 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
   top: 0;
   transform: none;
   width: unset;
+  height: unset !important;
 }
 
 .layout-multiple-columns.no-reduce-motion .icon-button.star-icon.active .icon-star {
@@ -4509,9 +4561,9 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
 }
 
 .layout-multiple-columns button.icon-button.icon-button--with-counter.activate.star-icon > .icon-star {
+  left: 0 !important;
   position: absolute !important;
   top: unset !important;
-  left: -34px !important;
 }
 
 @media (hover: none) {

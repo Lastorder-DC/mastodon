@@ -1,6 +1,6 @@
 /* Mastodon Bird UI by @rolle@mementomori.social
    Edit for OCCMv3 by Lastorder-DC
-   2.0.0 */
+   2.1.2rc6 */
 
 /* CSS variables */
 :root {
@@ -25,6 +25,7 @@
      and replace it inside the SVG icons if you decide to change it */
   --color-bg: var(--color-brand-mastodon-bg);
   --color-bg-75: #1e2028bf;
+  --color-bg-90: #1e2028e6;
   --color-fg: #fff;
   --color-border: #38384d;
   --color-dim: var(--color-brand-mastodon-dim);
@@ -276,6 +277,7 @@ body.theme-mastodon-bird-ui-light.layout-single-column {
   --color-light-purple: #9588a6;
   --color-dark-electric-blue: #9088a6;
   --color-bg-75: #ffffffbf;
+  --color-bg-90: #ffffffe6;
   --color-accent: var(--color-accent-dark);
   --color-ghost-button-text: var(--color-accent-dark);
   --color-bg-compose-form: rgb(147 136 166 / .2);
@@ -587,6 +589,12 @@ body.layout-single-column {
   box-shadow: 2px 4px 15px rgba(0, 0, 0, .2);
 }
 
+/* Search icon fix for 4.4.0-alpha.1+mementomods-2024-12-15 changes */
+.layout-single-column .search__icon {
+  right: 0;
+  top: 0;
+}
+
 .layout-single-column .list-editor__search .search__icon .icon {
   margin: 15px;
 }
@@ -682,11 +690,6 @@ body.layout-single-column {
 /* Show iframe in status card if status contains embedded media */
 .layout-single-column .status-card .status-card-video:has(iframe) {
   display: inherit;
-}
-
-/* Hide empty status cards alltogether (Mastodon 4.1.5-2023-07-29) */
-.layout-single-column .status-card:has(.icon-file-text) {
-  display: none;
 }
 
 /* Hide empty YouTube description */
@@ -791,9 +794,17 @@ body.layout-single-column {
   color: var(--color-light-text);
 }
 
+/* Setting boxes */
+.layout-single-column .column-header__collapsible-inner {
+  background-color: var(--color-bg);
+  border-color: var(--color-border);
+}
+
 /* Column-header border */
 .layout-single-column .column-header__collapsible {
   border-bottom: 1px solid var(--color-border);
+  border-left: 0;
+  border-right: 0;
 }
 
 .layout-single-column .column-header__collapsible,
@@ -1045,7 +1056,7 @@ body .content-warning {
   color: var(--color-light-purple);
   display: grid;
   font-size: var(--font-size-mid);
-  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 3fr) minmax(88px, 1fr);
   padding: 10px 16px;
   white-space: unset;
 }
@@ -1066,8 +1077,8 @@ body .content-warning .link-button {
   font-size: var(--font-size-mid);
   font-weight: var(--font-weight-semibold);
   justify-self: flex-end;
-  min-width: 65px;
   text-align: right;
+  white-space: nowrap;
 }
 
 /* New content warnings in 4.3.0.beta.1-mementomods-2024-08-23 */
@@ -1483,9 +1494,8 @@ body.embed .detailed-status__display-avatar > img,
   border: 0;
 }
 
-/* Nice active effect in the column header */
 .layout-single-column .column-header__wrapper.active {
-  box-shadow: var(--active-header-box-shadow);
+  box-shadow: none;
 }
 
 .layout-single-column .column-header__wrapper.active::before {
@@ -1681,9 +1691,6 @@ body.embed .video-player,
 .layout-single-column .media-gallery__preview,
 .layout-single-column .video-player {
   margin-left: calc(var(--size-avatar) + var(--gap-default));
-  max-height: 430px;
-  /* stylelint-disable-next-line */
-  width: unset !important;
 }
 
 body.embed [data-component="Video"] > div {
@@ -1730,8 +1737,7 @@ body.embed .detailed-status .video-player,
 
 .layout-single-column .media-gallery > .media-gallery__item:nth-of-type(odd),
 .layout-single-column .media-gallery > .media-gallery__item:nth-of-type(odd) > a,
-.layout-single-column .media-gallery__preview:nth-of-type(odd)
-{
+.layout-single-column .media-gallery__preview:nth-of-type(odd) {
   border-bottom-right-radius: 0;
   border-top-right-radius: 0;
 }
@@ -1747,6 +1753,23 @@ body.embed .detailed-status .video-player,
 .layout-single-column .status .status-card + .more-from-author,
 .layout-single-column .status .status-card {
   margin-left: calc(var(--size-avatar) + var(--gap-default));
+}
+
+.layout-single-column .media-gallery.media-gallery__item--tall,
+.layout-single-column .media-gallery.media-gallery--layout-1,
+.layout-single-column .media-gallery.media-gallery--layout-2,
+.layout-single-column .media-gallery.media-gallery--layout-3,
+.layout-single-column .media-gallery.media-gallery--layout-4,
+.layout-single-column .media-gallery__preview,
+.layout-single-column .video-player {
+  max-height: 430px;
+  /* stylelint-disable-next-line */
+  width: unset !important;
+}
+
+.layout-single-column .media-gallery:has(.spoiler-button) .media-gallery__preview {
+  /* stylelint-disable-next-line */
+  width: 100% !important;
 }
 
 /* Detailed status update */
@@ -3206,6 +3229,14 @@ body .compose-form .compose-form__uploads {
   gap: 10px;
 }
 
+.layout-single-column .compose-form .media-gallery__item,
+.layout-single-column .compose-form .compose-form__uploads,
+.layout-single-column .compose-form .media-gallery {
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+}
+
 .layout-single-column .compose-form__dropdowns .dropdown-button.active,
 .layout-single-column .compose-form__dropdowns .dropdown-button {
   background-color: transparent;
@@ -3384,6 +3415,11 @@ body .compose-form .compose-form__uploads {
 
 .layout-single-column .status__action-bar .icon-button:nth-of-type(1)::after {
   transform: translateX(4px) translateY(2px);
+}
+
+.layout-single-column .status__action-bar .icon-button.icon-button--with-counter::after,
+.layout-single-column .status__action-bar .icon-button.icon-button--with-counter:first-of-type::after {
+  transform: translateX(-5px) translateY(1px);
 }
 
 .layout-single-column .navigation-panel__menu {
@@ -3636,7 +3672,10 @@ body .compose-form .compose-form__uploads {
 .layout-single-column .load-more path,
 .layout-single-column .account__domain-pill__popout__parts > div:nth-child(2) path,
 .layout-single-column .column-header__button .icon-sliders > path,
-.compose-form .icon-close > path {
+.compose-form .icon-close > path,
+.layout-single-column .item-list .lists__item__title path,
+.layout-single-column .lists__item .icon-button.active path,
+.layout-single-column .dialog-modal__content .lists__item__title path {
   display: none;
 }
 
@@ -3746,6 +3785,14 @@ body .compose-form .compose-form__uploads {
 .layout-single-column .column-header__button .icon-sliders {
   --size-icon: 20px;
   background-image: var(--icon-sliders);
+}
+
+.column-header__button.active .icon-sliders {
+  /* Use contrast icon */
+  background-image: var(--icon-sliders-contrast);
+
+  /* Disable rotate */
+  transform: none;
 }
 
 /* Administration icon */
@@ -3966,6 +4013,18 @@ body .compose-form .compose-form__uploads {
     padding: 0;
   }
 
+  /* Fix back button background on mobile */
+  .app-body:not(.layout-multiple-columns):has(.column-back-button) .tabs-bar__wrapper::after {
+    background-color: var(--color-bg-90);
+    content: "";
+    height: 50px;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    z-index: -1;
+  }
+
   .layout-single-column .columns-area__panels__main {
     width: calc(100% - var(--width-side-panel));
   }
@@ -3996,7 +4055,6 @@ body .compose-form .compose-form__uploads {
 
 /* Mobile */
 @media screen and (max-width: 889px) {
-
 
   /* Better blur overlay for ui-header */
   .layout-single-column .ui::after {
@@ -4270,6 +4328,11 @@ body .compose-form .compose-form__uploads {
   overflow: hidden;
 }
 
+/* Fix double border on media */
+.layout-single-column .media-gallery .media-gallery__item .media-gallery__gifv {
+  border: 0;
+}
+
 /* Exception for your own profile media gallery */
 .layout-single-column .account-gallery__container .media-gallery__gifv {
   border-radius: 0;
@@ -4290,10 +4353,13 @@ body .compose-form .compose-form__uploads {
 
 /* Embeds outside Mastodon */
 body.embed {
+  /* stylelint-disable-next-line */
+  background-color: #0e1014 !important;
   /* Make sure with !important */
   /* stylelint-disable-next-line */
-  background: transparent !important;
   border: 0;
+  /* stylelint-disable-next-line */
+  overflow: hidden !important;
 }
 
 body.embed .entry .detailed-status {
@@ -4365,7 +4431,6 @@ body.embed .entry .detailed-status {
 /* Threaded line, actually */
 .layout-single-column .status__line {
   border-inline-start: 2px solid var(--color-thread-line);
-  -webkit-border-start: 2px solid var(--color-thread-line);
 }
 
 .layout-single-column .status__line--full::before {
@@ -4537,28 +4602,10 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
   color: transparent;
 }
 
-/* More compact header on mobile, thanks for the idea @nileane@nileane.fr! https://github.com/nileane/TangerineUI-for-Mastodon */
+/* Header on mobile */
 @media screen and (max-width: 1174px) {
-  .app-body:not(.layout-multiple-columns) .ui__header {
-    background-color: transparent;
-    border-bottom: 0;
-  }
-
   .app-body:not(.layout-multiple-columns) .ui__header .ui__header__logo {
     margin-left: 3px;
-  }
-
-  .app-body:not(.layout-multiple-columns) .tabs-bar__wrapper {
-    border-bottom: 0;
-    border-radius: 0;
-    box-shadow: none;
-    display: block;
-    height: 55px;
-    inset-inline-end: 105px;
-    inset-inline-start: 45px;
-    margin-bottom: -2px;
-    position: fixed;
-    top: 0;
   }
 
   /* stylelint-disable-next-line */
@@ -4570,47 +4617,47 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
     display: none;
   }
 
-  .app-body:not(.layout-multiple-columns)
-        :is(
-            .column-header,
-            .column-back-button,
-            .column-header__button,
-            .column-header__back-button
-        ) {
-    background-color: transparent;
-    border: 0;
-    height: 55px;
-    margin: 0;
-  }
-
   .app-body .column-header__icon {
     display: none;
   }
 
-  /* Set a backdrop blur background to both top bars */
-  .app-body:not(.layout-multiple-columns) .ui::after {
-    /* stylelint-disable-next-line */
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--color-border);
-    content: "";
-    height: 55px;
-    left: 0;
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 1;
+  .app-body:not(.layout-multiple-columns) .columns-area__panels {
+    z-index: 2;
   }
 
-  /* Remove margin between column settings and column header */
-  .app-body:not(.layout-multiple-columns) .column-header__collapsible {
+  /* Set a backdrop blur background to both top bars */
+  .app-body:not(.layout-multiple-columns) .ui__header {
+    background-color: var(--color-bg-90);
+    height: 55px;
+    z-index: 5;
+  }
+
+  .app-body:not(.layout-multiple-columns):has(.column-header) .tabs-bar__wrapper::after {
+    background-color: var(--color-bg-90);
+    content: "";
+    height: 49px;
     left: 0;
-    position: fixed;
-    right: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    z-index: 0;
+  }
+
+  .ui:has([href="/auth/sign_in"]) .tabs-bar__wrapper::after,
+  .ui:has(.compose-form__submit) .tabs-bar__wrapper::after {
+    display: none;
+  }
+
+  .layout-single-column .column-header__collapsible {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .layout-single-column .column-header__collapsible-inner {
+    background-color: var(--color-bg-90);
   }
 
   .app-body:not(.layout-multiple-columns) .column-header__collapsible:not(.collapsed) {
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 0;
   }
 }
 
@@ -4678,6 +4725,7 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
 .layout-single-column .notification-group--favourite .icon-star,
 .layout-single-column .notification-favourite .icon-star {
   background-image: var(--icon-heart-notification);
+  background-repeat: no-repeat;
 }
 
 .layout-single-column .notification__filter-bar .icon-star,
@@ -4765,12 +4813,31 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
 /* stylelint-disable-next-line */
 .layout-single-column.no-reduce-motion .status .icon-button.star-icon.activate .icon-star {
   left: -28px;
+}
+
+/* If number enabled in core */
+/* stylelint-disable-next-line */
+/* If number enabled in core */
+/* stylelint-disable-next-line */
+.layout-single-column.no-reduce-motion .status .icon-button.icon-button--with-counter.star-icon .icon-star {
+  left: 0;
   margin-top: 1px;
+  position: absolute;
 }
 
 /* stylelint-disable-next-line */
 .layout-single-column.no-reduce-motion .status .icon-button.icon-button--with-counter.star-icon.activate .icon-star {
-  left: -37px;
+  left: -40px;
+  margin-top: -1px;
+  position: absolute;
+}
+
+.layout-single-column.no-reduce-motion .star-icon.icon-button--with-counter .icon-button__counter {
+  margin-left: 20px;
+}
+
+.animated-number {
+  z-index: 99;
 }
 
 /* stylelint-disable-next-line */
@@ -4822,6 +4889,7 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
 .layout-single-column .notification-group--favourite .icon-star,
 .layout-single-column .notification-favourite .icon-star {
   background-image: var(--icon-star-notification);
+  background-repeat: no-repeat;
 }
 
 .layout-single-column .notification__filter-bar .active .icon-star {
@@ -4861,6 +4929,7 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
   top: 0;
   transform: none;
   width: unset;
+  height: unset !important;
 }
 
 .layout-single-column.no-reduce-motion .icon-button.star-icon.active .icon-star {
@@ -4978,7 +5047,7 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
 }
 
 .layout-single-column button.icon-button.icon-button--with-counter.activate.star-icon > .icon-star {
-  left: -34px !important;
+  left: 0 !important;
   position: absolute !important;
   top: unset !important;
 }
