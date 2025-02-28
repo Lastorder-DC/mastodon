@@ -1,6 +1,6 @@
 /* Mastodon Bird UI by @rolle@mementomori.social
    Edit for OCCMv3 by Lastorder-DC
-   2.1.2rc6 */
+   2.1.2rc10 */
 
 /* CSS variables */
 :root {
@@ -1652,6 +1652,12 @@ body.embed .detailed-status,
   width: unset !important;
 }
 
+/* When image is still loading up, reset width to 100%, Fixes #150 */
+body.layout-multiple-columns canvas[class="media-gallery__preview"] {
+  /* stylelint-disable-next-line */
+  width: 100% !important;
+}
+
 .layout-multiple-columns .spoiler-button + .media-gallery__item > .media-gallery__preview {
   /* stylelint-disable-next-line */
   margin-left: unset !important;
@@ -2074,7 +2080,7 @@ body.embed .detailed-status__meta .detailed-status__link .icon-retweet,
 }
 
 .layout-multiple-columns .status__prepend {
-  padding-left: calc(var(--size-avatar) - 4px);
+  padding-left: calc(var(--size-avatar) + 2px);
 }
 
 .layout-multiple-columns .notification.notification-update .account__display-name,
@@ -3364,7 +3370,8 @@ body .compose-form .compose-form__uploads {
 .compose-form .icon-close > path,
 .layout-multiple-columns .item-list .lists__item__title path,
 .layout-multiple-columns .lists__item .icon-button.active path,
-.layout-multiple-columns .dialog-modal__content .lists__item__title path {
+.layout-multiple-columns .dialog-modal__content .lists__item__title path,
+.layout-multiple-columns .hashtag-header__header__buttons .icon > path {
   display: none;
 }
 
@@ -3660,6 +3667,8 @@ body .compose-form .compose-form__uploads {
 
 .layout-multiple-columns .icon-ellipsis-v {
   background-image: var(--icon-more);
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 /* Close icon */

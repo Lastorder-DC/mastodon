@@ -1,6 +1,6 @@
 /* Mastodon Bird UI by @rolle@mementomori.social
    Edit for OCCMv3 by Lastorder-DC
-   2.1.2rc6 */
+   2.1.2rc10 */
 
 /* CSS variables */
 :root {
@@ -1767,6 +1767,12 @@ body.embed .detailed-status .video-player,
   width: unset !important;
 }
 
+/* When image is still loading up, reset width to 100%, Fixes #150 */
+body.layout-single-column canvas[class="media-gallery__preview"] {
+  /* stylelint-disable-next-line */
+  width: 100% !important;
+}
+
 .layout-single-column .media-gallery:has(.spoiler-button) .media-gallery__preview {
   /* stylelint-disable-next-line */
   width: 100% !important;
@@ -2160,7 +2166,7 @@ body.embed .detailed-status__meta .detailed-status__link .fa-retweet,
 }
 
 .layout-single-column .status__prepend {
-  padding-left: calc(var(--size-avatar) - 4px);
+  padding-left: calc(var(--size-avatar) + 2px);
 }
 
 .layout-single-column .notification.notification-update .account__display-name,
@@ -3675,7 +3681,8 @@ body .compose-form .compose-form__uploads {
 .compose-form .icon-close > path,
 .layout-single-column .item-list .lists__item__title path,
 .layout-single-column .lists__item .icon-button.active path,
-.layout-single-column .dialog-modal__content .lists__item__title path {
+.layout-single-column .dialog-modal__content .lists__item__title path,
+.layout-single-column .hashtag-header__header__buttons .icon > path {
   display: none;
 }
 
@@ -3972,6 +3979,8 @@ body .compose-form .compose-form__uploads {
 
 .layout-single-column .icon-ellipsis-v {
   background-image: var(--icon-more);
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .layout-single-column .icon-search {
@@ -4274,9 +4283,18 @@ body .compose-form .compose-form__uploads {
     order: 6;
   }
 
-  /* Hide explore */
+  /* Show explore */
   .layout-single-column .column-link[href="/explore"] {
-    display: none;
+    order: 7;
+  }
+
+  /* Change explore icon to search icon */
+  .layout-single-column .column-link .icon-explore {
+    background-image: var(--icon-search-opaque);
+  }
+
+  .layout-single-column .column-link.active .icon-explore {
+    background-image: var(--icon-search-opaque);
   }
 
   /* Hide local */
