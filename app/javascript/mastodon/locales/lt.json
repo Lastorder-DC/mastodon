@@ -29,7 +29,6 @@
   "account.endorse": "Rodyti profilyje",
   "account.featured_tags.last_status_at": "Paskutinis įrašas {date}",
   "account.featured_tags.last_status_never": "Nėra įrašų",
-  "account.featured_tags.title": "{name} rodomi saitažodžiai",
   "account.follow": "Sekti",
   "account.follow_back": "Sekti atgal",
   "account.followers": "Sekėjai",
@@ -857,7 +856,9 @@
   "subscribed_languages.target": "Keisti prenumeruojamas kalbas {target}",
   "tabs_bar.home": "Pagrindinis",
   "tabs_bar.notifications": "Pranešimai",
+  "terms_of_service.effective_as_of": "Įsigaliojo nuo {date}.",
   "terms_of_service.title": "Paslaugų sąlygos",
+  "terms_of_service.upcoming_changes_on": "Numatomi pakeitimai {date}.",
   "time_remaining.days": "liko {number, plural, one {# diena} few {# dienos} many {# dienos} other {# dienų}}",
   "time_remaining.hours": "liko {number, plural, one {# valanda} few {# valandos} many {# valandos} other {# valandų}}",
   "time_remaining.minutes": "liko {number, plural, one {# minutė} few {# minutės} many {# minutės} other {# minučių}}",
@@ -888,8 +889,6 @@
   "video.expand": "Išplėsti vaizdo įrašą",
   "video.fullscreen": "Visas ekranas",
   "video.hide": "Slėpti vaizdo įrašą",
-  "video.mute": "Išjungti garsą",
   "video.pause": "Pristabdyti",
-  "video.play": "Leisti",
-  "video.unmute": "Įjungti garsą"
+  "video.play": "Leisti"
 }
