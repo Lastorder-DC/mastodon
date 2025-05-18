@@ -1,6 +1,6 @@
 /* Mastodon Bird UI by @rolle@mementomori.social
    Edit for OCCMv3 by Lastorder-DC
-   2.1.2rc10 */
+   2.1.2rc13 */
 
 /* CSS variables */
 :root {
@@ -1648,16 +1648,6 @@ body.embed .detailed-status__display-avatar > img,
   padding-left: calc(24px + var(--gap-default));
 }
 
-/* Media inside status update tinted to right */
-.layout-single-column .status .audio-player,
-.layout-single-column .status .video-player,
-.layout-single-column .status .media-gallery {
-  margin-left: auto;
-  /* Need to override inline styles */
-  /* stylelint-disable-next-line */
-  width: calc(100% - calc(var(--size-avatar) + var(--gap-default))) !important;
-}
-
 /* Fix aspect-ratio for some videos in mastodon v4.1.5-nightly-2023-07-26 */
 .layout-single-column div[style*='aspect-ratio']:not([class]) {
 
@@ -3257,6 +3247,14 @@ body .compose-form .compose-form__uploads {
   color: var(--color-accent);
 }
 
+/* Override new warning button color (.dropdown-button.warning), v4.4.0-alpha.4+mementomods-2025-05-03 */
+.layout-single-column .compose-form__dropdowns .dropdown-button.warning,
+.layout-single-column .compose-form__dropdowns .dropdown-button.warning.active,
+.layout-single-column .compose-form__dropdowns .dropdown-button.warning:hover,
+.layout-single-column .compose-form__dropdowns .dropdown-button.warning:focus {
+  color: var(--color-yellow);
+}
+
 .layout-single-column .compose-form__submit {
   flex: unset;
 }
@@ -3690,6 +3688,7 @@ body .compose-form .compose-form__uploads {
 .layout-single-column .icon-user-plus.column-link__icon path,
 .layout-single-column .icon.icon-undefined path,
 .layout-single-column .icon.icon-users path,
+.layout-single-column .account__header__tabs__buttons .optional path,
 .layout-single-column .account__header__tabs__buttons .icon.icon-user-plus path,
 .layout-single-column .notification__filter-bar .icon.icon-user-plus path,
 .layout-single-column .account__header__tabs__buttons .icon.icon-tasks path,
@@ -5552,6 +5551,7 @@ div[tabindex="-1"] + div[tabindex="-1"] > .status__wrapper > .status-reply.statu
 }
 
 2/2: If you prefer stars remove this line too */
+
 
 /* Remove follow suggestions */
 .inline-follow-suggestions {
