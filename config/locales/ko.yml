@@ -2047,9 +2047,8 @@ ko:
     registered_on: "%{date}에 등록됨"
   themes:
      contrast: 마스토돈 (고대비)
-     default: 유사 트위터 (어두움)
-     bird-ui: bird-ui (삭제 예정)
+     default: 마스토돈 (어두움)
      mastodon-bird-ui-light: 유사 트위터 (밝음)
+     mastodon-bird-ui-dark: 유사 트위터 (어두움)
      mastodon-bird-ui-contrast: 유사 트위터 (고대비)
      mastodon-light: 마스토돈 (밝음)
-     mastodon-dark: 마스토돈 (어두움)
