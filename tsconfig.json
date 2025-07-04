@@ -27,9 +27,9 @@
   },
   "include": [
     "vite.config.mts",
+    "vitest.config.mts",
     "config/vite",
-    "app/javascript/mastodon",
-    "app/javascript/entrypoints",
-    "app/javascript/types"
+    "app/javascript",
+    ".storybook/*"
   ]
 }

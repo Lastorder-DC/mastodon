@@ -2,7 +2,7 @@
 %html{ lang: I18n.locale }
   %head
     %meta{ charset: 'utf-8' }/
-    %meta{ name: 'viewport', content: 'width=device-width, initial-scale=1' }/
+    %meta{ name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }/
 
     - if cdn_host?
       %link{ rel: 'dns-prefetch', href: cdn_host }/
@@ -28,6 +28,7 @@
     = theme_style_tags current_theme
     = vite_client_tag
     = vite_react_refresh_tag
+    = vite_polyfills_tag
     -# Needed for the wicg-inert polyfill. It needs to be on it's own <style> tag, with this `id`
     = vite_stylesheet_tag 'styles/entrypoints/inert.scss', media: 'all', id: 'inert-style'
     = vite_typescript_tag 'common.ts', crossorigin: 'anonymous'
