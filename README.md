@@ -18,6 +18,19 @@
 </p>
 
 Mastodon is a **free, open-source social network server** based on [ActivityPub](https://www.w3.org/TR/activitypub/) where users can follow friends and discover new ones. On Mastodon, users can publish anything they want: links, pictures, text, and video. All Mastodon servers are interoperable as a federated network (users on one server can seamlessly communicate with users from another one, including non-Mastodon software that implements ActivityPub!)
+<h1><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./lib/assets/wordmark.dark.png?raw=true">
+  <source media="(prefers-color-scheme: light)" srcset="./lib/assets/wordmark.light.png?raw=true">
+  <img alt="Mastodon" src="./lib/assets/wordmark.light.png?raw=true" height="34">
+</picture></h1>
+
+[![GitHub release](https://img.shields.io/github/release/Lastorder-DC/mastodon.svg)][releases]
+
+[releases]: https://github.com/Lastorder-DC/mastodon/releases
+
+OCCM SNS is fork of Mastodon, which is **free, open-source social network server** based on ActivityPub where users can follow friends and discover new ones. On Mastodon, users can publish anything they want: links, pictures, text, video. All Mastodon servers are interoperable as a federated network (users on one server can seamlessly communicate with users from another one, including non-Mastodon software that implements ActivityPub)!
+
+While installing OCCM SNS is possible, it's recommended to install original Mastodon instead, since OCCM SNS is focused to not expose any toot to other server by default.
 
 ## Navigation
 
