@@ -70,7 +70,7 @@ While installing OCCM SNS is possible, it's recommended to install original Mast
 ### Requirements
 
 - **Ruby** 3.2+
-- **PostgreSQL** 13+
+- **PostgreSQL** 14+
 - **Redis** 7.0+
 - **Node.js** 20+
 
