@@ -364,7 +364,7 @@ de:
       overwrite: Überschreiben
       shortcode: Shortcode
       shortcode_hint: Mindestens 2 Zeichen, nur Buchstaben, Ziffern und Unterstriche
-      title: Eigene Emojis
+      title: Emojis
       uncategorized: Unkategorisiert
       unlist: Nicht anzeigen
       unlisted: Nicht sichtbar
@@ -1089,16 +1089,16 @@ de:
           tag_servers_measure: Server
           tag_uses_measure: insgesamt
         description_html: Diese Hashtags werden derzeit in vielen Beiträgen verwendet, die dein Server sieht. Dies kann deinen Nutzer*innen helfen, herauszufinden, worüber die Leute im Moment am meisten schreiben. Hashtags werden erst dann öffentlich angezeigt, wenn du sie genehmigst.
-        listable: Kann vorgeschlagen werden
+        listable: Darf empfohlen werden
         no_tag_selected: Keine Hashtags wurden geändert, da keine ausgewählt wurden
-        not_listable: Wird nicht vorgeschlagen
-        not_trendable: Wird in den Trends nicht angezeigt
-        not_usable: Kann nicht verwendet werden
+        not_listable: Darf nicht vorgeschlagen werden
+        not_trendable: In Trends nicht erlaubt
+        not_usable: In Beiträgen nicht erlaubt
         peaked_on_and_decaying: In den Trends am %{date}, jetzt absteigend
         title: Angesagte Hashtags
-        trendable: Darf in den Trends erscheinen
+        trendable: In Trends erlaubt
         trending_rank: Platz %{rank}
-        usable: Darf verwendet werden
+        usable: In Beiträgen erlaubt
         usage_comparison: Heute %{today}-mal und gestern %{yesterday}-mal verwendet
         used_by_over_week:
           one: In den vergangenen 7 Tagen von einem Profil verwendet
@@ -1122,7 +1122,7 @@ de:
         title: Neue Regel für Profilnamen erstellen
       no_username_block_selected: Keine Regeln für Profilnamen wurden geändert, weil keine ausgewählt wurde(n)
       not_permitted: Nicht gestattet
-      title: Regeln für Profilnamen
+      title: Profilnamen
       updated_msg: Regel für Profilnamen erfolgreich aktualisiert
     warning_presets:
       add_new: Neu hinzufügen
@@ -1941,7 +1941,7 @@ de:
       pending_approval: Veröffentlichung ausstehend
       revoked: Beitrag durch Autor*in entfernt
     quote_policies:
-      followers: Nur Follower
+      followers: Nur Follower und ich
       nobody: Nur ich
       public: Alle
     quote_post_author: Zitierte %{acct}
@@ -2150,7 +2150,7 @@ de:
     follow_limit_reached: Du kannst nicht mehr als %{limit} Profilen folgen
     go_to_sso_account_settings: Kontoeinstellungen des Identitätsanbieters aufrufen
     invalid_otp_token: Ungültiger Code der Zwei-Faktor-Authentisierung
-    otp_lost_help_html: Wenn du beides nicht mehr weißt, melde dich bitte bei uns unter der E-Mail-Adresse %{email}
+    otp_lost_help_html: Wenn du sowohl die E-Mail-Adresse als auch das Passwort nicht mehr weißt, melde dich bitte bei uns unter %{email}
     rate_limited: Zu viele Authentisierungsversuche. Bitte versuche es später noch einmal.
     seamless_external_login: Du bist über einen externen Dienst angemeldet, daher sind Passwort- und E-Mail-Einstellungen nicht verfügbar.
     signed_in_as: 'Angemeldet als:'
