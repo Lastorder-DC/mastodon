@@ -77,7 +77,8 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   def after_sign_in_path_for(resource)
-    last_url = stored_location_for(:user)
+    multi_account_return_to = session.delete(:multi_account_return_to)
+    last_url = multi_account_return_to.presence || stored_location_for(:user)
 
     if home_paths(resource).include?(last_url)
       root_path

@@ -1,7 +1,7 @@
 import { debounce } from 'lodash';
 
 import type { MarkerJSON } from 'mastodon/api_types/markers';
-import { getAccessToken } from 'mastodon/initial_state';
+import { currentAuthorizationToken } from 'mastodon/api';
 import type { AppDispatch, RootState } from 'mastodon/store';
 import { createAppAsyncThunk } from 'mastodon/store/typed_functions';
 
@@ -11,7 +11,7 @@ import { compareId } from '../compare_id';
 export const synchronouslySubmitMarkers = createAppAsyncThunk(
   'markers/submit',
   async (_args, { getState }) => {
-    const accessToken = getAccessToken();
+    const accessToken = currentAuthorizationToken();
     const params = buildPostMarkersParams(getState());
 
     if (
@@ -98,7 +98,7 @@ export const submitMarkersAction = createAppAsyncThunk<{
   home: string | undefined;
   notifications: string | undefined;
 }>('markers/submitAction', async (_args, { getState }) => {
-  const accessToken = getAccessToken();
+  const accessToken = currentAuthorizationToken();
   const params = buildPostMarkersParams(getState());
 
   if (Object.keys(params).length === 0 || !accessToken || accessToken === '') {
