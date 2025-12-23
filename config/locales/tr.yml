@@ -7,6 +7,8 @@ tr:
     hosted_on: Mastodon %{domain} üzerinde barındırılıyor
     title: Hakkında
   accounts:
+    errors:
+      cannot_be_added_to_collections: Bu hesap koleksiyonlara eklenemez.
     followers:
       one: Takipçi
       other: Takipçiler
@@ -846,6 +848,7 @@ tr:
         publish_statistics: İstatistikleri yayınla
         title: Keşfet
         trends: Öne çıkanlar
+        wrapstodon: Wrapstodon
       domain_blocks:
         all: Herkes için
         disabled: Hiç kimseye
@@ -1706,16 +1709,22 @@ tr:
       body: "%{name} senden bahsetti:"
       subject: "%{name} senden bahsetti"
       title: Yeni bahsetme
+    moderation_warning:
+      subject: Hesabınız bir denetim uyarısı aldı
     poll:
       subject: Anket %{name} tarafından sonlandırıldı
     quote:
       body: "%{name} durumunuzu yeniden paylaştı:"
       subject: "%{name} gönderini yeniden paylaştı"
       title: Yeni alıntı
+    quoted_update:
+      subject: "%{name} alıntıladığınız bir gönderiyi düzenledi"
     reblog:
       body: "%{name} durumunuzu yeniden paylaştı:"
       subject: "%{name} durumunuzu yeniden paylaştı"
       title: Yeni paylaşım
+    severed_relationships:
+      subject: Bir denetim kararı nedeniyle bağlantılarınızı kaybettiniz
     status:
       subject: "%{name} az önce gönderdi"
     update:
@@ -2179,3 +2188,6 @@ tr:
     not_supported: Bu tarayıcı güvenlik anahtarlarını desteklemiyor
     otp_required: Güvenlik anahtarlarını kullanmak için lütfen önce iki adımlı kimlik doğrulamayı etkinleştirin.
     registered_on: "%{date} tarihinde kaydoldu"
+  wrapstodon:
+    description: "%{name} kullanıcısının bu yıl Mastodon'u nasıl kullandığını görün!"
+    title: "%{name} için %{year} Wrapstodon'u"

@@ -7,6 +7,8 @@ en:
     hosted_on: Mastodon hosted on %{domain}
     title: About
   accounts:
+    errors:
+      cannot_be_added_to_collections: This account cannot be added to collections.
     followers:
       one: Follower
       other: Followers
@@ -846,6 +848,7 @@ en:
         publish_statistics: Publish statistics
         title: Discovery
         trends: Trends
+        wrapstodon: Wrapstodon
       domain_blocks:
         all: To everyone
         disabled: To no one
@@ -1316,6 +1319,13 @@ en:
     hint_html: "<strong>Tip:</strong> We won't ask you for your password again for the next hour."
     invalid_password: Invalid password
     prompt: Confirm password to continue
+  color_scheme:
+    auto: Auto
+    dark: Dark
+    light: Light
+  contrast:
+    auto: Auto
+    high: High
   crypto:
     errors:
       invalid_key: is not a valid Ed25519 or Curve25519 key
@@ -1706,16 +1716,22 @@ en:
       body: 'You were mentioned by %{name} in:'
       subject: You were mentioned by %{name}
       title: New mention
+    moderation_warning:
+      subject: You have received a moderation warning
     poll:
       subject: A poll by %{name} has ended
     quote:
       body: 'Your post was quoted by %{name}:'
       subject: "%{name} quoted your post"
       title: New quote
+    quoted_update:
+      subject: "%{name} edited a post you have quoted"
     reblog:
       body: 'Your post was boosted by %{name}:'
       subject: "%{name} boosted your post"
       title: New boost
+    severed_relationships:
+      subject: You have lost connections due to a moderation decision
     status:
       subject: "%{name} just posted"
     update:
@@ -2180,11 +2196,6 @@ en:
     not_supported: This browser doesn't support security keys
     otp_required: To use security keys please enable two-factor authentication first.
     registered_on: Registered on %{date}
-  themes:
-     contrast: Mastodon (High contrast)
-     default: Mastodon Bird UI (Dark)
-     bird-ui: Mastodon Bird UI (DEPRECATED)
-     mastodon-bird-ui-light: Mastodon Bird UI (Light)
-     mastodon-bird-ui-contrast: Mastodon Bird UI (High contrast)
-     mastodon-light: Mastodon (Light)
-     mastodon-dark: Mastodon (Dark)
+  wrapstodon:
+    description: See how %{name} used Mastodon this year!
+    title: Wrapstodon %{year} for %{name}

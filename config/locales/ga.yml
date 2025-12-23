@@ -7,6 +7,8 @@ ga:
     hosted_on: Mastodon arna óstáil ar %{domain}
     title: Maidir le
   accounts:
+    errors:
+      cannot_be_added_to_collections: Ní féidir an cuntas seo a chur le bailiúcháin.
     followers:
       few: Leantóirí
       many: Leantóirí
@@ -888,6 +890,7 @@ ga:
         publish_statistics: Staitisticí a fhoilsiú
         title: Fionnachtain
         trends: Treochtaí
+        wrapstodon: Wrapstodon
       domain_blocks:
         all: Do chách
         disabled: Do dhuine ar bith
@@ -1825,16 +1828,22 @@ ga:
       body: 'Luaigh %{name} thú i:'
       subject: Luaigh %{name} thú
       title: Lua nua
+    moderation_warning:
+      subject: Tá rabhadh modhnóireachta faighte agat
     poll:
       subject: Tháinig deireadh le vótaíocht le %{name}
     quote:
       body: 'Luaigh %{name} do phost:'
       subject: Luaigh %{name} do phost
       title: Luachan nua
+    quoted_update:
+      subject: Chuir %{name} post in eagar a luaigh tú
     reblog:
       body: 'Treisíodh do phostáil le %{name}:'
       subject: Mhol %{name} do phostáil
       title: Moladh nua
+    severed_relationships:
+      subject: Tá naisc caillte agat mar gheall ar chinneadh modhnóireachta
     status:
       subject: Tá %{name} díreach postáilte
     update:
@@ -2313,3 +2322,6 @@ ga:
     not_supported: Ní thacaíonn an brabhsálaí seo le heochracha slándála
     otp_required: Chun eochracha slándála a úsáid cumasaigh fíordheimhniú dhá fhachtóir ar dtús.
     registered_on: Cláraithe ar %{date}
+  wrapstodon:
+    description: Féach conas a d'úsáid %{name} Mastodon i mbliana!
+    title: Wrapstodon %{year} do %{name}
