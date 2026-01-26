@@ -7,7 +7,8 @@ COPY .nvmrc .
 RUN /bin/bash --login -i -c "nvm install"
 
 # Install additional OS packages
-RUN apt-get update && \
+RUN rm -f /etc/apt/sources.list.d/yarn.list && \
+    apt-get update && \
     export DEBIAN_FRONTEND=noninteractive && \
     apt-get -y install --no-install-recommends libicu-dev libidn11-dev ffmpeg libvips42 libpam-dev
 
