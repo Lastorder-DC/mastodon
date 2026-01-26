@@ -1,5 +1,5 @@
 @use 'common';
-//@use 'mastodon-bird-ui';
+@use 'mastodon-bird-ui';
 
 .status__content__text[lang="fi"] ~ .status__content__translate-button {
   display: none;
