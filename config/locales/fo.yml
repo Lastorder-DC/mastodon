@@ -12,7 +12,6 @@ fo:
     followers:
       one: Fylgjari
       other: Fylgjarar
-    following: Fylgir
     instance_actor_flash: Hendan kontan er ein tykisligur aktørur, sum verður brúktur til at umboða ambætaran sjálvan og ikki nakran ávísan brúkara. Hon verður brúkt til sameind endamál og eigur ikki at vera tikin úr gildi.
     last_active: virkin seinast
     link_verified_on: Eigaraskapur av hesum leinki var eftirkannaður tann %{date}
@@ -2019,10 +2018,7 @@ fo:
     review_link: Eftirkanna tænastutreytir
     title: Tænastutreytirnar á %{domain} verða broyttar
   themes:
-    contrast: Mastodon (høgur kontrastur)
-    default: Mastodon (myrkt)
-    mastodon-light: Mastodon (ljóst)
-    system: Sjálvvirkandi (brúka vanligt uppsetingareyðkenni)
+    default: Mastodon
   time:
     formats:
       default: "%b %d, %Y, %H:%M"

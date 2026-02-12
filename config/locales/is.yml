@@ -12,7 +12,9 @@ is:
     followers:
       one: fylgjandi
       other: fylgjendur
-    following: Fylgist með
+    following:
+      one: Fylgist með
+      other: Fylgist með
     instance_actor_flash: Þessi notandaaðgangur er sýndarnotandi sem stendur fyrir sjálfan netþjóninn en ekki neinn einstakling. Hann er notaður við skýjasambandsmiðlun og ætti ekki að setja hann í frysti eða banna.
     last_active: síðasta virkni
     link_verified_on: Eignarhald á þessum tengli var athugað þann %{date}
@@ -2023,10 +2025,7 @@ is:
     review_link: Yfirfara þjónustuskilmála
     title: Þjónustuskilmálar eru að breytast á %{domain}
   themes:
-    contrast: Mastodon (mikil birtuskil)
-    default: Mastodon (dökkt)
-    mastodon-light: Mastodon (ljóst)
-    system: Sjálfvirkt (nota þema kerfis)
+    default: Mastodon
   time:
     formats:
       default: "%d. %b, %Y, %H:%M"

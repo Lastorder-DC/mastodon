@@ -12,7 +12,9 @@ es-MX:
     followers:
       one: Seguidor
       other: Seguidores
-    following: Siguiendo
+    following:
+      one: Siguiendo
+      other: Siguiendo
     instance_actor_flash: Esta cuenta es un actor virtual utilizado para representar al servidor en sí mismo y no a ningún usuario individual. Se utiliza para propósitos de la federación y no se debe suspender.
     last_active: última conexión
     link_verified_on: La propiedad de este vínculo fue verificada el %{date}
@@ -2019,10 +2021,7 @@ es-MX:
     review_link: Revisar los términos de servicio
     title: Los términos de servicio de %{domain} van a cambiar
   themes:
-    contrast: Alto contraste
     default: Mastodon
-    mastodon-light: Mastodon (claro)
-    system: Automático (usar tema del sistema)
   time:
     formats:
       default: "%d de %b del %Y, %H:%M"

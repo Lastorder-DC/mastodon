@@ -12,7 +12,9 @@ it:
     followers:
       one: Seguace
       other: Seguaci
-    following: Seguiti
+    following:
+      one: Stai seguendo
+      other: Stai seguendo
     instance_actor_flash: Questo profilo è un attore virtuale, utilizzato per rappresentare il server stesso e non un singolo utente. È utilizzato per scopi federativi e non dovrebbe esser sospeso.
     last_active: ultima attività
     link_verified_on: La proprietà di questo link è stata controllata il %{date}
@@ -2019,10 +2021,7 @@ it:
     review_link: Rivedi i termini di servizio
     title: I termini di servizio di %{domain} stanno cambiando
   themes:
-    contrast: Mastodon (contrasto elevato)
-    default: Mastodon (scuro)
-    mastodon-light: Mastodon (chiaro)
-    system: Automatico (usa il tema di sistema)
+    default: Mastodon
   time:
     formats:
       default: "%d %b %Y, %H:%M"
