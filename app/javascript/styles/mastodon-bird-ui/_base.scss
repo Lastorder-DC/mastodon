@@ -5,8 +5,8 @@
 
 // Force dark theme regardless of system preference or data-color-scheme attribute
 :root,
-[data-color-scheme='light'],
-[data-color-scheme='dark'],
+[data-color-scheme="light"],
+[data-color-scheme="dark"],
 html:not([data-color-scheme]) {
   // Brand colors
   --color-brand-mastodon: #6364ff;
@@ -881,7 +881,8 @@ html[data-contrast="high"] {
   .reply-indicator__content a,
   .status__content a,
   .column-link--transparent.active,
-  .status__content__read-more-button {
+  .status__content__read-more-button,
+  .status__content__translate-button {
     color: var(--color-accent);
   }
 
@@ -4454,6 +4455,12 @@ html[data-contrast="high"] {
 
   // Header on mobile
   @media screen and (width <= 1174px) {
+    // Hide extra border from mobile in 4.6.0-alpha.3
+    .columns-area__panels__pane--navigational .navigation-panel {
+      border-inline-start: 0;
+      border-left: 0;
+    }
+
     .app-body:not(.layout-multiple-columns) .ui__header .ui__header__logo {
       margin-left: 3px;
     }
@@ -4670,6 +4677,15 @@ html[data-contrast="high"] {
       border: 0 !important;
       border-radius: 0 !important;
       overflow: hidden;
+    }
+  }
+
+  // Mobile fixes
+  @media (width <= 760px) {
+    // Hide extra border from mobile in 4.6.0-alpha.3
+    .columns-area__panels__main,
+    .columns-area__panels__main > div {
+      border-left: 0;
     }
   }
 }
