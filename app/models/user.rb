@@ -209,8 +209,10 @@ class User < ApplicationRecord
 
     increment(:sign_in_count) if new_sign_in
 
-    save(validate: false) unless new_record?
-    prepare_returning_user!
+    unless new_record?
+      save(validate: false)
+      prepare_returning_user!
+    end
   end
 
   def pending?
@@ -461,18 +463,15 @@ class User < ApplicationRecord
   end
 
   def sign_up_email_requires_approval?
-    return false if email.blank?
-
-    _, domain = email.split('@', 2)
-    return false if domain.blank?
+    return false if email_domain.blank?
 
     records = []
 
     # Doing this conditionally is not very satisfying, but this is consistent
     # with the MX records validations we do and keeps the specs tractable.
-    records = DomainResource.new(domain).mx unless self.class.skip_mx_check?
+    records = DomainResource.new(email_domain).mx unless self.class.skip_mx_check?
 
-    EmailDomainBlock.requires_approval?(records + [domain], attempt_ip: sign_up_ip)
+    EmailDomainBlock.requires_approval?(records + [email_domain], attempt_ip: sign_up_ip)
   end
 
   def sign_up_username_requires_approval?
