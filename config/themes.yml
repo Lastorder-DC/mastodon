@@ -1,8 +1,1 @@
 default: styles/application.scss
-mastodon-bird-ui-dark: styles/mastodon-bird-ui-dark.scss
-mastodon-bird-ui-light: styles/mastodon-bird-ui-light.scss
-mastodon-bird-ui-dark-change-to-stars: styles/mastodon-bird-ui-dark-change-to-stars.scss
-mastodon-bird-ui-light-hide-finnish-change-to-stars: styles/mastodon-bird-ui-light-hide-finnish-change-to-stars.scss
-mastodon-bird-ui-contrast: styles/mastodon-bird-ui-contrast.scss
-mastodon-bird-ui-accessible: styles/mastodon-bird-ui-accessible.scss
-mastodon-bird-ui-accessible-plus: styles/mastodon-bird-ui-accessible-plus.scss
