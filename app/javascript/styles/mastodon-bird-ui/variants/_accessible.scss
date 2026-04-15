@@ -35,6 +35,7 @@
   --font-size-smaller: 18px;
   --font-size-mid: 18px;
   --font-size-bigger: 18px;
+  --font-size-11: 14px;
   --font-size-12: 14px;
   --font-size-heading: 20px;
   --line-height: 24px;
@@ -137,6 +138,11 @@ body .content-warning {
     --font-size: 24px;
     --line-height: 30px;
   }
+}
+
+.layout-single-column .account__header__bio dl[class*="fieldList"],
+.layout-multiple-columns .account__header__bio dl[class*="fieldList"] {
+  row-gap: 16px;
 }
 
 .layout-single-column .icon-with-badge__badge {

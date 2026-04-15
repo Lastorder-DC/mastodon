@@ -12,10 +12,10 @@
   --color-text-secondary: #717c9b;
   --color-text-tertiary: #717c9b;
   --color-text-on-inverted: #1e2028;
-  --color-text-brand: #6364ff;
-  --color-text-brand-soft: #858afa;
+  --color-text-brand: var(--color-accent);
+  --color-text-brand-soft: var(--color-accent);
   --color-text-on-brand-base: #fff;
-  --color-text-brand-on-inverted: #6364ff;
+  --color-text-brand-on-inverted: var(--color-accent-dark);
   --color-text-error: #f91880;
   --color-text-on-error-base: #fff;
   --color-text-warning: #ffac33;
@@ -80,7 +80,8 @@
   --shadow-strength-primary: 80%;
   --color-shadow-primary: rgb(0 0 0 / 80%);
   --dropdown-shadow:
-    0 20px 25px -5px rgb(0 0 0 / 80%), 0 8px 10px -6px rgb(0 0 0 / 80%);
+    0 20px 25px -5px rgb(35, 37, 67 / 80%),
+    0 8px 10px -6px rgb(35, 37, 67 / 80%);
   --overlay-icon-shadow: drop-shadow(0 0 8px rgb(0 0 0 / 80%));
 
   // Graph tokens
