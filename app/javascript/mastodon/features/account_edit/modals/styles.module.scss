@@ -58,7 +58,7 @@
   transition: background 0.2s ease-in-out;
 
   &:hover {
-    background: var(--color-bg-brand-softer);
+    background: var(--color-bg-brand-softest);
   }
 
   &:focus-visible {
@@ -113,20 +113,31 @@
   gap: 8px;
   align-items: center;
   justify-content: flex-end;
+}
 
-  .zoomControl {
+.zoomControl {
+  margin-right: auto;
+  font-size: 13px;
+
+  input {
     width: min(100%, 200px);
-    margin-right: auto;
   }
 }
 
 .altImage {
-  max-height: 300px;
+  max-height: 150px;
   object-fit: contain;
+  align-self: flex-start;
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--avatar-border-radius);
 }
 
-.altCounter {
-  color: var(--color-text-secondary);
+.altHint {
+  ul {
+    padding-left: 1em;
+    list-style: disc;
+    margin-bottom: 1em;
+  }
 }
 
 .verifiedSteps {
@@ -155,31 +166,5 @@
       line-height: 16px;
       text-align: center;
     }
-  }
-}
-
-.details {
-  color: var(--color-text-secondary);
-  font-size: 13px;
-  margin-top: 8px;
-
-  summary {
-    cursor: pointer;
-    font-weight: 600;
-    list-style: none;
-    margin-bottom: 8px;
-    text-decoration: underline;
-    text-decoration-style: dotted;
-  }
-
-  :global(.icon) {
-    width: 1.4em;
-    height: 1.4em;
-    vertical-align: middle;
-    transition: transform 0.2s ease-in-out;
-  }
-
-  &[open] :global(.icon) {
-    transform: rotate(-180deg);
   }
 }
