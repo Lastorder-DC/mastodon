@@ -1952,7 +1952,7 @@ ko:
     mastodon-dark: Mastodon
     mastodon-bird-ui-accessible-plus: 유사 트위터 (접근성 플러스)
     mastodon-bird-ui-accessible: 유사 트위터 (접근성)
-    default: 유사 트위터 (어두움, 하트)
+    default: 유사 트위터
   time:
     formats:
       default: "%Y-%m-%d %H:%M"
