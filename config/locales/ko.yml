@@ -1949,13 +1949,9 @@ ko:
     review_link: 이용 약관 검토하기
     title: "%{domain} 도메인의 이용 약관에 변경 있음"
   themes:
-    mastodon-dark: 마스토돈 (어두움)
+    mastodon-dark: Mastodon
     mastodon-bird-ui-accessible-plus: 유사 트위터 (접근성 플러스)
     mastodon-bird-ui-accessible: 유사 트위터 (접근성)
-    mastodon-bird-ui-contrast: 유사 트위터 (고대비)
-    mastodon-bird-ui-light-hide-finnish-change-to-stars: 유사 트위터 (밝음, 별)
-    mastodon-bird-ui-dark-change-to-stars: 유사 트위터 (어두움, 별)
-    mastodon-bird-ui-light: 유사 트위터 (밝음, 하트)
     default: 유사 트위터 (어두움, 하트)
   time:
     formats:

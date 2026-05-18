@@ -484,8 +484,10 @@ html.no-reduce-motion .icon-button.star-icon.active .icon-star {
   ) !important;
 }
 
-html.no-reduce-motion
-  .detailed-status__action-bar
+// Sparkle burst and ring expansion fire in both motion modes — they are
+// decorative pseudo-element fades rather than transform animations, so they
+// stay friendly to reduce-motion users.
+.detailed-status__action-bar
   button.icon-button.star-icon.activate::after,
 .status__action-bar button.icon-button.activate.star-icon::after {
   animation:
@@ -493,8 +495,7 @@ html.no-reduce-motion
     sparkles-size 0.65s 1;
 }
 
-html.no-reduce-motion
-  .detailed-status__action-bar
+.detailed-status__action-bar
   button.icon-button.activate.star-icon::before,
 .status__action-bar button.icon-button.activate.star-icon::before {
   animation:
