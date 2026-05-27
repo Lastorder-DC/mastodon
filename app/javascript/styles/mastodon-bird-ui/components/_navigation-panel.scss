@@ -16,6 +16,55 @@
     visibility: hidden;
   }
 
+  // Upstream PR mastodon#39145 wrapped each nav item in an <li>. Make the menu
+  // a flex column so the items stack and CSS `order` works (used below to keep
+  // More last).
+  .navigation-panel__menu {
+    display: flex;
+    flex-direction: column;
+  }
+
+  // The legacy desktop `order` values in _mobile.scss were written for the old
+  // flat .column-link flex children. After #39145 they land on the new <li>
+  // wrappers instead, scrambling the DOM order. Give the menu explicit orders:
+  // compose / Home / Notifications at the top, lists and More at the bottom,
+  // everything else in source order in between (baseline 3).
+  .navigation-panel__menu > li {
+    order: 3;
+    width: 100%;
+  }
+
+  // Hide the list-item separators that replaced the old <hr> elements.
+  .navigation-panel__menu > li[role="separator"] {
+    display: none;
+  }
+
+  // Compose button first (only present on the single-column layout).
+  .navigation-panel__menu > li:has(a.navigation-panel__compose-button) {
+    order: 0;
+  }
+
+  // Home first nav link.
+  .navigation-panel__menu > li:has(a[href="/home"]) {
+    order: 1;
+  }
+
+  // Notifications second.
+  .navigation-panel__menu > li:has(a[href="/notifications"]) {
+    order: 2;
+  }
+
+  // Keep the Lists and Followed tags panels at the bottom, just above More.
+  .navigation-panel__menu > li.navigation-panel__list-panel {
+    order: 90;
+  }
+
+  // Keep the "More" menu (the only item with a <button> styled as a column
+  // link) last, past any leftover legacy order values.
+  .navigation-panel__menu > li:has(button.column-link) {
+    order: 99;
+  }
+
   .navigation-panel__logo hr {
     margin: 0;
   }
