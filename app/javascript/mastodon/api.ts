@@ -78,8 +78,21 @@ const setCSRFHeader = () => {
 
 void ready(setCSRFHeader);
 
+let activeAccountToken: string | null = null;
+
+export const setActiveAccountToken = (token: string | null) => {
+  activeAccountToken = token;
+};
+
+export const currentAuthorizationToken = () =>
+  activeAccountToken ?? getAccessToken();
+
+export const updateCSRFToken = (token: string) => {
+  csrfHeader['X-CSRF-Token'] = token;
+};
+
 const authorizationTokenFromInitialState = (): RawAxiosRequestHeaders => {
-  const accessToken = getAccessToken();
+  const accessToken = currentAuthorizationToken();
 
   if (!accessToken) return {};
 

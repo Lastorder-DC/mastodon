@@ -18,6 +18,7 @@
 </p>
 
 Mastodon is a **free, open-source social network server** based on [ActivityPub](https://www.w3.org/TR/activitypub/) where users can follow friends and discover new ones. On Mastodon, users can publish anything they want: links, pictures, text, and video. All Mastodon servers are interoperable as a federated network (users on one server can seamlessly communicate with users from another one, including non-Mastodon software that implements ActivityPub!)
+
 <h1><picture>
   <source media="(prefers-color-scheme: dark)" srcset="./lib/assets/wordmark.dark.png?raw=true">
   <source media="(prefers-color-scheme: light)" srcset="./lib/assets/wordmark.light.png?raw=true">
@@ -54,6 +55,8 @@ While installing OCCM SNS is possible, it's recommended to install original Mast
 **Safety and moderation tools** - Mastodon includes private posts, locked accounts, phrase filtering, muting, blocking, and many other features, along with a reporting and moderation system.
 
 **OAuth2 and a straightforward REST API** - Mastodon acts as an OAuth2 provider, and third party apps can use the REST and Streaming APIs. This results in a [rich app ecosystem](https://joinmastodon.org/apps) with a variety of choices!
+
+**Account Switcher** - Switch between multiple accounts on the same server without logging out. Securely stores encrypted tokens locally using WebCrypto API. See the [Account Switcher Guide](docs/multi_account_switcher.md) for setup and usage.
 
 ## Deployment
 

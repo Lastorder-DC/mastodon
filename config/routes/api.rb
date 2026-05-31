@@ -275,6 +275,11 @@ namespace :api, format: false do
       resource :subscription, only: [:create, :show, :update, :destroy]
     end
 
+    resource :multi_accounts, only: [] do
+      post :consume
+      post :refresh_token
+    end
+
     namespace :admin do
       resources :accounts, only: [:index, :show, :destroy] do
         member do

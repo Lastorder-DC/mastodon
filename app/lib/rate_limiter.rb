@@ -18,6 +18,11 @@ class RateLimiter
       limit: 400,
       period: 24.hours.freeze,
     }.freeze,
+
+    multi_account_refresh: {
+      limit: 30,
+      period: 15.minutes.freeze,
+    }.freeze,
   }.freeze
 
   def initialize(by, options = {})

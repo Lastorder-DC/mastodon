@@ -10,9 +10,28 @@ module AccessTokenExtension
 
     after_commit :push_to_streaming_api
 
-    scope :expired, -> { where.not(expires_in: nil).where('created_at + MAKE_INTERVAL(secs => expires_in) < NOW()') }
+    scope :expired,
+          lambda {
+            where.not(expires_in: nil)
+                 .where('created_at + MAKE_INTERVAL(secs => expires_in) < NOW()')
+                 .where.not(long_lived: true, purpose: 'multi_account_refresh')
+          }
     scope :not_revoked, -> { where(revoked_at: nil) }
     scope :revoked, -> { where.not(revoked_at: nil).where(revoked_at: ...Time.now.utc) }
+    scope :multi_account, -> { where(multi_account: true) }
+    scope :non_multi_account, -> { where(multi_account: [false, nil]) }
+    scope :long_lived_refresh, -> { where(long_lived: true, purpose: 'multi_account_refresh') }
+    scope :excluding_long_lived_refresh, -> { where.not(long_lived: true, purpose: 'multi_account_refresh') }
+  end
+
+  def expired?(*args)
+    return false if long_lived_refresh?
+
+    super
+  end
+
+  def long_lived_refresh?
+    long_lived && purpose == 'multi_account_refresh'
   end
 
   def revoke(clock = Time)

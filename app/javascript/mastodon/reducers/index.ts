@@ -20,6 +20,7 @@ import { markersReducer } from './markers';
 import media_attachments from './media_attachments';
 import meta from './meta';
 import { modalReducer } from './modal';
+import { multiAccountReducer } from './multi_account';
 import { navigationReducer } from './navigation';
 import { notificationGroupsReducer } from './notification_groups';
 import { notificationPolicyReducer } from './notification_policy';
@@ -49,6 +50,7 @@ const reducers = {
   alerts: alertsReducer,
   loadingBar: loadingBarReducer,
   modal: modalReducer,
+  multiAccount: multiAccountReducer,
   user_lists,
   status_lists,
   accounts: accountsReducer,

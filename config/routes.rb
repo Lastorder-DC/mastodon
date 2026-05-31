@@ -87,6 +87,12 @@ Rails.application.routes.draw do
     devise_for :users, path: 'auth', format: false
   end
 
+  namespace :multi_accounts do
+    resource :entry, only: [:show], controller: :entries
+    resource :callback, only: [:show], controller: :callbacks
+    post 'switch', to: 'switch#create'
+  end
+
   with_options constraints: ->(req) { req.format.nil? || req.format.html? } do
     get '/users/:username', to: redirect_with_vary('/@%{username}')
     get '/users/:username/following', to: redirect_with_vary('/@%{username}/following')

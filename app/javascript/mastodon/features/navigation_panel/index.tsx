@@ -28,13 +28,16 @@ import PublicIcon from '@/material-icons/400-24px/public.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import StarActiveIcon from '@/material-icons/400-24px/star-fill.svg?react';
 import StarIcon from '@/material-icons/400-24px/star.svg?react';
+import SwapHorizIcon from '@/material-icons/400-24px/swap_horiz.svg?react';
 import TrendingUpIcon from '@/material-icons/400-24px/trending_up.svg?react';
 import { fetchFollowRequests } from 'mastodon/actions/accounts';
 import { openNavigation, closeNavigation } from 'mastodon/actions/navigation';
 import { Account } from 'mastodon/components/account';
+import { Icon } from 'mastodon/components/icon';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { WordmarkLogo } from 'mastodon/components/logo';
 import { Search } from 'mastodon/features/compose/components/search';
+import { AccountSwitcher } from 'mastodon/features/ui/components/account_switcher';
 import { ColumnLink } from 'mastodon/features/ui/components/column_link';
 import { getNavigationSkipLinkId } from 'mastodon/features/ui/components/skip_links';
 import { useBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
@@ -113,6 +116,10 @@ const messages = defineMessages({
   },
   logout: { id: 'navigation_bar.logout', defaultMessage: 'Logout' },
   compose: { id: 'tabs_bar.publish', defaultMessage: 'New Post' },
+  accountSwitch: {
+    id: 'navigation_panel.account_switch',
+    defaultMessage: 'Switch accounts',
+  },
 });
 
 const NotificationsLink = () => {
@@ -339,6 +346,26 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             <ListPanel />
 
             <FollowedTagsPanel />
+
+            <li>
+              <AccountSwitcher
+                // eslint-disable-next-line react/jsx-no-bind
+                renderTrigger={({ openManage }) => (
+                  <button
+                    className='column-link column-link--transparent'
+                    type='button'
+                    onClick={openManage}
+                  >
+                    <Icon
+                      id='swap-horiz'
+                      icon={SwapHorizIcon}
+                      className='column-link__icon'
+                    />
+                    <span>{intl.formatMessage(messages.accountSwitch)}</span>
+                  </button>
+                )}
+              />
+            </li>
 
             <li>
               <ColumnLink
