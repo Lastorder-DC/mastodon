@@ -51,7 +51,6 @@ import { selectUnreadNotificationGroupsCount } from 'mastodon/selectors/notifica
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
 import { AnnualReportNavItem } from '../annual_report/nav_item';
-import { areCollectionsEnabled } from '../collections/utils';
 
 import { DisabledAccountBanner } from './components/disabled_account_banner';
 import { FollowedTagsPanel } from './components/followed_tags_panel';
@@ -60,7 +59,7 @@ import { MoreLink } from './components/more_link';
 import { SignInBanner } from './components/sign_in_banner';
 import { Trends } from './components/trends';
 
-export const messages = defineMessages({
+const messages = defineMessages({
   home: { id: 'tabs_bar.home', defaultMessage: 'Home' },
   notifications: {
     id: 'tabs_bar.notifications',
@@ -238,7 +237,10 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
   }
 
   return (
-    <div className='navigation-panel'>
+    <nav
+      className='navigation-panel'
+      aria-label={intl.formatMessage(messages.main)}
+    >
       <div className='navigation-panel__logo'>
         <Link
           to='/'
@@ -358,18 +360,16 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
                 text={intl.formatMessage(messages.bookmarks)}
               />
             </li>
-            {areCollectionsEnabled() && (
-              <li>
-                <ColumnLink
-                  transparent
-                  to={`/@${account?.acct}/collections`}
-                  icon='collections'
-                  iconComponent={CollectionsIcon}
-                  activeIconComponent={CollectionsActiveIcon}
-                  text={intl.formatMessage(messages.collections)}
-                />
-              </li>
-            )}
+            <li>
+              <ColumnLink
+                transparent
+                to={`/@${account?.acct}/collections`}
+                icon='collections'
+                iconComponent={CollectionsIcon}
+                activeIconComponent={CollectionsActiveIcon}
+                text={intl.formatMessage(messages.collections)}
+              />
+            </li>
             <li>
               <ColumnLink
                 transparent
@@ -420,12 +420,11 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
       <div className='flex-spacer' />
 
       <Trends />
-    </div>
+    </nav>
   );
 };
 
 export const CollapsibleNavigationPanel: React.FC = () => {
-  const intl = useIntl();
   const open = useAppSelector((state) => state.navigation.open);
   const dispatch = useAppDispatch();
   const openable = useBreakpoint('openable');
@@ -534,8 +533,7 @@ export const CollapsibleNavigationPanel: React.FC = () => {
   const showOverlay = openable && open;
 
   return (
-    <nav
-      aria-label={intl.formatMessage(messages.main)}
+    <div
       className={classNames(
         'columns-area__panels__pane columns-area__panels__pane--start columns-area__panels__pane--navigational',
         { 'columns-area__panels__pane--overlay': showOverlay },
@@ -549,6 +547,6 @@ export const CollapsibleNavigationPanel: React.FC = () => {
       >
         <NavigationPanel />
       </animated.div>
-    </nav>
+    </div>
   );
 };
