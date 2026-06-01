@@ -170,6 +170,12 @@ export const AccountEdit: FC = () => {
     void dispatch(patchProfile({ bot: !profile?.bot }));
   }, [dispatch, profile?.bot]);
 
+  const handleProtectedAccountToggle = useCallback(() => {
+    void dispatch(
+      patchProfile({ protected_account: !profile?.protectedAccount }),
+    );
+  }, [dispatch, profile?.protectedAccount]);
+
   // Normally we would use the account emoji, but we want all custom emojis to be available to render after editing.
   const emojis = useCustomEmojis();
   const htmlHandlers = useElementHandledLink({
@@ -337,6 +343,23 @@ export const AccountEdit: FC = () => {
         />
 
         <AccountEditSection title={messages.advancedSettingsTitle}>
+          <ToggleField
+            checked={profile.protectedAccount}
+            onChange={handleProtectedAccountToggle}
+            disabled={isPending}
+            label={
+              <FormattedMessage
+                id='account_edit.advanced_settings.protected_account_label'
+                defaultMessage='Protect account'
+              />
+            }
+            hint={
+              <FormattedMessage
+                id='account_edit.advanced_settings.protected_account_hint'
+                defaultMessage='When enabled, follow requests require approval and default post visibility is set to followers-only.'
+              />
+            }
+          />
           <ToggleField
             checked={profile.bot}
             onChange={handleBotToggle}

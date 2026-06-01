@@ -112,6 +112,8 @@
   "account.unmute": "@{name} 뮤트 해제",
   "account.unmute_notifications_short": "알림 뮤트 해제",
   "account.unmute_short": "뮤트 해제",
+  "account_edit.advanced_settings.protected_account_hint": "프로텍트를 활성화하면 팔로워 수동 승인이 켜지고 기본 게시물 공개 범위가 '팔로워'로 설정됩니다.",
+  "account_edit.advanced_settings.protected_account_label": "프로텍트 계정",
   "account_edit.bio.title": "자기소개",
   "account_edit.bio_modal.add_title": "자기소개 추가",
   "account_edit.bio_modal.edit_title": "자기소개 편집",

@@ -12,7 +12,24 @@ class Api::V1::ProfilesController < Api::BaseController
 
   def update
     @account = current_account
-    UpdateAccountService.new.call(@account, account_params, raise_error: true)
+    merged_params = account_params.to_h
+
+    if params.key?(:protected_account)
+      if ActiveModel::Type::Boolean.new.cast(params[:protected_account])
+        merged_params[:locked] = true
+        merged_params[:protected_account] = true
+        current_user.settings['default_privacy'] = 'private'
+      else
+        merged_params[:locked] = false
+        merged_params[:protected_account] = false
+        current_user.settings['default_privacy'] = 'unlisted'
+      end
+      current_user.save!
+    elsif @account.protected_account
+      merged_params.delete(:locked)
+    end
+
+    UpdateAccountService.new.call(@account, merged_params, raise_error: true)
     ActivityPub::UpdateDistributionWorker.perform_in(ActivityPub::UpdateDistributionWorker::DEBOUNCE_DELAY, @account.id)
 
     render json: @account, serializer: REST::ProfileSerializer
@@ -36,6 +53,7 @@ class Api::V1::ProfilesController < Api::BaseController
       :show_media,
       :show_media_replies,
       :show_featured,
+      :protected_account,
       attribution_domains: [],
       fields_attributes: [:name, :value]
     )
