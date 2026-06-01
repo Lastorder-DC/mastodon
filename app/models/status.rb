@@ -370,6 +370,10 @@ class Status < ApplicationRecord
       unscoped.select(:reblog_of_id).where(reblog_of_id: status_ids).where(account_id: account_id).to_h { |s| [s.reblog_of_id, true] }
     end
 
+    def replies_map(status_ids, account_id)
+      unscoped.select(:in_reply_to_id).where(in_reply_to_id: status_ids).where(account_id: account_id).to_h { |s| [s.in_reply_to_id, true] }
+    end
+
     def mutes_map(conversation_ids, account_id)
       ConversationMute.select(:conversation_id).where(conversation_id: conversation_ids).where(account_id: account_id).to_h { |m| [m.conversation_id, true] }
     end

@@ -114,8 +114,7 @@ const isAwaitingReply = (
   const status = statuses.get(group.statusId);
   if (!status) return true; // safe default: show if not loaded
   if (status.get('favourited') === true) return false;
-  const repliesCount = status.get('replies_count');
-  if (typeof repliesCount === 'number' && repliesCount > 0) return false;
+  if (status.get('replied') === true) return false;
   return true;
 };
 

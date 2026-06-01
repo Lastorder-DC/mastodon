@@ -1,6 +1,7 @@
 import { Map as ImmutableMap, fromJS } from 'immutable';
 
 import { timelineDelete } from 'mastodon/actions/timelines_typed';
+import { me } from 'mastodon/initial_state';
 
 import { STATUS_IMPORT, STATUSES_IMPORT } from '../actions/importer';
 import { normalizeStatusTranslation } from '../actions/importer/normalizer';
@@ -31,7 +32,13 @@ import {
 } from '../actions/statuses';
 import { setStatusQuotePolicy } from '../actions/statuses_typed';
 
-const importStatus = (state, status) => state.set(status.id, fromJS(status));
+const importStatus = (state, status) => state.withMutations(map => {
+  map.set(status.id, fromJS(status));
+
+  if (status.in_reply_to_id && status.account === me) {
+    map.setIn([status.in_reply_to_id, 'replied'], true);
+  }
+});
 
 const importStatuses = (state, statuses) =>
   state.withMutations(mutable => statuses.forEach(status => importStatus(mutable, status)));

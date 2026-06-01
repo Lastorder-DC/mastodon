@@ -262,6 +262,35 @@ RSpec.describe 'Notifications' do
       end
     end
 
+    context 'with mention statuses' do
+      let(:params) { { types: %w(mention) } }
+
+      before do
+        user.account.notifications.destroy_all
+
+        replied_status = PostStatusService.new.call(bob.account, text: 'Reply to this @alice')
+        bookmarked_status = PostStatusService.new.call(bob.account, text: 'Bookmark this @alice')
+        PostStatusService.new.call(bob.account, text: 'Still pending @alice')
+
+        PostStatusService.new.call(user.account, text: '@bob replied', thread: replied_status)
+        user.account.bookmarks.create!(status: bookmarked_status)
+      end
+
+      it 'serializes current-account reply relationship without treating bookmarks as replies', :aggregate_failures do
+        subject
+
+        statuses = response.parsed_body[:statuses]
+        replied_status = statuses.find { |status| status[:content].include?('Reply to this') }
+        bookmarked_status = statuses.find { |status| status[:content].include?('Bookmark this') }
+        pending_status = statuses.find { |status| status[:content].include?('Still pending') }
+
+        expect(response).to have_http_status(200)
+        expect(replied_status).to include(replied: true, bookmarked: false)
+        expect(bookmarked_status).to include(replied: false, bookmarked: true)
+        expect(pending_status).to include(replied: false, bookmarked: false)
+      end
+    end
+
     context 'with limit param' do
       let(:params) { { limit: 3 } }
       let(:notifications) { user.account.notifications.reorder(id: :desc) }
