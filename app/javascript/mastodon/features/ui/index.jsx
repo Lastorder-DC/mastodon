@@ -83,6 +83,7 @@ import {
   AccountFeatured,
   AccountEdit,
   AccountEditFeaturedTags,
+  PendingMentions,
   Quotes,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
@@ -217,6 +218,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/notifications' component={Notifications} content={children} exact />
             <WrappedRoute path='/notifications/requests' component={NotificationRequests} content={children} exact />
             <WrappedRoute path='/notifications/requests/:id' component={NotificationRequest} content={children} exact />
+            <WrappedRoute path='/pending-mentions' component={PendingMentions} content={children} />
             <WrappedRoute path='/favourites' component={FavouritedStatuses} content={children} />
 
             <WrappedRoute path='/bookmarks' component={BookmarkedStatuses} content={children} />

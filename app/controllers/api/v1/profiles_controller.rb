@@ -24,12 +24,18 @@ class Api::V1::ProfilesController < Api::BaseController
         merged_params[:protected_account] = false
         current_user.settings['default_privacy'] = 'unlisted'
       end
-      current_user.save!
+
+      ActiveRecord::Base.transaction do
+        current_user.save!
+        UpdateAccountService.new.call(@account, merged_params, raise_error: true)
+      end
     elsif @account.protected_account
       merged_params.delete(:locked)
+      UpdateAccountService.new.call(@account, merged_params, raise_error: true)
+    else
+      UpdateAccountService.new.call(@account, merged_params, raise_error: true)
     end
 
-    UpdateAccountService.new.call(@account, merged_params, raise_error: true)
     ActivityPub::UpdateDistributionWorker.perform_in(ActivityPub::UpdateDistributionWorker::DEBOUNCE_DELAY, @account.id)
 
     render json: @account, serializer: REST::ProfileSerializer

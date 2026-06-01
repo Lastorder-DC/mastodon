@@ -98,6 +98,11 @@ export function AccountEditFeaturedTags() {
   .then((module) => ({ default: module.AccountEditFeaturedTags }));
 }
 
+export function PendingMentions() {
+  return import('../../pending_mentions')
+    .then((module) => ({ default: module.PendingMentions }));
+}
+
 export function Followers () {
   return import('../../followers');
 }

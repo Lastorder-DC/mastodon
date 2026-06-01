@@ -1,4 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
+import type { Map as ImmutableMap } from 'immutable';
 
 import { compareId } from 'mastodon/compare_id';
 import type { NotificationGroup } from 'mastodon/models/notification_group';
@@ -10,6 +11,8 @@ import {
   selectSettingsNotificationsQuickFilterActive,
   selectSettingsNotificationsQuickFilterShow,
 } from './settings';
+
+type StatusesMap = ImmutableMap<string, ImmutableMap<string, unknown>>;
 
 const filterNotificationsByAllowedTypes = (
   showFilterBar: boolean,
@@ -100,4 +103,30 @@ export const selectPendingNotificationGroupsCount = createSelector(
   [selectPendingNotificationGroups],
   (pendingGroups) =>
     pendingGroups.filter((group) => group.type !== 'gap').length,
+);
+
+const isAwaitingReply = (
+  group: NotificationGroup,
+  statuses: StatusesMap,
+): boolean => {
+  if (group.type !== 'mention') return false;
+  if (!group.statusId) return false;
+  const status = statuses.get(group.statusId);
+  if (!status) return true; // safe default: show if not loaded
+  if (status.get('favourited') === true) return false;
+  const repliesCount = status.get('replies_count');
+  if (typeof repliesCount === 'number' && repliesCount > 0) return false;
+  return true;
+};
+
+const selectStatusesMap = (state: RootState) =>
+  state.statuses as unknown as StatusesMap;
+
+export const selectPendingMentionGroups = createSelector(
+  [(state: RootState) => state.notificationGroups.groups, selectStatusesMap],
+  (notifications, statuses): NotificationGroup[] =>
+    notifications.filter(
+      (g): g is NotificationGroup =>
+        g.type !== 'gap' && isAwaitingReply(g, statuses),
+    ),
 );

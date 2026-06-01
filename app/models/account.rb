@@ -41,6 +41,7 @@
 #  note                          :text             default(""), not null
 #  outbox_url                    :string           default(""), not null
 #  private_key                   :text
+#  protected_account             :boolean          default(FALSE), not null
 #  protocol                      :integer          default("ostatus"), not null
 #  public_key                    :text             default(""), not null
 #  requested_review_at           :datetime

@@ -17,6 +17,8 @@ import BookmarksActiveIcon from '@/material-icons/400-24px/bookmarks-fill.svg?re
 import BookmarksIcon from '@/material-icons/400-24px/bookmarks.svg?react';
 import CollectionsActiveIcon from '@/material-icons/400-24px/category-fill.svg?react';
 import CollectionsIcon from '@/material-icons/400-24px/category.svg?react';
+import ChatBubbleActiveIcon from '@/material-icons/400-24px/chat_bubble-fill.svg?react';
+import ChatBubbleIcon from '@/material-icons/400-24px/chat_bubble.svg?react';
 import HomeActiveIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import InfoIcon from '@/material-icons/400-24px/info.svg?react';
@@ -113,6 +115,10 @@ const messages = defineMessages({
   followRequests: {
     id: 'navigation_bar.follow_requests',
     defaultMessage: 'Follow requests',
+  },
+  pendingMentions: {
+    id: 'navigation_bar.pending_mentions',
+    defaultMessage: 'Awaiting reply',
   },
   logout: { id: 'navigation_bar.logout', defaultMessage: 'Logout' },
   compose: { id: 'tabs_bar.publish', defaultMessage: 'New Post' },
@@ -331,6 +337,17 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
           <>
             <li>
               <NotificationsLink />
+            </li>
+
+            <li>
+              <ColumnLink
+                transparent
+                to='/pending-mentions'
+                icon='chat_bubble'
+                iconComponent={ChatBubbleIcon}
+                activeIconComponent={ChatBubbleActiveIcon}
+                text={intl.formatMessage(messages.pendingMentions)}
+              />
             </li>
 
             <li>

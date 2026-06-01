@@ -44,29 +44,35 @@ Mastodon의 API는 Doorkeeper 토큰만으로는 동작하지 않습니다. 모�
 **Rails 콘솔에서 생성:**
 
 ```ruby
+# 여기에 마스토돈 도메인을 입력하세요 (예: 'example.com')
+domain = 'your-domain.com'
+
 app = Doorkeeper::Application.create!(
   name: 'Multi-Account Switcher',
-  redirect_uri: 'https://<도메인>/multi_accounts/callback',
+  redirect_uri: "https://#{domain}/multi_accounts/callback",
   scopes: 'read write follow push',
   confidential: true
 )
-puts "Client ID: #{app.uid}"
-puts "Client Secret: #{app.secret}"
+
+puts "Add below to .env file"
+puts "MA_MULTI_ACCOUNT_CLIENT_ID=#{app.uid}"
+puts "MA_MULTI_ACCOUNT_CLIENT_SECRET=#{app.secret}"
+puts "MA_MULTI_ACCOUNT_REDIRECT_URI=https://#{domain}/multi_accounts/callback"
 ```
 
 ### 환경 변수
 
 다음 환경 변수를 서버 환경 설정 파일(`.env.production` 등)에 추가하세요:
 
-| 변수명 | 필수 | 설명 |
-|--------|------|------|
-| `MA_MULTI_ACCOUNT_CLIENT_ID` | 예 | OAuth 앱의 Client ID |
-| `MA_MULTI_ACCOUNT_CLIENT_SECRET` | 예 | OAuth 앱의 Client Secret |
-| `MA_MULTI_ACCOUNT_REDIRECT_URI` | 예 | 콜백 URI (`https://<도메인>/multi_accounts/callback`) |
-| `MA_MULTI_ACCOUNT_REFRESH_FLOW` | 아니오 | 세션 전환 활성화 (기본값: `true`) |
-| `MA_MULTI_ACCOUNT_RETAIN_TOKENS` | 아니오 | 로그아웃 시 토큰 유지 여부 (기본값: `true`) |
-| `MA_ROLLOUT_PERCENTAGE` | 아니오 | 기능 노출 비율, 0-100 (기본값: `100`) |
-| `MA_INTERNAL_USER_IDS` | 아니오 | 조기 접근 사용자 ID, 쉼표 구분 |
+| 변수명                           | 필수   | 설명                                                  |
+| -------------------------------- | ------ | ----------------------------------------------------- |
+| `MA_MULTI_ACCOUNT_CLIENT_ID`     | 예     | OAuth 앱의 Client ID                                  |
+| `MA_MULTI_ACCOUNT_CLIENT_SECRET` | 예     | OAuth 앱의 Client Secret                              |
+| `MA_MULTI_ACCOUNT_REDIRECT_URI`  | 예     | 콜백 URI (`https://<도메인>/multi_accounts/callback`) |
+| `MA_MULTI_ACCOUNT_REFRESH_FLOW`  | 아니오 | 세션 전환 활성화 (기본값: `true`)                     |
+| `MA_MULTI_ACCOUNT_RETAIN_TOKENS` | 아니오 | 로그아웃 시 토큰 유지 여부 (기본값: `true`)           |
+| `MA_ROLLOUT_PERCENTAGE`          | 아니오 | 기능 노출 비율, 0-100 (기본값: `100`)                 |
+| `MA_INTERNAL_USER_IDS`           | 아니오 | 조기 접근 사용자 ID, 쉼표 구분                        |
 
 ### 데이터베이스 마이그레이션
 
@@ -187,15 +193,15 @@ end
 
 ### 주요 차이점
 
-| 항목 | long-while (구버전) | 이 구현 (occm) |
-|------|---------------------|----------------|
-| **전환 방식** | `RefreshService`로 새 Doorkeeper 토큰 발급 후 API 호출에 사용 | `SwitchController`에서 `sign_in`으로 SessionActivation 생성 |
-| **세션 처리** | 토큰 기반 - 세션 쿠키를 직접 조작 | 서버 측 `sign_in` - Warden이 자동으로 세션/쿠키 관리 |
-| **컨트롤러 기반** | `Api::BaseController` 상속 (세션 미들웨어 미포함) | `ApplicationController` 상속 (전체 세션 미들웨어 포함) |
-| **팝업 감지** | `setInterval` 500ms로 `popup.closed` 폴링 | 폴링 없음, postMessage + 타임아웃만 사용 |
-| **코드베이스** | JSX, 클래스 컴포넌트 기반 | TSX, 함수형 컴포넌트 + hooks |
-| **CSRF** | 자체 CSRF 토큰 캐시/갱신 로직 | 불필요 (sign_in이 세션을 완전히 재설정) |
-| **token 라이프사이클** | refreshSession으로 단기 세션 토큰 + 장기 refresh 토큰 이중 구조 | 단일 장기 토큰 + 서버 측 세션 전환 |
+| 항목                   | long-while (구버전)                                             | 이 구현 (occm)                                              |
+| ---------------------- | --------------------------------------------------------------- | ----------------------------------------------------------- |
+| **전환 방식**          | `RefreshService`로 새 Doorkeeper 토큰 발급 후 API 호출에 사용   | `SwitchController`에서 `sign_in`으로 SessionActivation 생성 |
+| **세션 처리**          | 토큰 기반 - 세션 쿠키를 직접 조작                               | 서버 측 `sign_in` - Warden이 자동으로 세션/쿠키 관리        |
+| **컨트롤러 기반**      | `Api::BaseController` 상속 (세션 미들웨어 미포함)               | `ApplicationController` 상속 (전체 세션 미들웨어 포함)      |
+| **팝업 감지**          | `setInterval` 500ms로 `popup.closed` 폴링                       | 폴링 없음, postMessage + 타임아웃만 사용                    |
+| **코드베이스**         | JSX, 클래스 컴포넌트 기반                                       | TSX, 함수형 컴포넌트 + hooks                                |
+| **CSRF**               | 자체 CSRF 토큰 캐시/갱신 로직                                   | 불필요 (sign_in이 세션을 완전히 재설정)                     |
+| **token 라이프사이클** | refreshSession으로 단기 세션 토큰 + 장기 refresh 토큰 이중 구조 | 단일 장기 토큰 + 서버 측 세션 전환                          |
 
 ### 이 구현의 장점
 
@@ -239,8 +245,8 @@ end
 
 ## 기술 스택
 
-| 계층 | 기술 |
-|------|------|
+| 계층     | 기술                                                                                |
+| -------- | ----------------------------------------------------------------------------------- |
 | Frontend | TypeScript, React (함수형 컴포넌트), Redux (Immutable.js), WebCrypto API, IndexedDB |
-| Backend | Ruby on Rails 8, Redis, Doorkeeper OAuth 2.0, Devise/Warden |
-| Security | AES-GCM 256-bit (non-extractable key), OAuth 2.0 state/nonce, SessionActivation |
+| Backend  | Ruby on Rails 8, Redis, Doorkeeper OAuth 2.0, Devise/Warden                         |
+| Security | AES-GCM 256-bit (non-extractable key), OAuth 2.0 state/nonce, SessionActivation     |
