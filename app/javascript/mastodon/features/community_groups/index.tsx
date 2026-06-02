@@ -263,10 +263,6 @@ const GroupsList: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [groups, setGroups] = useState<ApiCommunityGroupJSON[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
-  const [displayName, setDisplayName] = useState('');
-  const [note, setNote] = useState('');
-  const [locked, setLocked] = useState(false);
-  const [discoverable, setDiscoverable] = useState(false);
   const [token, setToken] = useState('');
   const [message, setMessage] = useState('');
 
@@ -289,21 +285,6 @@ const GroupsList: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     void loadGroups();
   }, [loadGroups]);
 
-  const handleCreate = useCallback(async () => {
-    const { data } = await api().post<ApiCommunityGroupJSON>('/api/v1/groups', {
-      display_name: displayName,
-      note,
-      locked,
-      discoverable,
-    });
-
-    setGroups((current) => [data, ...current]);
-    setDisplayName('');
-    setNote('');
-    setLocked(false);
-    setDiscoverable(false);
-  }, [discoverable, displayName, locked, note]);
-
   const handleJoinByToken = useCallback(async () => {
     await api().post('/api/v1/groups/join_by_token', { token, message });
     setToken('');
@@ -321,6 +302,16 @@ const GroupsList: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         icon='groups'
         iconComponent={GroupsIcon}
         multiColumn={multiColumn}
+        extraButton={
+          <Link
+            to='/groups/new'
+            className='column-header__button'
+            title={intl.formatMessage(messages.createGroup)}
+            aria-label={intl.formatMessage(messages.createGroup)}
+          >
+            <Icon id='plus' icon={AddIcon} />
+          </Link>
+        }
       />
 
       <ScrollableList
@@ -337,67 +328,6 @@ const GroupsList: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         prepend={
           <div className='follow_requests-unlocked_explanation'>
             {error && <p className='warning-hint'>{error}</p>}
-
-            <h3>
-              <FormattedMessage
-                id='community_groups.create_group'
-                defaultMessage='Create group'
-              />
-            </h3>
-            <p>
-              <FormattedMessage
-                id='community_groups.manager_hint'
-                defaultMessage='Admins and moderators can manage members, invitations, join requests, bans, reports, and group posts here.'
-              />
-            </p>
-
-            <input
-              className='setting-text'
-              value={displayName}
-              onChange={(e) => {
-                setDisplayName(e.currentTarget.value);
-              }}
-              placeholder={intl.formatMessage(messages.displayName)}
-            />
-            <textarea
-              className='setting-text light'
-              value={note}
-              onChange={(e) => {
-                setNote(e.currentTarget.value);
-              }}
-              placeholder={intl.formatMessage(messages.description)}
-            />
-
-            <label>
-              <input
-                type='checkbox'
-                checked={locked}
-                onChange={(e) => {
-                  setLocked(e.currentTarget.checked);
-                }}
-              />{' '}
-              {intl.formatMessage(messages.locked)}
-            </label>
-            <label>
-              <input
-                type='checkbox'
-                checked={discoverable}
-                onChange={(e) => {
-                  setDiscoverable(e.currentTarget.checked);
-                }}
-              />{' '}
-              {intl.formatMessage(messages.discoverable)}
-            </label>
-
-            <p>
-              <PlainButton
-                onClick={handleCreate}
-                disabled={!displayName.trim()}
-              >
-                <Icon id='plus' icon={AddIcon} />{' '}
-                {intl.formatMessage(messages.createGroup)}
-              </PlainButton>
-            </p>
 
             <h3>
               <FormattedMessage
