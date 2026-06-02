@@ -42,6 +42,11 @@ export function Lists () {
   return import('../../lists');
 }
 
+
+export function CommunityGroups() {
+  return import('../../community_groups');
+}
+
 export function Collections() {
   return import('../../collections').then(
     module => ({default: module.Collections})

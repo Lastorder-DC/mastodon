@@ -11,6 +11,7 @@ import ImmutablePureComponent from 'react-immutable-pure-component';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import FlagIcon from '@/material-icons/400-24px/flag-fill.svg?react';
 import FormatQuoteIcon from '@/material-icons/400-24px/format_quote-fill.svg?react';
+import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import InsertChartIcon from '@/material-icons/400-24px/insert_chart.svg?react';
 import PersonIcon from '@/material-icons/400-24px/person-fill.svg?react';
@@ -45,7 +46,13 @@ const messages = defineMessages({
   adminReport: { id: 'notification.admin.report', defaultMessage: '{name} reported {target}' },
   relationshipsSevered: { id: 'notification.relationships_severance_event', defaultMessage: 'Lost connections with {name}' },
   moderationWarning: { id: 'notification.moderation_warning', defaultMessage: 'You have received a moderation warning' },
-  quote: { id: 'notification.label.quote', defaultMessage: '{name} quoted your post'}
+  quote: { id: 'notification.label.quote', defaultMessage: '{name} quoted your post'},
+  communityGroupJoinRequest: { id: 'notification.community_group_join_request', defaultMessage: '{name} requested to join a group you manage' },
+  communityGroupJoinRequestApproved: { id: 'notification.community_group_join_request_approved', defaultMessage: '{name} approved your group join request' },
+  communityGroupJoinRequestRejected: { id: 'notification.community_group_join_request_rejected', defaultMessage: '{name} rejected your group join request' },
+  communityGroupStatusRemovedByAdmin: { id: 'notification.community_group_status_removed_by_admin', defaultMessage: '{name} removed your group post as the group administrator' },
+  communityGroupStatusRemovedByModerator: { id: 'notification.community_group_status_removed_by_moderator', defaultMessage: '{name} removed your group post as a group moderator' },
+  communityGroupReport: { id: 'notification.community_group_report', defaultMessage: '{name} reported a post in a group you manage' },
 });
 
 const notificationForScreenReader = (intl, message, timestamp) => {
@@ -264,6 +271,25 @@ class Notification extends ImmutablePureComponent {
             cachedMediaWidth={this.props.cachedMediaWidth}
             cacheMediaWidth={this.props.cacheMediaWidth}
           />
+        </div>
+      </Hotkeys>
+    );
+  }
+
+
+  renderCommunityGroupNotification (notification, link, message) {
+    const { intl, unread } = this.props;
+
+    return (
+      <Hotkeys handlers={this.getHandlers()}>
+        <div className={classNames('notification notification-community-group focusable', { unread })} tabIndex={0} aria-label={notificationForScreenReader(intl, intl.formatMessage(message, { name: notification.getIn(['account', 'acct']) }), notification.get('created_at'))}>
+          <div className='notification__message'>
+            <Icon id='group' icon={GroupIcon} />
+
+            <span title={notification.get('created_at')}>
+              <FormattedMessage {...message} values={{ name: link }} />
+            </span>
+          </div>
         </div>
       </Hotkeys>
     );
@@ -535,6 +561,18 @@ class Notification extends ImmutablePureComponent {
       return this.renderQuotedUpdate(notification, link);
     case 'poll':
       return this.renderPoll(notification, account);
+    case 'community_group_join_request':
+      return this.renderCommunityGroupNotification(notification, link, messages.communityGroupJoinRequest);
+    case 'community_group_join_request_approved':
+      return this.renderCommunityGroupNotification(notification, link, messages.communityGroupJoinRequestApproved);
+    case 'community_group_join_request_rejected':
+      return this.renderCommunityGroupNotification(notification, link, messages.communityGroupJoinRequestRejected);
+    case 'community_group_status_removed_by_admin':
+      return this.renderCommunityGroupNotification(notification, link, messages.communityGroupStatusRemovedByAdmin);
+    case 'community_group_status_removed_by_moderator':
+      return this.renderCommunityGroupNotification(notification, link, messages.communityGroupStatusRemovedByModerator);
+    case 'community_group_report':
+      return this.renderCommunityGroupNotification(notification, link, messages.communityGroupReport);
     case 'severed_relationships':
       return this.renderRelationshipsSevered(notification);
     case 'moderation_warning':

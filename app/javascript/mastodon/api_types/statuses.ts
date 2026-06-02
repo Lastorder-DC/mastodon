@@ -6,11 +6,25 @@ import type { ApiMediaAttachmentJSON } from './media_attachments';
 import type { ApiPollJSON } from './polls';
 import type { ApiQuoteJSON, ApiQuotePolicyJSON } from './quotes';
 
+export interface ApiCommunityGroupJSON {
+  id: string;
+  display_name: string;
+  created_at: string;
+  note: string;
+  url: string;
+  locked: boolean;
+  discoverable: boolean;
+  members_count: number;
+  statuses_count: number;
+  last_status_at?: string;
+}
+
 // See app/modals/status.rb
 export type StatusVisibility =
   | 'public'
   | 'unlisted'
   | 'private'
+  | 'group'
   // | 'limited' // This is never exposed to the API (they become `private`)
   | 'direct';
 
@@ -122,6 +136,8 @@ export interface ApiStatusJSON {
   poll?: ApiPollJSON;
   quote?: ApiQuoteJSON;
   quote_approval?: ApiQuotePolicyJSON;
+  group?: ApiCommunityGroupJSON;
+  approval_status?: 'pending' | 'approved' | 'rejected' | 'revoked';
 }
 
 export interface ApiContextJSON {
@@ -138,5 +154,7 @@ export interface ApiStatusSourceJSON {
 export function isStatusVisibility(
   visibility: string,
 ): visibility is StatusVisibility {
-  return ['public', 'unlisted', 'private', 'direct'].includes(visibility);
+  return ['public', 'unlisted', 'private', 'direct', 'group'].includes(
+    visibility,
+  );
 }

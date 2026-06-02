@@ -69,6 +69,18 @@ module NotificationFallbackConcern
         'notification_fallbacks.collection_update.title_html',
         name: account
       )
+    when :community_group_join_request
+      I18n.t('notification_fallbacks.community_group_join_request.title_html', name: TextFormatter.link_to_mention(account))
+    when :community_group_join_request_approved
+      I18n.t('notification_fallbacks.community_group_join_request_approved.title_html', name: TextFormatter.link_to_mention(account))
+    when :community_group_join_request_rejected
+      I18n.t('notification_fallbacks.community_group_join_request_rejected.title_html', name: TextFormatter.link_to_mention(account))
+    when :community_group_status_removed_by_admin
+      I18n.t('notification_fallbacks.community_group_status_removed_by_admin.title_html', name: TextFormatter.link_to_mention(account))
+    when :community_group_status_removed_by_moderator
+      I18n.t('notification_fallbacks.community_group_status_removed_by_moderator.title_html', name: TextFormatter.link_to_mention(account))
+    when :community_group_report
+      I18n.t('notification_fallbacks.community_group_report.title_html', name: TextFormatter.link_to_mention(account))
     end
   end
 
@@ -86,7 +98,10 @@ module NotificationFallbackConcern
         'notification_fallbacks.moderation_warning.summary_html',
         link: link_to(I18n.t('notification_fallbacks.generic.sign_in'), disputes_strike_url(object.account_warning.id))
       )
-    when :'admin.sign_up', :'admin.report', :added_to_collection, :collection_update
+    when :'admin.sign_up', :'admin.report', :added_to_collection, :collection_update,
+         :community_group_join_request, :community_group_join_request_approved,
+         :community_group_join_request_rejected, :community_group_status_removed_by_admin,
+         :community_group_status_removed_by_moderator, :community_group_report
       I18n.t(
         'notification_fallbacks.generic.summary_html',
         link: link_to(I18n.t('notification_fallbacks.generic.sign_in'), root_url)

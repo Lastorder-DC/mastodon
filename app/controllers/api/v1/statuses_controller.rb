@@ -43,6 +43,7 @@ class Api::V1::StatusesController < Api::BaseController
       application: doorkeeper_token.application,
       poll: status_params[:poll],
       allowed_mentions: status_params[:allowed_mentions],
+      community_group_id: status_params[:community_group_id],
       idempotency: request.headers['Idempotency-Key'],
       with_rate_limit: true
     )
@@ -74,12 +75,14 @@ class Api::V1::StatusesController < Api::BaseController
   end
 
   def destroy
-    @status = Status.where(account: current_account).find(params[:id])
+    @status = Status.find(params[:id])
     authorize @status, :destroy?
 
     # JSON is generated before `discard_with_reblogs` in order to have the proper URL
     # for media attachments, as it would otherwise redirect to the media proxy
     json = render_to_body json: @status, serializer: REST::StatusSerializer, source_requested: true
+
+    notify_author_of_group_status_removal!
 
     @status.discard_with_reblogs
     StatusPin.find_by(status: @status)&.destroy
@@ -122,6 +125,21 @@ class Api::V1::StatusesController < Api::BaseController
     raise(Mastodon::ValidationError) if status_ids.size > DEFAULT_STATUSES_LIMIT
   end
 
+  def notify_author_of_group_status_removal!
+    return unless @status.community_group_status? && @status.account_id != current_account.id
+    return unless @status.community_group&.can_manage_members?(current_account)
+
+    NotifyService.new.call(@status.account, group_status_removed_notification_type, @status, from_account: current_account)
+  end
+
+  def group_status_removed_notification_type
+    if @status.community_group&.admin?(current_account)
+      'community_group_status_removed_by_admin'
+    else
+      'community_group_status_removed_by_moderator'
+    end
+  end
+
   def status_ids
     Array(statuses_params[:id]).uniq.map(&:to_i)
   end
@@ -141,6 +159,7 @@ class Api::V1::StatusesController < Api::BaseController
       :visibility,
       :language,
       :scheduled_at,
+      :community_group_id,
       allowed_mentions: [],
       media_ids: [],
       media_attributes: [

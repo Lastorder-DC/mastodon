@@ -47,9 +47,21 @@ export type NotificationGroupPoll = BaseNotificationWithStatus<'poll'>;
 export type NotificationGroupUpdate = BaseNotificationWithStatus<'update'>;
 export type NotificationGroupQuotedUpdate =
   BaseNotificationWithStatus<'quoted_update'>;
+export type NotificationGroupCommunityGroupStatusRemovedByAdmin =
+  BaseNotificationWithStatus<'community_group_status_removed_by_admin'>;
+export type NotificationGroupCommunityGroupStatusRemovedByModerator =
+  BaseNotificationWithStatus<'community_group_status_removed_by_moderator'>;
 export type NotificationGroupFollow = BaseNotification<'follow'>;
 export type NotificationGroupFollowRequest = BaseNotification<'follow_request'>;
 export type NotificationGroupAdminSignUp = BaseNotification<'admin.sign_up'>;
+export type NotificationGroupCommunityGroupJoinRequest =
+  BaseNotification<'community_group_join_request'>;
+export type NotificationGroupCommunityGroupJoinRequestApproved =
+  BaseNotification<'community_group_join_request_approved'>;
+export type NotificationGroupCommunityGroupJoinRequestRejected =
+  BaseNotification<'community_group_join_request_rejected'>;
+export type NotificationGroupCommunityGroupReport =
+  BaseNotification<'community_group_report'>;
 
 export type AccountWarningAction =
   | 'none'
@@ -107,11 +119,17 @@ export type NotificationGroup =
   | NotificationGroupPoll
   | NotificationGroupUpdate
   | NotificationGroupQuotedUpdate
+  | NotificationGroupCommunityGroupStatusRemovedByAdmin
+  | NotificationGroupCommunityGroupStatusRemovedByModerator
   | NotificationGroupFollow
   | NotificationGroupFollowRequest
   | NotificationGroupModerationWarning
   | NotificationGroupSeveredRelationships
   | NotificationGroupAdminSignUp
+  | NotificationGroupCommunityGroupJoinRequest
+  | NotificationGroupCommunityGroupJoinRequestApproved
+  | NotificationGroupCommunityGroupJoinRequestRejected
+  | NotificationGroupCommunityGroupReport
   | NotificationGroupAdminReport
   | NotificationGroupAnnualReport
   | NotificationGroupAddedToCollection
@@ -160,7 +178,9 @@ export function createNotificationGroupFromJSON(
     case 'quote':
     case 'poll':
     case 'update':
-    case 'quoted_update': {
+    case 'quoted_update':
+    case 'community_group_status_removed_by_admin':
+    case 'community_group_status_removed_by_moderator': {
       const { status_id: statusId, ...groupWithoutStatus } = group;
       return {
         statusId: statusId ?? undefined,
@@ -235,6 +255,8 @@ export function createNotificationGroupFromNotificationJSON(
     case 'poll':
     case 'update':
     case 'quoted_update':
+    case 'community_group_status_removed_by_admin':
+    case 'community_group_status_removed_by_moderator':
       return {
         ...group,
         type: notification.type,

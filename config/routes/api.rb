@@ -68,6 +68,7 @@ namespace :api, format: false do
       resource :link, only: :show, controller: :link
       resources :tag, only: :show
       resources :list, only: :show
+      resources :group, only: :show
     end
 
     with_options to: 'streaming#index' do
@@ -256,6 +257,44 @@ namespace :api, format: false do
     end
 
     resources :followed_tags, only: [:index]
+
+    resources :groups, only: [:index, :create, :show, :update, :destroy] do
+      member do
+        get :share
+        post :share_link
+        post :join
+        post :leave
+        post :transfer_ownership
+      end
+
+      collection do
+        post :join_by_token
+      end
+
+      scope module: :groups do
+        resources :invitations, only: [:index, :create, :destroy] do
+          member do
+            post :accept
+            post :reject
+          end
+        end
+        resources :membership_requests, only: [:index] do
+          member do
+            post :authorize
+            post :reject
+          end
+        end
+        resources :memberships, only: [:index, :update, :destroy]
+        resources :blocks, only: [:index, :create]
+        resources :reports, only: [:index, :create, :show] do
+          member do
+            post :resolve
+            post :unresolve
+          end
+        end
+        delete 'blocks/:account_id', to: 'blocks#destroy', as: :block
+      end
+    end
 
     resources :lists, only: [:index, :create, :show, :update, :destroy] do
       resource :accounts, only: [:show, :create, :destroy], module: :lists

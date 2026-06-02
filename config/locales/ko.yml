@@ -2086,6 +2086,71 @@ ko:
       sign_in_action: 로그인
       subject: 마스토돈에 오신 것을 환영합니다
       title: 환영합니다 %{name} 님!
+  notification_fallbacks:
+    generic:
+      sign_in: Mastodon 웹 앱에 로그인
+      summary_html: 사용 중인 앱이 최신 Mastodon 알림을 지원하지 않습니다. 모든 기능을 사용하려면 %{link}.
+    community_group_join_request:
+      title_html: "%{name} 님이 내가 관리하는 그룹에 가입을 요청했습니다"
+    community_group_join_request_approved:
+      title_html: "%{name} 님이 내 그룹 가입 요청을 승인했습니다"
+    community_group_join_request_rejected:
+      title_html: "%{name} 님이 내 그룹 가입 요청을 거절했습니다"
+    community_group_report:
+      title_html: "%{name} 님이 내가 관리하는 그룹의 게시물을 신고했습니다"
+    community_group_status_removed_by_admin:
+      title_html: "%{name} 님이 그룹 관리자로서 내 그룹 게시물을 삭제했습니다"
+    community_group_status_removed_by_moderator:
+      title_html: "%{name} 님이 그룹 운영자로서 내 그룹 게시물을 삭제했습니다"
+  community_group_reports:
+    actions:
+      resolved: 그룹 신고를 처리 완료했습니다.
+      unresolved: 그룹 신고를 다시 열었습니다.
+    descriptions:
+      create: 그룹 게시물을 그룹 운영자와 관리자에게 신고합니다. 현재 신고 사유는 직접 입력만 지원합니다.
+      review: 그룹 운영자와 관리자는 서버 전체 조정 권한 없이도 그룹 신고를 검토하고 처리할 수 있습니다.
+    errors:
+      invalid_statuses: 신고한 게시물은 이 그룹에 속하고 신고 대상 계정이 작성한 게시물이어야 합니다
+      rule_ids_not_supported: 그룹별 규칙은 아직 지원되지 않습니다. 대신 수동 사유를 입력하세요
+  community_groups:
+    actions:
+      block_created: 해당 계정이 이 그룹에 다시 가입할 수 없도록 차단했습니다. 기존 멤버십, 초대, 가입 요청도 함께 정리되었습니다.
+      block_removed: 해당 계정이 다시 이 그룹 가입을 요청하거나 초대받을 수 있습니다.
+      created: 그룹이 생성되었습니다. 그룹을 만든 계정은 자동으로 관리자가 됩니다.
+      invitation_accepted: 초대를 수락했습니다. 이제 이 그룹의 멤버입니다.
+      invitation_created: 초대를 보냈습니다. 상대 계정이 수락하면 그룹에 가입합니다.
+      invitation_rejected: 초대를 거절했습니다.
+      invitation_revoked: 초대를 취소했습니다. 해당 계정은 이 초대로 더 이상 가입할 수 없습니다.
+      join_request_approved: 가입 요청을 승인했습니다. 해당 계정은 이제 그룹 멤버입니다.
+      join_request_created: 가입 요청을 보냈습니다. 참여하려면 그룹 진행자 또는 관리자의 승인이 필요합니다.
+      join_request_rejected: 가입 요청을 거절했습니다. 해당 계정은 그룹에 추가되지 않았습니다.
+      joined: 그룹에 가입했습니다.
+      left: 그룹에서 나갔습니다.
+      membership_removed: 멤버를 그룹에서 내보냈습니다.
+      membership_updated: 멤버 역할을 변경했습니다.
+      ownership_transferred: 그룹 관리자 권한을 넘겼습니다. 이전 관리자는 운영자가 됩니다.
+      share_link_rotated: 그룹 공유 링크를 새로 만들었습니다. 이전 공유 링크는 더 이상 작동하지 않습니다.
+      updated: 그룹 정보를 수정했습니다.
+    descriptions:
+      block_account: 계정을 차단하면 멤버십이 제거되고, 대기 중인 초대가 취소되며, 대기 중인 가입 요청이 거절되고, 다시 가입할 수 없게 됩니다.
+      create_group: 이 서버 안에서만 동작하는 그룹을 만듭니다. 만든 계정은 자동으로 관리자가 됩니다.
+      invite_account: 이 서버의 계정을 초대합니다. 원격 계정, 이미 가입한 멤버, 차단된 계정은 초대할 수 없습니다.
+      join_locked: 이 그룹은 가입 승인이 필요합니다. 가입 요청은 그룹 진행자와 관리자에게 표시됩니다.
+      join_unlocked: 이 그룹에 가입하면 즉시 멤버로 추가됩니다.
+      manage_members: 그룹 진행자와 관리자는 가입 요청 검토, 멤버 역할 변경, 멤버 내보내기, 계정 차단을 할 수 있습니다.
+      post_to_group: 그룹 게시물은 승인된 그룹 멤버에게만 보이며 공개 타임라인이나 ActivityPub으로 배포되지 않습니다.
+      review_join_request: 요청을 승인하면 해당 계정이 멤버로 추가됩니다. 거절하면 해당 계정은 그룹 밖에 남습니다.
+      share_link: 이 서버의 사용자는 공유 토큰으로 그룹에 가입하거나, 잠긴 그룹인 경우 가입을 요청할 수 있습니다.
+    errors:
+      already_member: 이 계정은 이미 그룹 멤버입니다
+      blocked_account: 이 계정은 이 그룹에 가입할 수 없도록 차단되어 있습니다
+      blocked_from_group: 이 그룹에 가입할 수 없도록 차단되어 있습니다
+      local_accounts_only: 현재 그룹은 이 서버의 계정만 지원합니다
+      single_admin: 그룹 관리자는 한 명만 지정할 수 있습니다
+      transfer_required_for_admin: 다른 멤버를 관리자로 만들려면 그룹 관리자 권한 넘기기를 사용해야 합니다
+      not_a_member: 이 그룹에 게시하려면 그룹 멤버여야 합니다
+      reply_must_stay_in_group: 그룹 게시물에 대한 답글은 같은 그룹 안에 있어야 합니다
+      scheduled_statuses_not_supported: 예약 그룹 게시물은 아직 지원되지 않습니다
   users:
     follow_limit_reached: 당신은 %{limit}명의 사람을 넘어서 팔로우 할 수 없습니다
     go_to_sso_account_settings: ID 공급자의 계정 설정으로 이동

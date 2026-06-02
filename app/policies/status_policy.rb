@@ -4,7 +4,9 @@ class StatusPolicy < ApplicationPolicy
   def show?
     return false if author.unavailable?
 
-    if requires_mention?
+    if record.community_group_status?
+      group_status_visible?
+    elsif requires_mention?
       owned? || mention_exists?
     elsif private?
       owned? || following_author? || mention_exists?
@@ -26,7 +28,7 @@ class StatusPolicy < ApplicationPolicy
   end
 
   def destroy?
-    owned?
+    owned? || group_manager?
   end
 
   alias unreblog? destroy?
@@ -36,6 +38,17 @@ class StatusPolicy < ApplicationPolicy
   end
 
   private
+
+  def group_manager?
+    record.community_group_status? && record.community_group&.can_manage_members?(current_account)
+  end
+
+  def group_status_visible?
+    return false if current_account.nil? || record.community_group&.blocked?(current_account)
+    return true if owned? || record.community_group&.moderator?(current_account)
+
+    record.community_group_approved? && record.community_group&.member?(current_account)
+  end
 
   def requires_mention?
     record.direct_visibility? || record.limited_visibility?

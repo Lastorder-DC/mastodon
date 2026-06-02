@@ -19,6 +19,8 @@ import CollectionsActiveIcon from '@/material-icons/400-24px/category-fill.svg?r
 import CollectionsIcon from '@/material-icons/400-24px/category.svg?react';
 import ChatBubbleActiveIcon from '@/material-icons/400-24px/chat_bubble-fill.svg?react';
 import ChatBubbleIcon from '@/material-icons/400-24px/chat_bubble.svg?react';
+import GroupsActiveIcon from '@/material-icons/400-24px/groups-fill.svg?react';
+import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import HomeActiveIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import InfoIcon from '@/material-icons/400-24px/info.svg?react';
@@ -89,6 +91,7 @@ const messages = defineMessages({
     id: 'navigation_bar.collections',
     defaultMessage: 'Collections',
   },
+  groups: { id: 'community_groups.heading', defaultMessage: 'Groups' },
   preferences: {
     id: 'navigation_bar.preferences',
     defaultMessage: 'Preferences',
@@ -361,6 +364,17 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             <li role='separator' />
 
             <ListPanel />
+
+            <li>
+              <ColumnLink
+                transparent
+                to='/groups'
+                icon='groups'
+                iconComponent={GroupsIcon}
+                activeIconComponent={GroupsActiveIcon}
+                text={intl.formatMessage(messages.groups)}
+              />
+            </li>
 
             <FollowedTagsPanel />
 

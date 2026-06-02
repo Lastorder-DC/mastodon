@@ -78,6 +78,7 @@ class Status < ApplicationRecord
   belongs_to :in_reply_to_account, class_name: 'Account', optional: true
   belongs_to :conversation, optional: true
   belongs_to :preloadable_poll, class_name: 'Poll', foreign_key: 'poll_id', optional: true, inverse_of: false
+  belongs_to :community_group, optional: true, inverse_of: :statuses
 
   with_options class_name: 'Status', optional: true do
     belongs_to :thread, foreign_key: 'in_reply_to_id', inverse_of: :replies
@@ -122,6 +123,12 @@ class Status < ApplicationRecord
   validates_with StatusLengthValidator
   validates_with DisallowedHashtagsValidator
   validates :reblog, uniqueness: { scope: :account }, if: :reblog?
+  validates :community_group, absence: true, if: :reblog?
+  validates :community_group_approval_status, presence: true, if: :community_group_id?
+  validate :community_group_author_must_be_member
+  validate :community_group_reply_must_stay_in_group
+
+  enum :community_group_approval_status, { approved: 0, pending: 1, rejected: 2, revoked: 3 }, prefix: :community_group, validate: { allow_nil: true }
 
   accepts_nested_attributes_for :poll
 
@@ -153,12 +160,16 @@ class Status < ApplicationRecord
     where('NOT EXISTS (SELECT * FROM statuses_tags forbidden WHERE forbidden.status_id = statuses.id AND forbidden.tag_id IN (?))', tag_ids)
   }
   scope :without_empty_attachments, -> { where(ordered_media_attachment_ids: nil).or(where.not(ordered_media_attachment_ids: [])) }
+  scope :without_community_group, -> { where(community_group_id: nil) }
+  scope :community_group_approved, -> { where(community_group_approval_status: :approved) }
 
   after_create_commit :trigger_create_webhooks
   after_update_commit :trigger_update_webhooks
 
   after_create_commit  :increment_counter_caches
+  after_create_commit  :increment_community_group_counters, if: :community_group_status?
   after_destroy_commit :decrement_counter_caches
+  after_destroy_commit :decrement_community_group_counters, if: :community_group_status?
 
   after_create_commit :store_uri, if: :local?
   after_create_commit :update_statistics, if: :local?
@@ -213,6 +224,10 @@ class Status < ApplicationRecord
 
   def reblog?
     !reblog_of_id.nil?
+  end
+
+  def community_group_status?
+    community_group_id.present?
   end
 
   def within_realtime_window?
@@ -470,6 +485,18 @@ class Status < ApplicationRecord
     end
   end
 
+  def community_group_author_must_be_member
+    return if community_group.nil? || account.nil?
+
+    errors.add(:community_group, I18n.t('community_groups.errors.not_a_member')) unless community_group.can_post?(account)
+  end
+
+  def community_group_reply_must_stay_in_group
+    return if thread.nil?
+
+    errors.add(:community_group, I18n.t('community_groups.errors.reply_must_stay_in_group')) if thread.community_group_id != community_group_id
+  end
+
   def set_local
     self.local = account.local?
   end
@@ -494,6 +521,18 @@ class Status < ApplicationRecord
     account&.decrement_count!(:statuses_count)
     reblog&.decrement_count!(:reblogs_count) if reblog?
     thread&.decrement_count!(:replies_count) if in_reply_to_id.present? && distributable?
+  end
+
+  def increment_community_group_counters
+    return if community_group.nil?
+
+    CommunityGroup.where(id: community_group_id).update_all(['statuses_count = statuses_count + 1, last_status_at = GREATEST(COALESCE(last_status_at, ?::timestamp), ?::timestamp), updated_at = ?', created_at, created_at, Time.current])
+  end
+
+  def decrement_community_group_counters
+    return if community_group.nil?
+
+    CommunityGroup.where(id: community_group_id).update_all('statuses_count = GREATEST(statuses_count - 1, 0)')
   end
 
   def trigger_create_webhooks

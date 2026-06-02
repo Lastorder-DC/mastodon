@@ -16,6 +16,12 @@ class NotifyService < BaseService
     annual_report
     added_to_collection
     collection_update
+    community_group_join_request
+    community_group_join_request_approved
+    community_group_join_request_rejected
+    community_group_status_removed_by_admin
+    community_group_status_removed_by_moderator
+    community_group_report
   ).freeze
 
   class BaseCondition
@@ -205,6 +211,7 @@ class NotifyService < BaseService
     @recipient    = recipient
     @activity     = activity
     @notification = Notification.new(account: @recipient, type: type, activity: @activity)
+    @notification.from_account = @options[:from_account] if @options[:from_account].present?
 
     # For certain conditions we don't need to create a notification at all
     return if drop?

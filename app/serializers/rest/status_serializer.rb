@@ -16,6 +16,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
   attribute :bookmarked, if: :current_user?
   attribute :replied, if: :current_user?
   attribute :pinned, if: :pinnable?
+  attribute :approval_status, if: :community_group_status?
   has_many :filtered, serializer: REST::FilterResultSerializer, if: :current_user?
 
   attribute :content, unless: :source_requested?
@@ -24,6 +25,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
   belongs_to :reblog, serializer: REST::StatusSerializer
   belongs_to :application, if: :show_application?
   belongs_to :account, serializer: REST::AccountSerializer
+  belongs_to :community_group, key: :group, serializer: REST::CommunityGroupSerializer, if: :community_group_status?
 
   has_many :ordered_media_attachments, key: :media_attachments, serializer: REST::MediaAttachmentSerializer
   has_many :ordered_mentions, key: :mentions
@@ -54,6 +56,14 @@ class REST::StatusSerializer < ActiveModel::Serializer
     object.in_reply_to_account_id&.to_s
   end
 
+  def community_group_status?
+    object.community_group_status?
+  end
+
+  def approval_status
+    object.community_group_approval_status || 'approved'
+  end
+
   def current_user?
     !current_user.nil?
   end
@@ -63,6 +73,8 @@ class REST::StatusSerializer < ActiveModel::Serializer
   end
 
   def visibility
+    return 'group' if object.community_group_status?
+
     # This visibility is masked behind "private"
     # to avoid API changes because there are no
     # UX differences

@@ -21,6 +21,8 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
   belongs_to :account_warning, key: :moderation_warning, if: :moderation_warning_event?, serializer: REST::AccountWarningSerializer
   belongs_to :generated_annual_report, key: :annual_report, if: :annual_report_event?, serializer: REST::AnnualReportEventSerializer
   belongs_to :target_collection, key: :collection, if: :collection_type?, serializer: REST::CollectionSerializer
+  belongs_to :community_group_join_request, key: :group_join_request, if: :community_group_join_request_type?, serializer: REST::CommunityGroupJoinRequestSerializer
+  belongs_to :community_group_report, key: :group_report, if: :community_group_report_type?, serializer: REST::CommunityGroupReportSerializer
 
   def sample_account_ids
     object.sample_accounts.pluck(:id).map(&:to_s)
@@ -31,7 +33,15 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
   end
 
   def status_type?
-    [:favourite, :reblog, :status, :mention, :poll, :update, :quote, :quoted_update].include?(object.type)
+    [:favourite, :reblog, :status, :mention, :poll, :update, :quote, :quoted_update, :community_group_status_removed_by_admin, :community_group_status_removed_by_moderator].include?(object.type)
+  end
+
+  def community_group_join_request_type?
+    [:community_group_join_request, :community_group_join_request_approved, :community_group_join_request_rejected].include?(object.type)
+  end
+
+  def community_group_report_type?
+    object.type == :community_group_report
   end
 
   def collection_type?

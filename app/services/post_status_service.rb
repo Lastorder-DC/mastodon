@@ -38,6 +38,7 @@ class PostStatusService < BaseService
   # @option [String] :idempotency Optional idempotency key
   # @option [Boolean] :with_rate_limit
   # @option [Enumerable] :allowed_mentions Optional array of expected mentioned account IDs, raises `UnexpectedMentionsError` if unexpected accounts end up in mentions
+  # @option [String] :community_group_id Optional local community group target
   # @return [Status]
   def call(account, options = {})
     @account     = account
@@ -45,10 +46,12 @@ class PostStatusService < BaseService
     @text        = @options[:text] || ''
     @in_reply_to = @options[:thread]
     @quoted_status = @options[:quoted_status]
+    @community_group = CommunityGroup.find(@options[:community_group_id]) if @options[:community_group_id].present?
 
     with_idempotency do
       validate_media!
       preprocess_attributes!
+      preprocess_community_group!
 
       if scheduled?
         schedule_status!
@@ -79,6 +82,17 @@ class PostStatusService < BaseService
     @scheduled_at = nil if scheduled_in_the_past?
   rescue ArgumentError
     raise ActiveRecord::RecordInvalid
+  end
+
+  def preprocess_community_group!
+    return if @community_group.nil?
+
+    raise Mastodon::ValidationError, I18n.t('community_groups.errors.not_a_member') unless @community_group.can_post?(@account)
+    raise Mastodon::ValidationError, I18n.t('community_groups.errors.scheduled_statuses_not_supported') if scheduled?
+    raise Mastodon::ValidationError, I18n.t('community_groups.errors.reply_must_stay_in_group') if @in_reply_to.present? && @in_reply_to.community_group_id != @community_group.id
+
+    @visibility = :limited
+    @options[:community_group_approval_status] = :approved
   end
 
   def process_status!
@@ -160,6 +174,8 @@ class PostStatusService < BaseService
   end
 
   def postprocess_status!
+    return if @status.community_group_status?
+
     process_hashtags_service.call(@status)
     Trends.tags.register(@status)
     LinkCrawlWorker.perform_async(@status.id)
@@ -269,6 +285,8 @@ class PostStatusService < BaseService
       application: @options[:application],
       rate_limit: @options[:with_rate_limit],
       quote_approval_policy: @options[:quote_approval_policy],
+      community_group: @community_group,
+      community_group_approval_status: @options[:community_group_approval_status],
     }.compact
   end
 

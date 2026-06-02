@@ -103,6 +103,30 @@ class Notification < ApplicationRecord
       filterable: false,
       baseline: false,
     }.freeze,
+    community_group_join_request: {
+      filterable: false,
+      baseline: false,
+    }.freeze,
+    community_group_join_request_approved: {
+      filterable: false,
+      baseline: false,
+    }.freeze,
+    community_group_join_request_rejected: {
+      filterable: false,
+      baseline: false,
+    }.freeze,
+    community_group_status_removed_by_admin: {
+      filterable: false,
+      baseline: false,
+    }.freeze,
+    community_group_status_removed_by_moderator: {
+      filterable: false,
+      baseline: false,
+    }.freeze,
+    community_group_report: {
+      filterable: false,
+      baseline: false,
+    }.freeze,
   }.freeze
 
   TYPES = PROPERTIES.keys.freeze
@@ -116,6 +140,8 @@ class Notification < ApplicationRecord
     poll: [poll: :status],
     update: :status,
     quoted_update: :status,
+    community_group_status_removed_by_admin: :status,
+    community_group_status_removed_by_moderator: :status,
     'admin.report': [report: :target_account],
   }.freeze
 
@@ -137,6 +163,8 @@ class Notification < ApplicationRecord
     belongs_to :quote, inverse_of: :notification
     belongs_to :collection_item, inverse_of: false # TODO: have an inverse?
     belongs_to :collection, inverse_of: false # TODO: have an inverse?
+    belongs_to :community_group_join_request, inverse_of: false
+    belongs_to :community_group_report, inverse_of: false
   end
 
   validates :type, inclusion: { in: TYPES }
@@ -149,7 +177,7 @@ class Notification < ApplicationRecord
 
   def target_status
     case type
-    when :status, :update, :quoted_update
+    when :status, :update, :quoted_update, :community_group_status_removed_by_admin, :community_group_status_removed_by_moderator
       status
     when :reblog
       status&.reblog
@@ -238,12 +266,19 @@ class Notification < ApplicationRecord
 
   def set_from_account
     return unless new_record?
+    return if from_account_id.present?
 
     case activity_type
     when 'Status'
       self.from_account_id = type == :quoted_update ? activity&.quote&.quoted_account_id : activity&.account_id
-    when 'Follow', 'Favourite', 'FollowRequest', 'Poll', 'Report', 'Quote', 'Collection'
+    when 'Follow', 'Favourite', 'FollowRequest', 'Poll', 'Report', 'Quote', 'Collection', 'CommunityGroupReport'
       self.from_account_id = activity&.account_id
+    when 'CommunityGroupJoinRequest'
+      self.from_account_id = if %i(community_group_join_request_approved community_group_join_request_rejected).include?(type)
+                               activity&.reviewed_by_account_id || activity&.community_group&.owner_account_id
+                             else
+                               activity&.account_id
+                             end
     when 'CollectionItem'
       self.from_account_id = activity&.collection&.account_id
     when 'Mention'

@@ -25,6 +25,12 @@ export const allNotificationTypes: NotificationType[] = [
   'annual_report',
   'added_to_collection',
   'collection_update',
+  'community_group_join_request',
+  'community_group_join_request_approved',
+  'community_group_join_request_rejected',
+  'community_group_status_removed_by_admin',
+  'community_group_status_removed_by_moderator',
+  'community_group_report',
 ];
 
 export type NotificationWithStatusType =
@@ -35,7 +41,9 @@ export type NotificationWithStatusType =
   | 'quote'
   | 'poll'
   | 'update'
-  | 'quoted_update';
+  | 'quoted_update'
+  | 'community_group_status_removed_by_admin'
+  | 'community_group_status_removed_by_moderator';
 
 export type NotificationType =
   | NotificationWithStatusType
@@ -47,7 +55,11 @@ export type NotificationType =
   | 'admin.report'
   | 'annual_report'
   | 'added_to_collection'
-  | 'collection_update';
+  | 'collection_update'
+  | 'community_group_join_request'
+  | 'community_group_join_request_approved'
+  | 'community_group_join_request_rejected'
+  | 'community_group_report';
 
 export interface BaseNotificationJSON {
   id: string;
@@ -106,6 +118,52 @@ interface CollectionUpdateNotificationGroupJSON extends BaseNotificationGroupJSO
 interface CollectionUpdateNotificationJSON extends BaseNotificationJSON {
   type: 'collection_update';
   collection: ApiCollectionJSON;
+}
+
+export interface ApiCommunityGroupJoinRequestJSON {
+  id: string;
+  message: string;
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  created_at: string;
+  reviewed_at?: string;
+  account: ApiAccountJSON;
+}
+
+type CommunityGroupJoinRequestNotificationTypes =
+  | 'community_group_join_request'
+  | 'community_group_join_request_approved'
+  | 'community_group_join_request_rejected';
+
+interface CommunityGroupJoinRequestNotificationGroupJSON extends BaseNotificationGroupJSON {
+  type: CommunityGroupJoinRequestNotificationTypes;
+  group_join_request: ApiCommunityGroupJoinRequestJSON;
+}
+
+interface CommunityGroupJoinRequestNotificationJSON extends BaseNotificationJSON {
+  type: CommunityGroupJoinRequestNotificationTypes;
+  group_join_request: ApiCommunityGroupJoinRequestJSON;
+}
+
+export interface ApiCommunityGroupReportJSON {
+  id: string;
+  action_taken: boolean;
+  action_taken_at?: string;
+  comment: string;
+  created_at: string;
+  status_ids: string[];
+  rule_ids: string[];
+  account: ApiAccountJSON;
+  target_account: ApiAccountJSON;
+}
+
+interface CommunityGroupReportNotificationGroupJSON extends BaseNotificationGroupJSON {
+  type: 'community_group_report';
+  group_report: ApiCommunityGroupReportJSON;
+}
+
+interface CommunityGroupReportNotificationJSON extends BaseNotificationJSON {
+  type: 'community_group_report';
+  group_report: ApiCommunityGroupReportJSON;
 }
 
 type SimpleNotificationTypes = 'follow' | 'follow_request' | 'admin.sign_up';
@@ -173,7 +231,9 @@ export type ApiNotificationJSON =
   | NotificationWithStatusJSON
   | ModerationWarningNotificationJSON
   | AddedToCollectionNotificationJSON
-  | CollectionUpdateNotificationJSON;
+  | CollectionUpdateNotificationJSON
+  | CommunityGroupJoinRequestNotificationJSON
+  | CommunityGroupReportNotificationJSON;
 
 export type ApiNotificationGroupJSON =
   | SimpleNotificationGroupJSON
@@ -183,7 +243,9 @@ export type ApiNotificationGroupJSON =
   | ModerationWarningNotificationGroupJSON
   | AnnualReportNotificationGroupJSON
   | AddedToCollectionNotificationGroupJSON
-  | CollectionUpdateNotificationGroupJSON;
+  | CollectionUpdateNotificationGroupJSON
+  | CommunityGroupJoinRequestNotificationGroupJSON
+  | CommunityGroupReportNotificationGroupJSON;
 
 export interface ApiNotificationGroupsResultJSON {
   accounts: ApiAccountJSON[];

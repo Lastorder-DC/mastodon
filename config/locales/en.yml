@@ -1825,6 +1825,18 @@ en:
       title_html: "%{name} signed up"
     collection_update:
       title_html: "%{name} updated a collection you are in"
+    community_group_join_request:
+      title_html: "%{name} requested to join a group you manage"
+    community_group_join_request_approved:
+      title_html: "%{name} approved your group join request"
+    community_group_join_request_rejected:
+      title_html: "%{name} rejected your group join request"
+    community_group_report:
+      title_html: "%{name} reported a post in a group you manage"
+    community_group_status_removed_by_admin:
+      title_html: "%{name} removed your group post as the group administrator"
+    community_group_status_removed_by_moderator:
+      title_html: "%{name} removed your group post as a group moderator"
     generic:
       sign_in: Sign in to the Mastodon web app
       summary_html: You're on an app that does not support the most recent version of Mastodon. %{link} for full functionality.
@@ -2331,6 +2343,55 @@ en:
       sign_in_action: Sign in
       subject: Welcome to Mastodon
       title: Welcome aboard, %{name}!
+  community_group_reports:
+    actions:
+      resolved: Group report resolved.
+      unresolved: Group report reopened.
+    descriptions:
+      create: Report a group post to group moderators and the administrator. For now, reports only support a manually entered reason.
+      review: Group moderators and the administrator can review and resolve reports without server-wide moderation permissions.
+    errors:
+      invalid_statuses: Reported posts must belong to this group and to the reported account
+      rule_ids_not_supported: Group-specific rules are not supported yet; enter a manual reason instead
+  community_groups:
+    actions:
+      block_created: The account has been banned from joining this group. Existing memberships, invitations, and join requests for that account were removed.
+      block_removed: The account can request to join or be invited to this group again.
+      created: Group created. You are now the group administrator.
+      invitation_accepted: Invitation accepted. You are now a member of this group.
+      invitation_created: Invitation sent. The account can accept it to join the group.
+      invitation_rejected: Invitation declined.
+      invitation_revoked: Invitation revoked. The account can no longer use it to join.
+      join_request_approved: Join request approved. The account is now a group member.
+      join_request_created: Join request sent. A group moderator or administrator must approve it before you can participate.
+      join_request_rejected: Join request rejected. The account was not added to the group.
+      joined: You joined the group.
+      left: You left the group.
+      membership_removed: Member removed from the group.
+      membership_updated: Member role updated.
+      ownership_transferred: Group administrator role transferred. The previous administrator is now a moderator.
+      share_link_rotated: Group share link rotated. Previous share links no longer work.
+      updated: Group details updated.
+    descriptions:
+      block_account: Banning an account removes their membership, revokes pending invitations, rejects pending join requests, and prevents them from rejoining.
+      create_group: Create a local-only group. The creator automatically becomes an administrator.
+      invite_account: Invite an account from this server. Remote accounts, existing members, and banned accounts cannot be invited.
+      join_locked: This group requires approval. Your request will be visible to group moderators and administrators.
+      join_unlocked: Joining this group adds you as a member immediately.
+      manage_members: Group moderators and administrators can review requests, change member roles, remove members, and ban accounts.
+      post_to_group: Group posts are visible only to approved group members and are not distributed to public timelines or ActivityPub.
+      review_join_request: Approving a request adds the account as a member. Rejecting it leaves the account outside the group.
+      share_link: Anyone on this server with the share token can join or request to join, depending on whether the group is locked.
+    errors:
+      already_member: This account is already a group member
+      blocked_account: This account is banned from joining this group
+      blocked_from_group: You are banned from joining this group
+      local_accounts_only: Groups currently support accounts from this server only
+      single_admin: A group can only have one administrator
+      transfer_required_for_admin: Transfer group ownership to make another member the administrator
+      not_a_member: You must be a group member to post to this group
+      reply_must_stay_in_group: Replies to group posts must stay in the same group
+      scheduled_statuses_not_supported: Scheduled group posts are not supported yet
   users:
     follow_limit_reached: You cannot follow more than %{limit} people
     go_to_sso_account_settings: Go to your identity provider's account settings
