@@ -2,7 +2,7 @@
   "id": "FEAT-008",
   "type": "fix",
   "description": "Fix review issues: timeline endpoint mismatch, serializer missing current_account, member removal authorization, 'me' account_id resolution, and N+1 in StatusPolicy.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Fix frontend timeline endpoint: change expandOccmGroupTimeline and fillOccmGroupTimelineGaps in actions/timelines.js to use /api/v1/occm_groups/${id}/timeline instead of /statuses",
     "Fix OccmGroupsController: add current_account: current_account to render options in show, create, update, and transfer actions",
@@ -22,5 +22,5 @@
     "Run: npx tsc --noEmit to verify TypeScript still compiles"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "All 5 review fixes implemented successfully. Ruby files pass rubocop with no offenses. JavaScript passes eslint. Pre-commit hooks (rubocop, eslint, i18n:extract) all pass. Added occm_group_status to CACHEABLE_ASSOCIATIONS to ensure the preloaded association is available when StatusPolicy checks are performed on collections."
 }
