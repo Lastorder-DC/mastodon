@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Phase 7+8: Streaming server integration (Node.js channel registration with membership auth) and backend i18n (en + ko locale files).",
+  "status": "in_progress",
+  "steps": [
+    "Modify streaming/index.js - Add 'occm_group' to CHANNEL_NAMES array at the top of startServer",
+    "Modify streaming/index.js channelNameFromPath function - Add case for '/api/v1/streaming/occm_group' returning 'occm_group'",
+    "Modify streaming/index.js channelNameToIds function - Add 'occm_group' case: require params.group, call authorizeOccmGroupAccess(params.group, req), then resolve with channelIds: [`timeline:occm_group:${params.group}`], options: { needsFiltering: false }",
+    "Add authorizeOccmGroupAccess function in streaming/index.js (near authorizeListAccess) - queries pgPool for SELECT id FROM occm_group_memberships WHERE occm_group_id = $1 AND account_id = $2 AND state = 1 LIMIT 1. Throws AuthenticationError if no rows returned",
+    "Modify streaming/index.js checkScopes function - Add handling for 'occm_group' channel to require 'read:occm_groups' scope in addition to 'read'",
+    "Add handling for 'revoke' events in the streamFrom listener - when event is 'revoke', check if payload contains account_id matching req.accountId, and if so force-close the subscription (do not relay to other subscribers)",
+    "Modify streaming/index.js streamNameFromChannelName function - Add case for 'occm_group' with params.group to return ['occm_group', params.group]",
+    "Add app/javascript/mastodon/actions/streaming.js - export connectOccmGroupStream function following connectListStream pattern: connectTimelineStream(`occm_group:${groupId}`, 'occm_group', { group: groupId })",
+    "Add config/locales/en.yml occm_groups key tree with: title, errors (limit, not_member, already_member, admin_cannot_leave, not_authorized, pending_request), notifications (join_request, join_approved, join_rejected, post_deleted), reports.categories (other, spam, harassment, off_topic, rule_violation), roles (admin, moderator, user)",
+    "Add config/locales/ko.yml occm_groups key tree with Korean translations matching the en.yml structure"
+  ],
+  "acceptance_criteria": [
+    "Streaming server recognizes 'occm_group' as a valid channel name",
+    "Subscription requires group parameter and validates membership via PG query",
+    "Unauthorized subscriptions are rejected with AuthenticationError",
+    "Revoke events are intercepted and used to force-close removed member subscriptions",
+    "connectOccmGroupStream action creator properly subscribes to the occm_group channel",
+    "I18n.t('occm_groups.errors.limit') returns the expected English string",
+    "I18n.t('occm_groups.title', locale: :ko) returns Korean translation",
+    "All locale keys present in both en and ko files"
+  ],
+  "verification": [
+    "Run: node --check streaming/index.js to verify JavaScript syntax",
+    "Verify en.yml and ko.yml have matching key structures for occm_groups"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

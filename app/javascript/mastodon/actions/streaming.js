@@ -216,3 +216,10 @@ export const connectListStream = listId =>
     // @ts-expect-error
     fillGaps: () => fillListTimelineGaps(listId)
   });
+
+/**
+ * @param {string} groupId
+ * @returns {function(): void}
+ */
+export const connectOccmGroupStream = (groupId) =>
+  connectTimelineStream(`occm_group:${groupId}`, 'occm_group', { group: groupId });

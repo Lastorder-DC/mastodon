@@ -1679,6 +1679,31 @@ ko:
           quadrillion: Q
           thousand: K
           trillion: T
+  occm_groups:
+    title: "그룹"
+    errors:
+      limit: "그룹 최대 개수에 도달했습니다"
+      not_member: "이 그룹의 멤버가 아닙니다"
+      already_member: "이미 이 그룹의 멤버입니다"
+      admin_cannot_leave: "관리자는 그룹을 떠날 수 없습니다. 관리자 권한을 이전하거나 그룹을 삭제하세요."
+      not_authorized: "이 작업을 수행할 권한이 없습니다"
+      pending_request: "이미 가입 요청이 대기 중입니다"
+    notifications:
+      join_request: "%{name}님이 그룹 %{group}에 가입을 요청했습니다"
+      join_approved: "%{group} 그룹 가입 요청이 승인되었습니다"
+      join_rejected: "%{group} 그룹 가입 요청이 거절되었습니다"
+      post_deleted: "%{group} 그룹에서 게시물이 관리자에 의해 삭제되었습니다"
+    reports:
+      categories:
+        other: "기타"
+        spam: "스팸"
+        harassment: "괴롭힘"
+        off_topic: "주제와 무관"
+        rule_violation: "규칙 위반"
+    roles:
+      admin: "관리자"
+      moderator: "운영자"
+      user: "멤버"
   otp_authentication:
     code_hint: 확인을 위해 인증 애플리케이션에 생성된 코드를 입력해 주십시오
     description_html: 인증기 앱으로 <strong>2단계 인증</strong>을 활성화 하면 로그인 시 입력 할 토큰을 생성해 주는 전화기가 필요합니다.

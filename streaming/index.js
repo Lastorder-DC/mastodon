@@ -113,6 +113,7 @@ const CHANNEL_NAMES = [
   'user',
   'user:notification',
   'list',
+  'occm_group',
   'direct',
   'public',
   'public:media',
@@ -448,6 +449,8 @@ const startServer = async () => {
       return 'direct';
     case '/api/v1/streaming/list':
       return 'list';
+    case '/api/v1/streaming/occm_group':
+      return 'occm_group';
     default:
       return undefined;
     }
@@ -472,7 +475,9 @@ const startServer = async () => {
     // user stream will not contain notifications unless
     // the token has either read or read:notifications scope
     // as well, this is handled separately.
-    if (channelName === 'user:notification') {
+    if (channelName === 'occm_group') {
+      requiredScopes.push('read:occm_groups');
+    } else if (channelName === 'user:notification') {
       requiredScopes.push('read:notifications');
     } else {
       requiredScopes.push('read:statuses');
@@ -611,6 +616,24 @@ const startServer = async () => {
 
     if (result.rows.length === 0) {
       throw new AuthenticationError('List not found');
+    }
+  };
+
+  /**
+   * @param {string} groupId
+   * @param {Request} req
+   * @returns {Promise.<void>}
+   */
+  const authorizeOccmGroupAccess = async (groupId, req) => {
+    const { accountId } = req;
+
+    const result = await pgPool.query(
+      'SELECT id FROM occm_group_memberships WHERE occm_group_id = $1 AND account_id = $2 AND state = 1 LIMIT 1',
+      [groupId, accountId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new AuthenticationError('Not a member of this group');
     }
   };
 
@@ -1161,6 +1184,22 @@ const startServer = async () => {
       });
 
       break;
+    case 'occm_group':
+      if (!params.group) {
+        reject(new RequestError('Missing group parameter'));
+        return;
+      }
+
+      authorizeOccmGroupAccess(params.group, req).then(() => {
+        resolve({
+          channelIds: [`timeline:occm_group:${params.group}`],
+          options: { needsFiltering: false },
+        });
+      }).catch(() => {
+        reject(new AuthenticationError('Not authorized to stream this group'));
+      });
+
+      break;
     default:
       reject(new RequestError('Unknown stream type'));
     }
@@ -1174,6 +1213,8 @@ const startServer = async () => {
   const streamNameFromChannelName = (channelName, params) => {
     if (channelName === 'list' && params.list) {
       return [channelName, params.list];
+    } else if (channelName === 'occm_group' && params.group) {
+      return [channelName, params.group];
     } else if (['hashtag', 'hashtag:local'].includes(channelName) && params.tag) {
       return [channelName, params.tag];
     } else {
