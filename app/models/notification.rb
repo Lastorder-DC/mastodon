@@ -103,6 +103,22 @@ class Notification < ApplicationRecord
       filterable: false,
       baseline: false,
     }.freeze,
+    occm_group_join_request: {
+      filterable: true,
+      baseline: false,
+    }.freeze,
+    occm_group_join_approved: {
+      filterable: true,
+      baseline: false,
+    }.freeze,
+    occm_group_join_rejected: {
+      filterable: true,
+      baseline: false,
+    }.freeze,
+    occm_group_post_deleted: {
+      filterable: true,
+      baseline: false,
+    }.freeze,
   }.freeze
 
   TYPES = PROPERTIES.keys.freeze
@@ -137,6 +153,8 @@ class Notification < ApplicationRecord
     belongs_to :quote, inverse_of: :notification
     belongs_to :collection_item, inverse_of: false # TODO: have an inverse?
     belongs_to :collection, inverse_of: false # TODO: have an inverse?
+    belongs_to :occm_group_membership, inverse_of: false
+    belongs_to :occm_group_status, inverse_of: false
   end
 
   validates :type, inclusion: { in: TYPES }
