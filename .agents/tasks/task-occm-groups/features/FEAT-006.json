@@ -2,7 +2,7 @@
   "id": "FEAT-006",
   "type": "feat",
   "description": "Phase 6+3.9+3.10: Notification integration, home feed exclusion of group posts, and status visibility enforcement. Wires notifications into services, excludes group posts from home feed/search, and enforces visibility in StatusPolicy.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Modify app/services/join_occm_group_service.rb - when approval_required and membership created as pending, call NotifyOccmGroupService for each admin/moderator member with type :occm_group_join_request",
     "Modify app/services/approve_occm_group_member_service.rb - after approving, call NotifyOccmGroupService for the requester with type :occm_group_join_approved",
@@ -30,5 +30,5 @@
     "Verify the fan_out_on_write_service change does not break non-group statuses"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Notification dispatch was already integrated in all four services (join, approve, reject, delete) by previous features. RSpec tests cannot run in this sandbox due to missing libvips system library (pre-existing environment issue). Rubocop requires `lambda {}` instead of `-> {}` for multiline lambdas and prefers `Model.exists?(conditions)` over `Model.where(conditions).exists?`."
 }
