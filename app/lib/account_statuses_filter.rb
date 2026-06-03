@@ -26,6 +26,8 @@ class AccountStatusesFilter
     scope.merge!(no_reblogs_scope) if exclude_reblogs?
     scope.merge!(hashtag_scope)    if tagged?
 
+    scope.merge!(Status.excluding_occm_group_posts) unless author?
+
     scope
   end
 

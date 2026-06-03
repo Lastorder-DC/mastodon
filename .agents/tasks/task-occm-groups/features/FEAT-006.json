@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-006",
+  "type": "feat",
+  "description": "Phase 6+3.9+3.10: Notification integration, home feed exclusion of group posts, and status visibility enforcement. Wires notifications into services, excludes group posts from home feed/search, and enforces visibility in StatusPolicy.",
+  "status": "in_progress",
+  "steps": [
+    "Modify app/services/join_occm_group_service.rb - when approval_required and membership created as pending, call NotifyOccmGroupService for each admin/moderator member with type :occm_group_join_request",
+    "Modify app/services/approve_occm_group_member_service.rb - after approving, call NotifyOccmGroupService for the requester with type :occm_group_join_approved",
+    "Modify app/services/reject_occm_group_member_service.rb - after rejecting, call NotifyOccmGroupService for the requester with type :occm_group_join_rejected",
+    "Modify app/services/delete_occm_group_status_service.rb - after deleting, call NotifyOccmGroupService for the post author with type :occm_group_post_deleted",
+    "Add scope to Status model or the OccmGroupVisibility concern: scope :excluding_occm_group_posts that uses WHERE NOT EXISTS (SELECT 1 FROM occm_group_statuses WHERE occm_group_statuses.status_id = statuses.id) pattern for efficient filtering",
+    "Modify app/services/fan_out_on_write_service.rb - add a check at the beginning of the perform method (or relevant entry point): return early / skip home feed fanout if the status has an associated occm_group_status record (check OccmGroupStatus.exists?(status_id: @status.id))",
+    "Modify app/controllers/api/v1/accounts/statuses_controller.rb (or the relevant scope) - apply excluding_occm_group_posts scope to exclude group posts from account timeline API responses unless the viewer is a group member",
+    "Modify app/policies/status_policy.rb - in the show? method (or equivalent visibility check), add a condition: if the status has limited visibility AND has an occm_group_status record, check that the viewing account has active membership in that group. Return false if not a member",
+    "Ensure GET /api/v1/statuses/:id returns 404 (not 403) for non-members viewing a group post - this may already be handled by StatusPolicy returning false which triggers RecordNotFound, but verify and adjust if needed"
+  ],
+  "acceptance_criteria": [
+    "Join request sends notification to all admin + moderator members when approval_required is true",
+    "Approve sends occm_group_join_approved notification to the requesting user",
+    "Reject sends occm_group_join_rejected notification to the requesting user",
+    "Post delete sends occm_group_post_deleted notification to the post author",
+    "Group posts do not appear in home timeline feed (FanOutOnWriteService skips them)",
+    "Group posts do not appear in account timeline API for non-members",
+    "StatusPolicy#show? returns false for group posts when viewer is not an active member",
+    "GET /api/v1/statuses/:id returns 404 for group posts viewed by non-members",
+    "The excluding_occm_group_posts scope uses efficient SQL (NOT EXISTS or LEFT JOIN IS NULL)"
+  ],
+  "verification": [
+    "Run: ruby -c on all modified Ruby files to verify syntax",
+    "Verify the fan_out_on_write_service change does not break non-group statuses"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -3,6 +3,7 @@
 class StatusPolicy < ApplicationPolicy
   def show?
     return false if author.unavailable?
+    return false if occm_group_post? && !viewable_for_occm_group?
 
     if requires_mention?
       owned? || mention_exists?
@@ -39,6 +40,23 @@ class StatusPolicy < ApplicationPolicy
 
   def requires_mention?
     record.direct_visibility? || record.limited_visibility?
+  end
+
+  def occm_group_post?
+    record.limited_visibility? && OccmGroupStatus.exists?(status_id: record.id)
+  end
+
+  def viewable_for_occm_group?
+    return true if owned?
+
+    occm_group_status = OccmGroupStatus.find_by(status_id: record.id)
+    return true if occm_group_status.nil?
+
+    OccmGroupMembership.exists?(
+      occm_group_id: occm_group_status.occm_group_id,
+      account_id: current_account&.id,
+      state: :active
+    )
   end
 
   def owned?

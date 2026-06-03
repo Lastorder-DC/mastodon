@@ -15,6 +15,7 @@ class FanOutOnWriteService < BaseService
     @options   = options
 
     return if @status.proper.account.suspended?
+    return if occm_group_post?
 
     check_race_condition!
     warm_payload_cache!
@@ -36,6 +37,10 @@ class FanOutOnWriteService < BaseService
     # with the full object, if something like it occurs
 
     raise Mastodon::RaceConditionError if @status.visibility.nil?
+  end
+
+  def occm_group_post?
+    OccmGroupStatus.exists?(status_id: @status.id)
   end
 
   def fan_out_to_local_recipients!
