@@ -47,14 +47,6 @@ export function CommunityGroups() {
   return import('../../community_groups');
 }
 
-export function CommunityGroupEdit() {
-  return import('../../community_groups/edit');
-}
-
-export function CommunityGroupJoin() {
-  return import('../../community_groups/join');
-}
-
 export function Collections() {
   return import('../../collections').then(
     module => ({default: module.Collections})
