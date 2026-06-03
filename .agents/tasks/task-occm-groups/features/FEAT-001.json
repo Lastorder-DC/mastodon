@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Phase 1+2: Database migrations, model classes, OAuth scopes, and API routes for OCCM Groups. This establishes the entire data layer and routing foundation.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create migration db/migrate/20260701000001_create_occm_groups.rb with columns: title (string, default:'', not null), description (text, default:'', not null), account_id (references, not null, foreign_key on_delete cascade), approval_required (boolean, default:true, not null), member_count (integer, default:0, not null), timestamps",
     "Create migration db/migrate/20260701000002_create_occm_group_memberships.rb with columns: occm_group_id (references, not null, FK cascade), account_id (references, not null, FK cascade), role (integer, default:2, not null), state (integer, default:0, not null), timestamps. Add unique index on [occm_group_id, account_id]",
@@ -35,5 +35,5 @@
     "Run: bundle exec rspec spec/models/occm_group_spec.rb (after specs are created in later feature)"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Bundle install requires libidn-devel system package. Full Rails environment cannot load without libvips (not available in sandbox). Verified via ruby -c syntax checks, rubocop (all pass), and isolated model loading tests. All 17 files pass rubocop with no offenses."
 }
