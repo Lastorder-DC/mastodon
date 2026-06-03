@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "docs",
   "description": "Write the migration and rollback plan document (docs/occm_groups_migration_plan.md) covering how to migrate from occm_groups to the official PR #19059 system and how to cleanly rollback the feature.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Create docs/occm_groups_migration_plan.md with the following sections:",
     "1. Overview: Purpose of this document - ensuring clean migration path to official groups and safe rollback",
