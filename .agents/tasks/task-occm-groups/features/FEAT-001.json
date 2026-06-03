@@ -1,0 +1,39 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Phase 1+2: Database migrations, model classes, OAuth scopes, and API routes for OCCM Groups. This establishes the entire data layer and routing foundation.",
+  "status": "in_progress",
+  "steps": [
+    "Create migration db/migrate/20260701000001_create_occm_groups.rb with columns: title (string, default:'', not null), description (text, default:'', not null), account_id (references, not null, foreign_key on_delete cascade), approval_required (boolean, default:true, not null), member_count (integer, default:0, not null), timestamps",
+    "Create migration db/migrate/20260701000002_create_occm_group_memberships.rb with columns: occm_group_id (references, not null, FK cascade), account_id (references, not null, FK cascade), role (integer, default:2, not null), state (integer, default:0, not null), timestamps. Add unique index on [occm_group_id, account_id]",
+    "Create migration db/migrate/20260701000003_create_occm_group_statuses.rb with columns: occm_group_id (references, not null, FK cascade), status_id (references, not null, FK cascade), account_id (references, not null, FK cascade), created_at (datetime, not null). Add unique index on [occm_group_id, status_id]",
+    "Create migration db/migrate/20260701000004_create_occm_group_reports.rb with columns: occm_group_id (references, FK cascade), account_id (references, FK cascade), target_account_id (bigint, not null), status_ids (bigint array, default:[]), comment (text, default:''), category (integer, default:0, not null), action_taken_at (datetime), action_taken_by_account_id (bigint), timestamps. Add indexes and foreign keys for target_account_id and action_taken_by_account_id",
+    "Create migration db/migrate/20260701000005_create_occm_group_dm_rooms.rb (placeholder) with columns: occm_group_id (references, FK cascade), title (string, default:'', not null), timestamps",
+    "Create app/models/occm_group.rb - include Paginable, belongs_to :account, has_many associations, validations (title presence/max 100, description max 500), validate_group_limit (GROUP_LIMIT=50). Use owned_groups pattern from account associations",
+    "Create app/models/occm_group_membership.rb - belongs_to :occm_group, belongs_to :account, enum :role (admin:0, moderator:1, user:2) with prefix, enum :state (pending:0, active:1, rejected:2) with prefix, validates uniqueness of account_id scoped to occm_group_id, scopes: active, pending, admins, moderators, with_moderation_role",
+    "Create app/models/occm_group_status.rb - include Paginable, belongs_to :occm_group, belongs_to :status, belongs_to :account, validates uniqueness of status_id scoped to occm_group_id",
+    "Create app/models/occm_group_report.rb - belongs_to :occm_group, belongs_to :account, belongs_to :target_account (class_name Account), belongs_to :action_taken_by_account (class_name Account, optional), enum :category (other:0, spam:1, harassment:2, off_topic:3, rule_violation:4) with prefix, validates comment length max 1000, scopes: unresolved, resolved",
+    "Create app/models/occm_group_dm_room.rb - belongs_to :occm_group, validates title presence/max 100",
+    "Create app/models/concerns/status/occm_group_visibility.rb - extend ActiveSupport::Concern, define visible_to_occm_group_member?(account) method that checks if status has occm_group_status record and if so verifies active membership",
+    "Modify app/models/concerns/account/associations.rb - add has_many :occm_groups (owned groups), has_many :occm_group_memberships",
+    "Modify app/models/status.rb - add has_one :occm_group_status, dependent: :destroy and include Status::OccmGroupVisibility",
+    "Add read:occm_groups and write:occm_groups to config/initializers/doorkeeper.rb optional_scopes list",
+    "Add OCCM Groups routes to config/routes/api.rb inside namespace :v1 block: resources :occm_groups with nested members (index, create, destroy + pending/approve/reject), moderators (create, destroy), statuses (create, destroy), timelines (show), reports (index, create + resolve), and transfer action",
+    "Create fabricators: spec/fabricators/occm_group_fabricator.rb, spec/fabricators/occm_group_membership_fabricator.rb, spec/fabricators/occm_group_status_fabricator.rb, spec/fabricators/occm_group_report_fabricator.rb"
+  ],
+  "acceptance_criteria": [
+    "All model files load without errors (bundle exec rails runner 'OccmGroup; OccmGroupMembership; OccmGroupStatus; OccmGroupReport; OccmGroupDmRoom')",
+    "Routes are properly defined (rails routes grep occm shows all expected endpoints)",
+    "Doorkeeper config includes the new scopes",
+    "Model validations work correctly (title presence, length limits, uniqueness constraints)",
+    "Enums are properly defined with correct integer mappings",
+    "Scopes return correct results (active, pending, admins, moderators, with_moderation_role, unresolved, resolved)",
+    "Fabricators produce valid objects"
+  ],
+  "verification": [
+    "Run: ruby -c on all new Ruby files to verify syntax",
+    "Run: bundle exec rspec spec/models/occm_group_spec.rb (after specs are created in later feature)"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

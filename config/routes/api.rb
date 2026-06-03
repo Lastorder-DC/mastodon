@@ -261,6 +261,32 @@ namespace :api, format: false do
       resource :accounts, only: [:show, :create, :destroy], module: :lists
     end
 
+    resources :occm_groups, only: [:index, :show, :create, :update, :destroy] do
+      member do
+        post :transfer
+      end
+
+      scope module: :occm_groups do
+        resources :members, only: [:index, :create, :destroy] do
+          collection do
+            get :pending
+          end
+          member do
+            post :approve
+            post :reject
+          end
+        end
+        resources :moderators, only: [:create, :destroy]
+        resources :statuses, only: [:create, :destroy]
+        resource :timeline, only: [:show]
+        resources :reports, only: [:index, :create] do
+          member do
+            post :resolve
+          end
+        end
+      end
+    end
+
     namespace :featured_tags do
       resources :suggestions, only: :index
     end

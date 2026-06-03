@@ -31,6 +31,8 @@ module Account::Associations
         has_many :notification_permissions
         has_many :notification_requests
         has_many :notifications
+        has_many :occm_groups
+        has_many :occm_group_memberships
         has_many :owned_lists, class_name: 'List'
         has_many :polls
         has_many :report_notes
