@@ -61,6 +61,7 @@ import { DisabledAccountBanner } from './components/disabled_account_banner';
 import { FollowedTagsPanel } from './components/followed_tags_panel';
 import { ListPanel } from './components/list_panel';
 import { MoreLink } from './components/more_link';
+import { OccmGroupPanel } from './components/occm_group_panel';
 import { SignInBanner } from './components/sign_in_banner';
 import { Trends } from './components/trends';
 
@@ -361,6 +362,8 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
             <li role='separator' />
 
             <ListPanel />
+
+            <OccmGroupPanel />
 
             <FollowedTagsPanel />
 

@@ -1,0 +1,46 @@
+{
+  "id": "FEAT-005",
+  "type": "feat",
+  "description": "Phase 9+10+11: Frontend implementation - API types, API module, actions, reducer, all UI components (group list, create/edit, timeline, members, reports), navigation/routing integration, notification rendering, and frontend i18n (en + ko).",
+  "status": "in_progress",
+  "steps": [
+    "Create app/javascript/mastodon/api_types/occm_groups.ts - Define ApiOccmGroupJSON, ApiOccmGroupMembershipJSON, ApiOccmGroupReportJSON interfaces with proper TypeScript types",
+    "Create app/javascript/mastodon/api/occm_groups.ts - All API functions following api/lists.ts pattern: apiGetOccmGroups, apiGetOccmGroup, apiCreateOccmGroup, apiUpdateOccmGroup, apiDeleteOccmGroup, apiGetOccmGroupMembers, apiGetOccmGroupPendingMembers, apiJoinOccmGroup, apiApproveOccmGroupMember, apiRejectOccmGroupMember, apiRemoveOccmGroupMember, apiTransferOccmGroupAdmin, apiPromoteOccmGroupModerator, apiDemoteOccmGroupModerator, apiGetOccmGroupTimeline, apiPostToOccmGroup, apiGetOccmGroupReports, apiCreateOccmGroupReport, apiResolveOccmGroupReport, apiDeleteOccmGroupStatus",
+    "Create app/javascript/mastodon/actions/occm_groups.ts - Action type constants (FETCH/CREATE/UPDATE/DELETE with REQUEST/SUCCESS/FAIL, MEMBERS_FETCH, JOIN, LEAVE, TIMELINE_EXPAND) and thunk action creators that call API module functions and dispatch appropriate actions",
+    "Create app/javascript/mastodon/reducers/occm_groups.ts - Reducer following lists.ts pattern using ImmutableMap, handles all action types, state shape: items Map<string, OccmGroup>, isLoading boolean, loaded boolean",
+    "Modify app/javascript/mastodon/reducers/index.ts - Import and register occmGroups reducer in the reducers object",
+    "Create app/javascript/mastodon/features/occm_groups/index.tsx - Group list screen using Column, ColumnHeader, ScrollableList pattern from features/lists/index.tsx. Shows group items with title, member count, role badge. New Group button in header",
+    "Create app/javascript/mastodon/features/occm_groups/components/occm_group_item.tsx - Individual group list item component with title, member count, role badge, link to group timeline",
+    "Create app/javascript/mastodon/features/occm_groups/new.tsx - Create/Edit group form following features/lists/new.tsx pattern. Title input (max 100), description textarea (max 500), approval_required toggle, submit button",
+    "Create app/javascript/mastodon/features/occm_group_timeline/index.tsx - Group timeline using StatusListContainer pattern from list_timeline/index.jsx. Connects streaming via connectOccmGroupStream on mount, disconnects on unmount. ColumnHeader with group title and action buttons (settings, members). Supports infinite scroll pagination",
+    "Create app/javascript/mastodon/features/occm_groups/members.tsx - Members screen with Active/Pending tabs. Active tab shows members with role badges and admin actions (remove, promote/demote). Pending tab shows approve/reject buttons. Uses ScrollableList",
+    "Create app/javascript/mastodon/features/occm_groups/reports.tsx - Reports screen for admin/mod. Open/Resolved tabs. Each report shows reporter, target, category, comment. Resolve button with action selection (dismiss, delete_posts, remove_member)",
+    "Modify app/javascript/mastodon/features/ui/index.jsx - Add routes: /groups (OccmGroups), /groups/new (OccmGroupNew), /groups/:id (OccmGroupTimeline), /groups/:id/edit (OccmGroupEdit), /groups/:id/members (OccmGroupMembers), /groups/:id/reports (OccmGroupReports)",
+    "Modify app/javascript/mastodon/features/ui/util/async-components.js - Add async component imports for OccmGroups, OccmGroupNew, OccmGroupTimeline, OccmGroupMembers, OccmGroupReports",
+    "Add navigation link for Groups in the sidebar navigation component (find the component that renders Lists link and add Groups link nearby with appropriate icon)",
+    "Add notification rendering for 4 OCCM group notification types in the notifications feature - add cases in the notification rendering switch for occm_group_join_request, occm_group_join_approved, occm_group_join_rejected, occm_group_post_deleted with appropriate text, icons, and navigation",
+    "Add all occm_groups.* keys to app/javascript/mastodon/locales/en.json - title, create, edit, delete, join, leave, pending, members, pending_members, reports, approve, reject, remove_member, promote_mod, demote_mod, transfer_admin, timeline, post, approval_required, description, group_title, confirm_delete, member_count (with ICU plural)",
+    "Add all occm_groups.* keys to app/javascript/mastodon/locales/ko.json - Korean translations matching en.json structure"
+  ],
+  "acceptance_criteria": [
+    "TypeScript types compile without errors",
+    "API module exports all required functions with correct paths and types",
+    "Redux actions dispatch correctly (REQUEST on start, SUCCESS/FAIL on completion)",
+    "Reducer properly updates state for all action types",
+    "Group list screen renders with Column/ColumnHeader/ScrollableList pattern",
+    "Create/edit form handles validation and submission",
+    "Timeline connects to streaming and displays statuses",
+    "Members screen shows active/pending tabs with appropriate actions per role",
+    "Reports screen is accessible only to admin/moderators",
+    "All routes resolve to correct components",
+    "Navigation sidebar includes Groups link",
+    "All i18n keys present in both en.json and ko.json",
+    "No TypeScript compilation errors"
+  ],
+  "verification": [
+    "Run: npx tsc --noEmit to verify TypeScript compiles without errors",
+    "Verify all locale keys are present in both en.json and ko.json files"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

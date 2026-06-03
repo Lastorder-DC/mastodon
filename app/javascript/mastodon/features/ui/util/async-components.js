@@ -275,3 +275,23 @@ export function ListEdit () {
 export function ListMembers () {
   return import('../../lists/members');
 }
+
+export function OccmGroups () {
+  return import('../../occm_groups');
+}
+
+export function OccmGroupNew () {
+  return import('../../occm_groups/new');
+}
+
+export function OccmGroupTimeline () {
+  return import('../../occm_group_timeline');
+}
+
+export function OccmGroupMembers () {
+  return import('../../occm_groups/members');
+}
+
+export function OccmGroupReports () {
+  return import('../../occm_groups/reports');
+}

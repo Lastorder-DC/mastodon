@@ -65,6 +65,11 @@ import {
   Lists,
   ListEdit,
   ListMembers,
+  OccmGroups,
+  OccmGroupNew,
+  OccmGroupTimeline,
+  OccmGroupMembers,
+  OccmGroupReports,
   Collections,
   CollectionDetail,
   CollectionsEditor,
@@ -262,6 +267,12 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/followed_tags' component={FollowedTags} content={children} />
             <WrappedRoute path='/mutes' component={Mutes} content={children} />
             <WrappedRoute path='/lists' component={Lists} content={children} />
+            <WrappedRoute path='/groups/new' component={OccmGroupNew} content={children} />
+            <WrappedRoute path='/groups/:id/edit' component={OccmGroupNew} content={children} />
+            <WrappedRoute path='/groups/:id/members' component={OccmGroupMembers} content={children} />
+            <WrappedRoute path='/groups/:id/reports' component={OccmGroupReports} content={children} />
+            <WrappedRoute path='/groups/:id' component={OccmGroupTimeline} content={children} />
+            <WrappedRoute path='/groups' component={OccmGroups} content={children} />
 
             <Route path='/overview' component={CustomHomepage} />
             <Route component={BundleColumnError} />

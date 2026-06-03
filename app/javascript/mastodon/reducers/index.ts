@@ -26,6 +26,7 @@ import { notificationGroupsReducer } from './notification_groups';
 import { notificationPolicyReducer } from './notification_policy';
 import { notificationRequestsReducer } from './notification_requests';
 import notifications from './notifications';
+import { occmGroupsReducer } from './occm_groups';
 import { pictureInPictureReducer } from './picture_in_picture';
 import { pollsReducer } from './polls';
 import push_notifications from './push_notifications';
@@ -69,6 +70,7 @@ const reducers = {
   notificationGroups: notificationGroupsReducer,
   height_cache,
   lists: listsReducer,
+  occm_groups: occmGroupsReducer,
   followedTags: followedTagsReducer,
   filters,
   conversations,
