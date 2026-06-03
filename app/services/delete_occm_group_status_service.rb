@@ -26,6 +26,6 @@ class DeleteOccmGroupStatusService < BaseService
   end
 
   def publish_delete_event!
-    redis.publish("timeline:occm_group:#{@group.id}", Oj.dump(event: :delete, payload: @status.id.to_s))
+    redis.publish("timeline:occm_group:#{@group.id}", JSON.generate(event: :delete, payload: @status.id.to_s))
   end
 end

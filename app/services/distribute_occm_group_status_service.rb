@@ -8,7 +8,7 @@ class DistributeOccmGroupStatusService < BaseService
     @group = occm_group
 
     rendered = InlineRenderer.render(@status, nil, :status)
-    payload = Oj.dump(event: :update, payload: rendered)
+    payload = JSON.generate(event: :update, payload: rendered)
 
     redis.publish("timeline:occm_group:#{@group.id}", payload)
   end

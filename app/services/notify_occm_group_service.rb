@@ -33,6 +33,6 @@ class NotifyOccmGroupService < BaseService
 
   def push_to_streaming_api!
     rendered = InlineRenderer.render(@notification, @recipient, :notification)
-    redis.publish("timeline:#{@recipient.id}:notifications", Oj.dump(event: :notification, payload: rendered))
+    redis.publish("timeline:#{@recipient.id}:notifications", JSON.generate(event: :notification, payload: rendered))
   end
 end

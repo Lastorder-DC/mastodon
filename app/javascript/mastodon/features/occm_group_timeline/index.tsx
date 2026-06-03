@@ -9,7 +9,7 @@ import { Helmet } from '@unhead/react/helmet';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import PeopleIcon from '@/material-icons/400-24px/group.svg?react';
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
-import { fetchOccmGroup } from 'mastodon/actions/occm_groups';
+import { fetchOccmGroup, joinOccmGroup } from 'mastodon/actions/occm_groups';
 import { connectOccmGroupStream } from 'mastodon/actions/streaming';
 import { expandOccmGroupTimeline } from 'mastodon/actions/timelines';
 import { Column } from 'mastodon/components/column';
@@ -36,6 +36,19 @@ const OccmGroupTimeline: React.FC<{
 
   useEffect(() => {
     void dispatch(fetchOccmGroup(id));
+  }, [dispatch, id]);
+
+  const membershipState = group
+    ? (group.get('membership_state') as string | null)
+    : undefined;
+  const isMember = membershipState === 'active';
+  const isPending = membershipState === 'pending';
+  const role = group ? (group.get('role') as string | null) : null;
+  const isAdmin = role === 'admin';
+
+  useEffect(() => {
+    if (!isMember) return;
+
     void dispatch(expandOccmGroupTimeline(id));
 
     // connectOccmGroupStream returns a thunk that returns a disconnect function
@@ -47,7 +60,7 @@ const OccmGroupTimeline: React.FC<{
     return () => {
       disconnect?.();
     };
-  }, [dispatch, id]);
+  }, [dispatch, id, isMember]);
 
   const handleHeaderClick = useCallback(() => {
     columnRef.current?.scrollTop();
@@ -60,7 +73,12 @@ const OccmGroupTimeline: React.FC<{
     [dispatch, id],
   );
 
+  const handleJoin = useCallback(() => {
+    void dispatch(joinOccmGroup(id));
+  }, [dispatch, id]);
+
   const title = group ? (group.get('title') as string) : id;
+  const description = group ? (group.get('description') as string) : '';
 
   if (typeof group === 'undefined') {
     return (
@@ -72,6 +90,46 @@ const OccmGroupTimeline: React.FC<{
     );
   } else if (group === null) {
     return <BundleColumnError multiColumn={multiColumn} errorType='routing' />;
+  }
+
+  if (!isMember) {
+    return (
+      <Column bindToDocument={!multiColumn} label={title}>
+        <ColumnHeader
+          icon='groups'
+          iconComponent={GroupsIcon}
+          title={title}
+          multiColumn={multiColumn}
+          showBackButton
+        />
+
+        <div className='scrollable'>
+          <div className='empty-column-indicator'>
+            {description && <p>{description}</p>}
+            {isPending ? (
+              <p>
+                <FormattedMessage
+                  id='occm_groups.pending'
+                  defaultMessage='Pending approval'
+                />
+              </p>
+            ) : (
+              <button type='button' className='button' onClick={handleJoin}>
+                <FormattedMessage
+                  id='occm_groups.join'
+                  defaultMessage='Join group'
+                />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <Helmet>
+          <title>{title}</title>
+          <meta name='robots' content='noindex' />
+        </Helmet>
+      </Column>
+    );
   }
 
   return (
@@ -87,16 +145,18 @@ const OccmGroupTimeline: React.FC<{
       >
         <div className='column-settings'>
           <section className='column-header__links'>
-            <Link
-              to={`/groups/${id}/edit`}
-              className='text-btn column-header__setting-btn'
-            >
-              <Icon id='pencil' icon={EditIcon} />{' '}
-              <FormattedMessage
-                id='occm_groups.edit'
-                defaultMessage='Edit group'
-              />
-            </Link>
+            {isAdmin && (
+              <Link
+                to={`/groups/${id}/edit`}
+                className='text-btn column-header__setting-btn'
+              >
+                <Icon id='pencil' icon={EditIcon} />{' '}
+                <FormattedMessage
+                  id='occm_groups.edit'
+                  defaultMessage='Edit group'
+                />
+              </Link>
+            )}
 
             <Link
               to={`/groups/${id}/members`}

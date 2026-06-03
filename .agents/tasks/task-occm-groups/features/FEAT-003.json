@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Phase 5: All API controllers for OCCM Groups - CRUD, members, moderators, statuses, timelines, reports, and transfer.",
+  "status": "completed",
+  "steps": [
+    "Create app/controllers/api/v1/occm_groups_controller.rb - inherits Api::BaseController, doorkeeper_authorize! read for index/show, write for create/update/destroy/transfer. Actions: index (returns groups where current user is active member with memberships_map), show, create (calls CreateOccmGroupService), update (authorize :update?), destroy (authorize :destroy?), transfer (authorize :transfer?, calls TransferOccmGroupAdminService). before_action :require_user!, :set_occm_group",
+    "Create app/controllers/api/v1/occm_groups/members_controller.rb - inherits Api::BaseController, actions: index (active members with pagination), pending (authorize :moderate?, pending members), create (calls JoinOccmGroupService), approve (authorize :moderate?, calls ApproveOccmGroupMemberService), reject (authorize :moderate?, calls RejectOccmGroupMemberService), destroy (calls RemoveOccmGroupMemberService). Include pagination via Link headers",
+    "Create app/controllers/api/v1/occm_groups/moderators_controller.rb - inherits Api::BaseController, actions: create (promote to moderator, admin only), destroy (demote from moderator, admin only). Returns updated membership",
+    "Create app/controllers/api/v1/occm_groups/statuses_controller.rb - inherits Api::BaseController, actions: create (authorize :post?, calls PostToOccmGroupService), destroy (authorize :moderate?, calls DeleteOccmGroupStatusService). Accepts status text, media_ids, poll params",
+    "Create app/controllers/api/v1/occm_groups/timelines_controller.rb - inherits Api::BaseController, action: show (requires active membership, returns paginated statuses via OccmGroupStatus records joined with Status). Supports cursor-based pagination (max_id, since_id, min_id, limit). Returns Link headers. Eager-loads status accounts",
+    "Create app/controllers/api/v1/occm_groups/reports_controller.rb - inherits Api::BaseController, actions: index (authorize :moderate?, paginated, supports resolved filter), create (requires active membership, validates params), resolve (authorize :moderate?, calls ResolveOccmGroupReportService). Uses REST::OccmGroupReportSerializer"
+  ],
+  "acceptance_criteria": [
+    "All controller files load without syntax errors",
+    "OccmGroupsController follows the exact same pattern as ListsController (doorkeeper, require_user!, before_action, render json with serializer)",
+    "MembersController supports pagination with Link headers following Mastodon patterns",
+    "TimelinesController returns paginated statuses with proper cursor-based pagination",
+    "All write actions use the :write scope, all read actions use the :read scope",
+    "Policy authorization is called for all protected actions",
+    "404 returned for non-members trying to access group content (not 403)"
+  ],
+  "verification": [
+    "Run: ruby -c on all new controller files to verify syntax",
+    "Verify routes match controllers by checking route helpers resolve correctly"
+  ],
+  "blocked_reason": null,
+  "findings": "All 6 controller files pass rubocop with no offenses. Used rubocop -A to fix Layout/MultilineMethodCallIndentation style (use 2 spaces for continuation). Full Rails environment cannot load without libvips (not available in sandbox) so verification is limited to syntax checks and rubocop. Route helpers: api_v1_occm_group_members_url, api_v1_occm_group_timeline_url, api_v1_occm_group_reports_url for pagination Link headers."
+}

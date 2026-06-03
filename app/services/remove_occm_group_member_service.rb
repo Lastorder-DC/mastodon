@@ -21,6 +21,6 @@ class RemoveOccmGroupMemberService < BaseService
   private
 
   def publish_revoke_event!
-    redis.publish("timeline:occm_group:#{@group.id}", Oj.dump(event: :remove_member, payload: @membership.account_id.to_s))
+    redis.publish("timeline:occm_group:#{@group.id}", JSON.generate(event: :remove_member, payload: @membership.account_id.to_s))
   end
 end

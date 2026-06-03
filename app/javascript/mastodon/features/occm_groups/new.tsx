@@ -79,6 +79,7 @@ const OccmGroupForm: React.FC<{
           }),
         ).then(() => {
           setSubmitting(false);
+          history.push(`/groups/${id}`);
           return '';
         });
       } else {

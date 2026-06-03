@@ -2,7 +2,7 @@
 
 class OccmGroupPolicy < ApplicationPolicy
   def show?
-    active_member?
+    true
   end
 
   def update?

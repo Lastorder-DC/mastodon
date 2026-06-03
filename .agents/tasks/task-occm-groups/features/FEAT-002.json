@@ -1,0 +1,42 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Phase 3+4: All service classes, Pundit policy, REST serializers, notification types, and the counter reconciliation worker. This implements all backend business logic.",
+  "status": "completed",
+  "steps": [
+    "Create app/services/create_occm_group_service.rb - inherits BaseService, call(account, params) wraps in transaction: creates OccmGroup, creates admin membership (role: :admin, state: :active), sets member_count to 1",
+    "Create app/services/join_occm_group_service.rb - inherits BaseService, call(account, occm_group): checks not already member/pending, if approval_required creates pending membership and notifies admins/mods, if not creates active membership and increments member_count",
+    "Create app/services/approve_occm_group_member_service.rb - inherits BaseService, call(occm_group, account_id): finds pending membership, updates state to active, increments member_count, notifies requester with occm_group_join_approved",
+    "Create app/services/reject_occm_group_member_service.rb - inherits BaseService, call(occm_group, account_id): finds pending membership, updates state to rejected, notifies requester with occm_group_join_rejected",
+    "Create app/services/remove_occm_group_member_service.rb - inherits BaseService, call(occm_group, account_id, current_account): raises error if target is admin, destroys membership, decrements member_count, publishes revoke event to streaming channel",
+    "Create app/services/transfer_occm_group_admin_service.rb - inherits BaseService, call(occm_group, target_account_id): verifies target is active member, wraps in transaction with lock!, swaps roles (target becomes admin, former admin becomes user), updates occm_group.account_id",
+    "Create app/services/post_to_occm_group_service.rb - inherits BaseService, call(account, occm_group, params): verifies active membership, calls PostStatusService with visibility: :limited and local_only: true, creates OccmGroupStatus record, calls DistributeOccmGroupStatusService",
+    "Create app/services/distribute_occm_group_status_service.rb - inherits BaseService, call(status, occm_group): renders status via InlineRenderer, publishes to Redis channel timeline:occm_group:{id} with event :update",
+    "Create app/services/delete_occm_group_status_service.rb - inherits BaseService, call(occm_group, status, current_account): removes OccmGroupStatus record, removes underlying Status, notifies post author with occm_group_post_deleted, publishes delete event to streaming channel",
+    "Create app/services/resolve_occm_group_report_service.rb - inherits BaseService, call(occm_group, report, action, current_account): sets action_taken_at/action_taken_by_account_id, if action is delete_posts calls DeleteOccmGroupStatusService for each status, if remove_member calls RemoveOccmGroupMemberService",
+    "Create app/services/notify_occm_group_service.rb - inherits BaseService, call(recipient, type, activity): creates Notification record, renders via InlineRenderer, publishes to Redis timeline:{recipient.id}, handles all 4 notification types",
+    "Create app/workers/occm_group_counter_reconciliation_worker.rb - include Sidekiq::Worker, queue scheduler, retry 0, find_each batch_size 200, compares member_count to actual active count, uses update_column when different",
+    "Create app/policies/occm_group_policy.rb - inherits ApplicationPolicy, methods: update? (admin only), destroy? (admin only), moderate? (admin or moderator), transfer? (admin only), post? (any active member), show? (any active member). Memoize membership lookup",
+    "Create app/serializers/rest/occm_group_serializer.rb - attributes: id (to_s), title, description, approval_required, member_count, role, membership_state, created_at. Support memberships_map option for N+1 prevention",
+    "Create app/serializers/rest/occm_group_membership_serializer.rb - attributes: id (to_s), role, state, created_at. Has one :account using REST::AccountSerializer",
+    "Create app/serializers/rest/occm_group_report_serializer.rb - attributes: id (to_s), occm_group_id (to_s), status_ids, comment, category, action_taken_at, created_at. Has one :account, :target_account, :action_taken_by_account",
+    "Modify app/models/notification.rb - add 4 new types to PROPERTIES hash: occm_group_join_request (filterable:true, baseline:false), occm_group_join_approved, occm_group_join_rejected, occm_group_post_deleted. Add belongs_to :occm_group_membership with foreign_key activity_id optional"
+  ],
+  "acceptance_criteria": [
+    "All service files load without syntax errors",
+    "CreateOccmGroupService creates group and admin membership in a single transaction",
+    "JoinOccmGroupService handles both approval_required=true and false cases correctly",
+    "TransferOccmGroupAdminService atomically swaps roles with row locking",
+    "PostToOccmGroupService creates limited-visibility local-only status and links to group",
+    "DistributeOccmGroupStatusService publishes to correct Redis channel",
+    "OccmGroupPolicy returns correct boolean for each role/action combination",
+    "Serializers output correct JSON structure with string IDs",
+    "Notification types are properly registered and the model validates them"
+  ],
+  "verification": [
+    "Run: ruby -c on all new Ruby files to verify syntax",
+    "Verify notification types are in the TYPES constant by checking the PROPERTIES hash includes all 4 new types"
+  ],
+  "blocked_reason": null,
+  "findings": "All 17 files pass rubocop with no offenses. Used defined?(@membership) pattern instead of ||= for find_by memoization per Rails/FindByOrAssignmentMemoization cop. Combined duplicate case branches in notify service per Lint/DuplicateBranch cop. Worker uses queue 'pull' (no 'scheduler' queue exists in Mastodon). Full Rails environment cannot load without libvips (not available in sandbox) so verification is limited to syntax checks and rubocop."
+}
