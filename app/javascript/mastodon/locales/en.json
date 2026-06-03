@@ -1081,6 +1081,8 @@
   "notifications_permission_banner.title": "Never miss a thing",
   "occm_groups.approval_required": "Require approval to join",
   "occm_groups.approve": "Approve",
+  "occm_groups.compose_placeholder": "Write something to the group...",
+  "occm_groups.compose_post": "Post",
   "occm_groups.confirm_delete": "Are you sure you want to delete this group? This cannot be undone.",
   "occm_groups.create": "Create group",
   "occm_groups.create_a_group": "Create a new group to start a private community",

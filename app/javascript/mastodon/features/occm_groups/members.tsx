@@ -226,29 +226,24 @@ const OccmGroupMembers: React.FC<{
         showBackButton
       />
 
-      <div className='column-header__collapsible'>
-        <div className='column-header__button-group'>
-          <button
-            type='button'
-            className={`column-header__button ${activeTab === 'active' ? 'active' : ''}`}
-            onClick={handleActiveTab}
-          >
-            <FormattedMessage
-              id='occm_groups.members'
-              defaultMessage='Members'
-            />
-          </button>
-          <button
-            type='button'
-            className={`column-header__button ${activeTab === 'pending' ? 'active' : ''}`}
-            onClick={handlePendingTab}
-          >
-            <FormattedMessage
-              id='occm_groups.pending_members'
-              defaultMessage='Pending requests'
-            />
-          </button>
-        </div>
+      <div className='account__section-headline'>
+        <button
+          type='button'
+          className={activeTab === 'active' ? 'active' : ''}
+          onClick={handleActiveTab}
+        >
+          <FormattedMessage id='occm_groups.members' defaultMessage='Members' />
+        </button>
+        <button
+          type='button'
+          className={activeTab === 'pending' ? 'active' : ''}
+          onClick={handlePendingTab}
+        >
+          <FormattedMessage
+            id='occm_groups.pending_members'
+            defaultMessage='Pending requests'
+          />
+        </button>
       </div>
 
       {loading ? (

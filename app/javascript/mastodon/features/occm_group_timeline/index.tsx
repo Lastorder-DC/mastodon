@@ -20,6 +20,8 @@ import BundleColumnError from 'mastodon/features/ui/components/bundle_column_err
 import StatusListContainer from 'mastodon/features/ui/containers/status_list_container';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
+import { OccmGroupCompose } from './components/occm_group_compose';
+
 const OccmGroupTimeline: React.FC<{
   multiColumn?: boolean;
 }> = ({ multiColumn }) => {
@@ -109,6 +111,8 @@ const OccmGroupTimeline: React.FC<{
           </section>
         </div>
       </ColumnHeader>
+
+      <OccmGroupCompose groupId={id} />
 
       <StatusListContainer
         trackScroll

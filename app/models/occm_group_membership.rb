@@ -14,6 +14,8 @@
 #
 
 class OccmGroupMembership < ApplicationRecord
+  include Paginable
+
   belongs_to :occm_group
   belongs_to :account
 

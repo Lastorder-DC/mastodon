@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-009",
+  "type": "fix",
+  "description": "Fix multiple bugs: /groups routes 404 on page refresh, /groups/:id/members 500 due to missing Paginable, no compose form on group timeline, and wrong tab design on members page.",
+  "status": "in_progress",
+  "steps": [
+    "Add /groups/(*any) to config/routes/web_app.rb following the /lists/(*any) pattern",
+    "Add include Paginable to app/models/occm_group_membership.rb",
+    "Create compose component at app/javascript/mastodon/features/occm_group_timeline/components/occm_group_compose.tsx",
+    "Import and use compose component in group timeline index.tsx",
+    "Fix tab design in members.tsx to use account__section-headline pattern instead of column-header__button-group",
+    "Add compose_placeholder and post locale keys to en.json and ko.json"
+  ],
+  "acceptance_criteria": [
+    "/groups/(*any) route exists in web_app.rb",
+    "OccmGroupMembership includes Paginable",
+    "Group timeline has a compose form that posts to the group",
+    "Members page tabs use account__section-headline pattern matching Mastodon standard tabs",
+    "Locale keys exist for compose placeholder and post button in both en and ko"
+  ],
+  "verification": [
+    "Run: ruby -c on modified Ruby files",
+    "Run: npx tsc --noEmit to verify TypeScript compiles"
+  ],
+  "blocked_reason": null,
+  "findings": null
+}
