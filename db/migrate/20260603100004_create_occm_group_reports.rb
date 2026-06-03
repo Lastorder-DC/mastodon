@@ -16,7 +16,7 @@ class CreateOccmGroupReports < ActiveRecord::Migration[8.0]
 
     add_index :occm_group_reports, :target_account_id
     add_index :occm_group_reports, :action_taken_at
-    add_foreign_key :occm_group_reports, :accounts, column: :target_account_id, on_delete: :cascade
-    add_foreign_key :occm_group_reports, :accounts, column: :action_taken_by_account_id, on_delete: :nullify
+    add_foreign_key :occm_group_reports, :accounts, column: :target_account_id, on_delete: :cascade, validate: false
+    add_foreign_key :occm_group_reports, :accounts, column: :action_taken_by_account_id, on_delete: :nullify, validate: false
   end
 end
