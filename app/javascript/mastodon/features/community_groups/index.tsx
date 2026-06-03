@@ -325,6 +325,7 @@ const GroupsList: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             defaultMessage='No groups yet. Create one or join with a share token.'
           />
         }
+        alwaysPrepend
         prepend={
           <div className='follow_requests-unlocked_explanation'>
             {error && <p className='warning-hint'>{error}</p>}

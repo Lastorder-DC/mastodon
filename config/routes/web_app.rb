@@ -17,6 +17,7 @@
   /follow_requests
   /followed_tags
   /getting-started
+  /groups/(*any)
   /home
   /keyboard-shortcuts
   /links/(*any)
