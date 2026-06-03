@@ -124,17 +124,14 @@ const OccmGroupTimeline: React.FC<{
                 />
               </p>
             ) : (
-              <button
-                type='button'
-                className='button'
-                onClick={handleJoin}
-                style={{ marginTop: '20px' }}
-              >
-                <FormattedMessage
-                  id='occm_groups.join'
-                  defaultMessage='Join group'
-                />
-              </button>
+              <div style={{ marginTop: '20px' }}>
+                <button type='button' className='button' onClick={handleJoin}>
+                  <FormattedMessage
+                    id='occm_groups.join'
+                    defaultMessage='Join group'
+                  />
+                </button>
+              </div>
             )}
           </div>
         </div>

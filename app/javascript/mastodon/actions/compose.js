@@ -250,6 +250,7 @@ export function submitCompose(successCallback) {
         in_reply_to_id: getState().getIn(['compose', 'in_reply_to'], null),
         media_ids: media.map(item => item.get('id')),
         sensitive: getState().getIn(['compose', 'sensitive']),
+        language: getState().getIn(['compose', 'language']),
       };
     } else {
       apiUrl = statusId === null ? '/api/v1/statuses' : `/api/v1/statuses/${statusId}`;

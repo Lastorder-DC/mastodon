@@ -139,7 +139,6 @@ function clearAll(state) {
     map.set('quoted_status_id', null);
     map.set('quote_policy', state.get('default_quote_policy'));
     map.set('isDragDisabled', false);
-    map.set('occm_group_id', null);
   });
 }
 

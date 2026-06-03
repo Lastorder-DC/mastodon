@@ -1087,8 +1087,6 @@
   "notifications_permission_banner.title": "아무것도 놓치지 마세요",
   "occm_groups.approval_required": "가입 시 승인 필요",
   "occm_groups.approve": "승인",
-  "occm_groups.compose_placeholder": "그룹에 글을 작성하세요...",
-  "occm_groups.compose_post": "게시",
   "occm_groups.confirm_delete": "정말로 이 그룹을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
   "occm_groups.create": "그룹 만들기",
   "occm_groups.create_a_group": "새 그룹을 만들어 비공개 커뮤니티를 시작하세요",
