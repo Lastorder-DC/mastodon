@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-008",
+  "type": "fix",
+  "description": "Fix review issues: timeline endpoint mismatch, serializer missing current_account, member removal authorization, 'me' account_id resolution, and N+1 in StatusPolicy.",
+  "status": "in_progress",
+  "steps": [
+    "Fix frontend timeline endpoint: change expandOccmGroupTimeline and fillOccmGroupTimelineGaps in actions/timelines.js to use /api/v1/occm_groups/${id}/timeline instead of /statuses",
+    "Fix OccmGroupsController: add current_account: current_account to render options in show, create, update, and transfer actions",
+    "Fix MembersController#destroy: resolve 'me' to current_account.id, differentiate self-removal from moderation-removal with authorize @occm_group, :moderate? for non-self removals",
+    "Fix StatusPolicy#occm_group_post?: use record.occm_group_status.present? instead of OccmGroupStatus.exists? query",
+    "Fix StatusPolicy#viewable_for_occm_group?: use record.occm_group_status instead of OccmGroupStatus.find_by"
+  ],
+  "acceptance_criteria": [
+    "Frontend timeline fetcher uses /api/v1/occm_groups/:id/timeline path",
+    "Serializer receives current_account in all single-group render calls",
+    "Member removal requires moderate? policy for removing others, allows self-removal without it",
+    "'me' param is resolved to current_account.id before service call",
+    "StatusPolicy uses preloaded association instead of N+1 queries"
+  ],
+  "verification": [
+    "Run: ruby -c on modified Ruby files to verify syntax",
+    "Run: npx tsc --noEmit to verify TypeScript still compiles"
+  ],
+  "blocked_reason": null,
+  "findings": null
+}

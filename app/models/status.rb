@@ -50,6 +50,7 @@ class Status < ApplicationRecord
     :application,
     :conversation,
     :media_attachments,
+    :occm_group_status,
     :preloadable_poll,
     :status_stat,
     :tags,

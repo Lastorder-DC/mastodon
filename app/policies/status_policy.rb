@@ -43,13 +43,13 @@ class StatusPolicy < ApplicationPolicy
   end
 
   def occm_group_post?
-    record.limited_visibility? && OccmGroupStatus.exists?(status_id: record.id)
+    record.limited_visibility? && record.occm_group_status.present?
   end
 
   def viewable_for_occm_group?
     return true if owned?
 
-    occm_group_status = OccmGroupStatus.find_by(status_id: record.id)
+    occm_group_status = record.occm_group_status
     return true if occm_group_status.nil?
 
     OccmGroupMembership.exists?(

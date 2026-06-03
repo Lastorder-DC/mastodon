@@ -16,18 +16,18 @@ class Api::V1::OccmGroupsController < Api::BaseController
   end
 
   def show
-    render json: @occm_group, serializer: REST::OccmGroupSerializer
+    render json: @occm_group, serializer: REST::OccmGroupSerializer, current_account: current_account
   end
 
   def create
     @occm_group = CreateOccmGroupService.new.call(current_account, occm_group_params)
-    render json: @occm_group, serializer: REST::OccmGroupSerializer
+    render json: @occm_group, serializer: REST::OccmGroupSerializer, current_account: current_account
   end
 
   def update
     authorize @occm_group, :update?
     @occm_group.update!(occm_group_params)
-    render json: @occm_group, serializer: REST::OccmGroupSerializer
+    render json: @occm_group, serializer: REST::OccmGroupSerializer, current_account: current_account
   end
 
   def destroy
@@ -39,7 +39,7 @@ class Api::V1::OccmGroupsController < Api::BaseController
   def transfer
     authorize @occm_group, :transfer?
     TransferOccmGroupAdminService.new.call(@occm_group, params[:account_id])
-    render json: @occm_group.reload, serializer: REST::OccmGroupSerializer
+    render json: @occm_group.reload, serializer: REST::OccmGroupSerializer, current_account: current_account
   end
 
   private

@@ -39,7 +39,14 @@ class Api::V1::OccmGroups::MembersController < Api::BaseController
   end
 
   def destroy
-    RemoveOccmGroupMemberService.new.call(@occm_group, params[:id], current_account)
+    target_account_id = if params[:id] == 'me' || params[:id] == current_account.id.to_s
+                          current_account.id
+                        else
+                          authorize @occm_group, :moderate?
+                          params[:id]
+                        end
+
+    RemoveOccmGroupMemberService.new.call(@occm_group, target_account_id, current_account)
     render_empty
   end
 
