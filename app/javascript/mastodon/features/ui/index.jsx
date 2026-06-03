@@ -67,6 +67,8 @@ import {
   ListMembers,
   Collections,
   CommunityGroups,
+  CommunityGroupEdit,
+  CommunityGroupJoin,
   CollectionDetail,
   CollectionsEditor,
   Blocks,
@@ -213,6 +215,9 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/tags/:id' component={HashtagTimeline} content={children} />
             <WrappedRoute path='/links/:url' component={LinkTimeline} content={children} />
             <WrappedRoute path='/groups' exact component={CommunityGroups} content={children} />
+            <WrappedRoute path='/groups/new' component={CommunityGroupEdit} content={children} />
+            <WrappedRoute path='/groups/join' component={CommunityGroupJoin} content={children} />
+            <WrappedRoute path='/groups/:id/:section' component={CommunityGroups} content={children} />
             <WrappedRoute path='/groups/:id' component={CommunityGroups} content={children} />
             <WrappedRoute path='/lists/new' component={ListEdit} content={children} />
             <WrappedRoute path='/lists/:id/edit' component={ListEdit} content={children} />
