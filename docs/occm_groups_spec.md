@@ -77,6 +77,30 @@ end
 CREATE INDEX index_occm_groups_on_account_id ON occm_groups (account_id);
 ```
 
+**Counter Cache Reconciliation:**
+
+The `member_count` column is a counter cache that is incremented/decremented by service objects when members join or leave. However, if a membership record is deleted by cascade (e.g., `ON DELETE CASCADE` when an account is deleted), no Rails callback fires and the counter becomes stale.
+
+To address this, a periodic reconciliation worker recomputes the count:
+
+```ruby
+# app/workers/occm_group_counter_reconciliation_worker.rb
+class OccmGroupCounterReconciliationWorker
+  include Sidekiq::Worker
+
+  sidekiq_options queue: 'scheduler', retry: 0
+
+  def perform
+    OccmGroup.find_each(batch_size: 200) do |group|
+      actual_count = group.occm_group_memberships.active.count
+      group.update_column(:member_count, actual_count) if group.member_count != actual_count
+    end
+  end
+end
+```
+
+This worker should run on a daily schedule via `config/sidekiq.yml` or the Scheduler configuration. It corrects any drift caused by cascading deletes, manual database operations, or bugs in the service layer.
+
 **Migration:**
 
 ```ruby
@@ -430,6 +454,18 @@ end
 | POST | `/api/v1/occm_groups/:group_id/members/:account_id/reject` | `write:occm_groups` | Reject join request (admin/mod) |
 | DELETE | `/api/v1/occm_groups/:group_id/members/:account_id` | `write:occm_groups` | Remove member (admin/mod) or leave group (self) |
 
+**Pagination (GET endpoints):**
+
+Member list endpoints support cursor-based pagination using `Link` headers, consistent with other Mastodon list endpoints:
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | integer | 40 | Maximum number of results (max: 80) |
+| `max_id` | string | - | Return results older than this ID |
+| `since_id` | string | - | Return results newer than this ID |
+
+Response includes `Link` headers with `rel="next"` and `rel="prev"` URIs for pagination.
+
 **Join Request:**
 
 ```json
@@ -619,6 +655,19 @@ This triggers an `occm_group_post_deleted` notification to the post author.
 | GET | `/api/v1/occm_groups/:group_id/reports` | `read:occm_groups` | List reports (admin/mod) |
 | POST | `/api/v1/occm_groups/:group_id/reports` | `write:occm_groups` | File a report |
 | POST | `/api/v1/occm_groups/:group_id/reports/:id/resolve` | `write:occm_groups` | Resolve a report (admin/mod) |
+
+**Pagination (GET /reports):**
+
+The reports list endpoint supports cursor-based pagination:
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | integer | 40 | Maximum number of results (max: 80) |
+| `max_id` | string | - | Return results older than this ID |
+| `since_id` | string | - | Return results newer than this ID |
+| `resolved` | boolean | - | Filter by resolution status (omit for all) |
+
+Response includes `Link` headers with `rel="next"` and `rel="prev"` URIs for pagination.
 
 **Create Report:**
 
@@ -813,10 +862,23 @@ interface OccmGroupPostDeletedNotification {
 
 ### 7.1 Design Principles
 
-1. **Internal moderation**: Group reports are handled entirely by the group's admin and moderators. They do NOT appear in the server admin interface.
+1. **Internal moderation**: Group reports are handled primarily by the group's admin and moderators. They do NOT appear in the server admin interface by default.
 2. **Separation from server reports**: The `occm_group_reports` table is completely separate from Mastodon's `reports` table. This prevents interference with server-level moderation.
 3. **Member-only reporting**: Only active group members can file reports.
 4. **Status attachment**: Reports can reference specific statuses (group posts) that violated rules.
+5. **Server-admin visibility**: Server administrators retain the ability to view and act on group content through the following mechanisms:
+
+### 7.1.1 Server-Admin Escalation Path
+
+Although group reports are handled internally by group leadership, server administrators must retain visibility into group content for legal compliance (e.g., CSAM, terrorism content, court orders) and terms-of-service enforcement. The following mechanisms ensure this:
+
+1. **Existing admin API access**: Group posts are stored in the standard `statuses` table. Server administrators can view any status via the existing admin interface (`/admin/accounts/:id` and the admin API). The `limited` visibility does not hide content from instance operators.
+2. **Automated media scanning**: If the instance uses automated content scanning (e.g., PhotoDNA integration), group posts are scanned like any other status because they exist in the `statuses` table with standard media attachments.
+3. **Escalation by group moderators**: Group moderators can escalate a report to server-level moderation by filing a standard Mastodon report (`POST /api/v1/reports`) referencing the offending status IDs. This creates a report visible in the server admin panel.
+4. **Server-admin override**: Server administrators can suspend or silence any account regardless of group membership. Account-level actions (suspension, silencing) cascade to all group activity by that account.
+5. **Instance-level content rules**: The server's existing `DomainBlock`, `EmailDomainBlock`, and custom filter rules continue to apply to group content since it flows through standard `PostStatusService`.
+
+**Implementation note**: The `occm_group_reports` table handles intra-group disputes (off-topic posts, minor rule violations). Content that violates instance-wide rules or applicable law should be escalated to the server moderation system via standard reports.
 
 ### 7.2 Report Categories
 
@@ -1257,6 +1319,37 @@ Group posts use the existing `limited` visibility level (value: 4). Additionally
 # Group posts use visibility: :limited
 ```
 
+### 11.2.1 Discriminating Group Posts from Other Limited-Visibility Statuses
+
+The `limited` visibility integer (4) is shared between group posts and circle posts (and potentially other constrained-audience statuses). Because both types share the same visibility value, any code path that queries `WHERE visibility = 4` will return both.
+
+**Invariant**: A limited-visibility status is a group post if and only if it has a corresponding record in `occm_group_statuses`. The presence of a row in this junction table is the sole discriminator.
+
+**Required scope**: Any code path that filters or displays limited-visibility statuses must apply the appropriate join or exclusion:
+
+```ruby
+# Scope: only group posts (for group timeline queries)
+Status.joins(:occm_group_status).where(visibility: :limited)
+
+# Scope: exclude group posts (for home feed, account timeline, search)
+Status.where(visibility: :limited)
+      .where.not(id: OccmGroupStatus.select(:status_id))
+
+# Alternatively, using a LEFT JOIN for performance on large datasets:
+Status.left_joins(:occm_group_status)
+      .where(visibility: :limited, occm_group_statuses: { id: nil })
+```
+
+**Affected code paths** that must apply this discrimination:
+
+1. Home feed fanout (group posts excluded from home)
+2. Account timeline API (group posts excluded unless viewer is group member)
+3. Search indexing (group posts excluded from search results)
+4. Notification filtering (group post mentions handled separately)
+5. Public/hashtag timeline queries (already excluded by `limited` visibility, no change needed)
+
+The migration plan (Section 2.4 of `docs/occm_groups_migration_plan.md`) handles converting only statuses present in `occm_group_statuses` when transitioning to a dedicated `group` visibility value.
+
 ### 11.3 Federation Prevention
 
 ```ruby
@@ -1381,16 +1474,14 @@ class DistributeOccmGroupStatusService < BaseService
     payload = InlineRenderer.render(status, nil, :status)
     payload = Oj.dump(event: :update, payload: payload)
 
-    # Publish to group timeline channel
+    # Publish to group timeline streaming channel only.
+    # Group posts are NOT pushed to home feeds (see Section 11.4).
     Redis.current.publish("timeline:occm_group:#{occm_group.id}", payload)
-
-    # Also notify each member's notification stream if they have it enabled
-    occm_group.occm_group_memberships.active.pluck(:account_id).each do |account_id|
-      FeedManager.instance.push_to_home(Account.find(account_id), status)
-    end
   end
 end
 ```
+
+Group posts appear only in the group timeline via the streaming channel. They are never pushed to member home feeds. Members who want to see group content must subscribe to the group timeline stream (Section 12.1) or fetch the group timeline endpoint directly (Section 3.3).
 
 ### 12.4 Streaming Events
 
@@ -1729,10 +1820,34 @@ class REST::OccmGroupSerializer < ActiveModel::Serializer
   private
 
   def membership
-    @membership ||= object.occm_group_memberships.find_by(account_id: current_user&.account_id)
+    # Uses preloaded data when available (see controller index action below).
+    # Falls back to a query for single-resource endpoints (show action).
+    @membership ||= instance_options[:memberships_map]&.fetch(object.id, nil) ||
+                    object.occm_group_memberships.find_by(account_id: current_user&.account_id)
   end
 end
 ```
+
+**Preloading in the controller** to avoid N+1 queries on `index` actions:
+
+```ruby
+# app/controllers/api/v1/occm_groups_controller.rb (index action)
+def index
+  @occm_groups = current_account.occm_groups
+
+  # Preload the current user's memberships for all groups in one query
+  memberships = OccmGroupMembership.where(
+    occm_group_id: @occm_groups.select(:id),
+    account_id: current_account.id
+  ).index_by(&:occm_group_id)
+
+  render json: @occm_groups,
+         each_serializer: REST::OccmGroupSerializer,
+         memberships_map: memberships
+end
+```
+
+This pattern avoids issuing one `find_by` query per group when rendering a list. The `memberships_map` option passes the preloaded data to the serializer, which checks it before falling back to a per-object query.
 
 ```ruby
 # app/serializers/rest/occm_group_membership_serializer.rb

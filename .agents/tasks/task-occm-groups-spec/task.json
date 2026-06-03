@@ -1,7 +1,14 @@
 {
   "task_id": "task-occm-groups-spec",
   "task_description": "Write comprehensive feature specification documents for the OCCM Groups feature in Mastodon. Includes main spec (docs/occm_groups_spec.md) and migration/rollback plan (docs/occm_groups_migration_plan.md). These are design documents grounded in actual Mastodon codebase patterns, not code implementation.",
-  "status": "in_progress",
+  "status": "completed",
   "feature_order": ["FEAT-001", "FEAT-002"],
-  "blocked_reason": null
+  "blocked_reason": null,
+  "verification": {
+    "build": "pass",
+    "tests": "pass",
+    "test_quality": "pass",
+    "docker_build": "skipped",
+    "summary": "Documentation-only task. Both spec documents created, verified, and updated per review feedback. Review fixes applied: (1) removed push_to_home contradiction, (2) added limited-visibility discriminator documentation, (3) added server-admin escalation path, (4) added counter cache reconciliation worker, (5) replaced hardcoded GROUP_VISIBILITY constant with runtime lookup, (6) unified route definitions between spec and migration plan, (7) added pagination parameters to member/report list endpoints, (8) added serializer N+1 preloading pattern."
+  }
 }

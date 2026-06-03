@@ -269,9 +269,18 @@ end
 class MigrateOccmGroupStatusesToOfficial < ActiveRecord::Migration[8.0]
   disable_ddl_transaction!
 
-  GROUP_VISIBILITY = 5 # PR #19059 "group" visibility value (verify actual value)
-
   def up
+    # Derive the visibility value from the actual enum at runtime rather than
+    # hardcoding it. This ensures correctness regardless of what integer value
+    # PR #19059 assigns to the "group" visibility level.
+    group_visibility = Status.visibilities['group']
+
+    raise <<~MSG if group_visibility.nil?
+      MIGRATION ABORTED: The 'group' visibility level does not exist in Status.visibilities.
+      This migration requires PR #19059's visibility enum to be present.
+      Verify that the official groups migrations have been run before this migration.
+    MSG
+
     OccmGroupStatus.find_each(batch_size: 1000) do |group_status|
       mapping = OccmMigrationMapping.find_by(
         source_table: 'occm_groups',
@@ -281,7 +290,7 @@ class MigrateOccmGroupStatusesToOfficial < ActiveRecord::Migration[8.0]
 
       Status.where(id: group_status.status_id).update_all(
         group_id: mapping.target_id,
-        visibility: GROUP_VISIBILITY
+        visibility: group_visibility
       )
     end
   end
@@ -586,24 +595,30 @@ Remove from `config/routes/api.rb`:
 namespace :v1 do
   resources :occm_groups, only: [:index, :create, :show, :update, :destroy] do
     member do
-      post :join
-      post :leave
-      get :timeline
-      post :statuses
+      post :transfer
     end
-    resources :members, only: [:index, :destroy], controller: 'occm_groups/members' do
+
+    resources :members, only: [:index, :create, :destroy], controller: 'occm_groups/members' do
       collection do
+        get :pending
+      end
+      member do
         post :approve
         post :reject
       end
     end
+
     resources :moderators, only: [:create, :destroy], controller: 'occm_groups/moderators'
+
+    resources :statuses, only: [:create, :destroy], controller: 'occm_groups/statuses'
+
+    get :timeline, to: 'occm_groups/timelines#show'
+
     resources :reports, only: [:index, :create], controller: 'occm_groups/reports' do
       member do
         post :resolve
       end
     end
-    post :transfer, to: 'occm_groups/transfer#create'
   end
 end
 ```
