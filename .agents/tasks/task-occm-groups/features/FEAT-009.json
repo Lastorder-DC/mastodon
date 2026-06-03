@@ -2,7 +2,7 @@
   "id": "FEAT-009",
   "type": "fix",
   "description": "Fix multiple bugs: /groups routes 404 on page refresh, /groups/:id/members 500 due to missing Paginable, no compose form on group timeline, and wrong tab design on members page.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Add /groups/(*any) to config/routes/web_app.rb following the /lists/(*any) pattern",
     "Add include Paginable to app/models/occm_group_membership.rb",
@@ -23,5 +23,5 @@
     "Run: npx tsc --noEmit to verify TypeScript compiles"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "All pre-commit hooks pass (rubocop, eslint, tsc, oxfmt, i18n:extract). TypeScript compiles without errors. The account__section-headline pattern for tabs matches the standard Mastodon approach used in explore and search pages."
 }
