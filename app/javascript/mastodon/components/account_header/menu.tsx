@@ -3,6 +3,8 @@ import type { FC } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import { useHistory } from 'react-router-dom';
+
 import {
   followAccount,
   pinAccount,
@@ -14,6 +16,7 @@ import { removeAccountFromFollowers } from '@/mastodon/actions/accounts_typed';
 import { showAlert } from '@/mastodon/actions/alerts';
 import { initBlockModal } from '@/mastodon/actions/blocks';
 import { directCompose, mentionCompose } from '@/mastodon/actions/compose';
+import { createChatRoom } from '@/mastodon/actions/dm';
 import {
   initDomainBlockModal,
   unblockDomain,
@@ -50,6 +53,7 @@ import classes from './styles.module.scss';
 export const AccountMenu: FC<{ accountId: string }> = ({ accountId }) => {
   const intl = useIntl();
   const { signedIn, permissions } = useIdentity();
+  const history = useHistory();
 
   const account = useAccount(accountId);
   const relationship = useAppSelector((state) =>
@@ -73,8 +77,9 @@ export const AccountMenu: FC<{ accountId: string }> = ({ accountId }) => {
       intl,
       relationship,
       dispatch,
+      history,
     });
-  }, [account, signedIn, isMe, permissions, intl, relationship, dispatch]);
+  }, [account, signedIn, isMe, permissions, intl, relationship, dispatch, history]);
   return (
     <Dropdown
       disabled={menuItems.length === 0}
@@ -93,6 +98,7 @@ interface MenuItemsParams {
   intl: ReturnType<typeof useIntl>;
   relationship?: Relationship;
   dispatch: AppDispatch;
+  history: ReturnType<typeof useHistory>;
 }
 
 const messages = defineMessages({
@@ -239,6 +245,7 @@ function getMenuItems({
   intl,
   relationship,
   dispatch,
+  history,
 }: MenuItemsParams): MenuItem[] {
   const items: MenuItem[] = [];
   const isRemote = account.acct !== account.username;
@@ -291,7 +298,20 @@ function getMenuItems({
       {
         text: intl.formatMessage(redesignMessages.direct),
         action: () => {
-          dispatch(directCompose(account));
+          const isLocal = account.acct === account.username;
+          if (isLocal) {
+            void (
+              dispatch(
+                createChatRoom({ account_ids: [account.id] }),
+              ) as unknown as Promise<{ id: string; uuid: string }>
+            ).then((data) => {
+              history.push(`/conversations/${data.uuid}`);
+            }).catch(() => {
+              dispatch(directCompose(account));
+            });
+          } else {
+            dispatch(directCompose(account));
+          }
         },
       },
       null,

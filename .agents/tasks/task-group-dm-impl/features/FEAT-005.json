@@ -1,0 +1,36 @@
+{
+  "id": "FEAT-005",
+  "type": "feat",
+  "description": "Implement the complete frontend DM UI components: 2-panel layout, chat room list with items, message view with bubble messages, message compose area, chat room header, and basic styling following the design document.",
+  "status": "in_progress",
+  "steps": [
+    "Create app/javascript/mastodon/features/dm/index.tsx: Main DM page component with 2-panel layout. Left panel (350px fixed width) shows ChatRoomList. Right panel (flex-grow) shows ChatRoomView for the active room or an empty state. On mount, dispatch fetchChatRooms() and connectDmStream(). Use route param :roomId to set active room. Handle responsive: below 768px, show only one panel at a time (list or view based on whether a room is selected).",
+    "Create app/javascript/mastodon/features/dm/components/chat_room_list.tsx: Renders the list of chat rooms from Redux store. Includes ChatRoomListHeader at top. Maps over chatRooms.items to render ChatRoomItem for each. Implements infinite scroll (load more when reaching bottom, using hasMore flag). Shows loading spinner when isLoading.",
+    "Create app/javascript/mastodon/features/dm/components/chat_room_list_header.tsx: Header with title 'Messages', a search input (placeholder for now), and a 'new message' icon button that will trigger new chat room modal.",
+    "Create app/javascript/mastodon/features/dm/components/chat_room_item.tsx: Individual chat room list item. Shows avatar (single for 1:1, grouped for group), room name (participant name for 1:1, title or participant names for group), last message preview (content_plain truncated), timestamp (relative), and unread indicator (blue dot). Clicking navigates to /conversations/:roomId. Active room has highlighted background.",
+    "Create app/javascript/mastodon/features/dm/components/chat_room_view.tsx: Container for the message view when a room is selected. Includes ChatRoomHeader at top, MessageList in the middle (scrollable), and MessageCompose at the bottom. On mount/room change, dispatch fetchMessages(roomId) and markAsRead(roomId).",
+    "Create app/javascript/mastodon/features/dm/components/chat_room_header.tsx: Shows room info: participant avatar + name for 1:1, group title + member count for group. Includes a settings/info icon button on the right.",
+    "Create app/javascript/mastodon/features/dm/components/message_list.tsx: Renders messages chronologically. Implements reverse infinite scroll (scroll up to load older messages). Auto-scrolls to bottom on new messages if already at bottom. Groups consecutive messages from same sender (smaller gaps, hide repeated avatar). Shows date separators between different days.",
+    "Create app/javascript/mastodon/features/dm/components/message_item.tsx: Individual message bubble. Own messages: right-aligned, blue background (#1d9bf0), white text, border-radius 18px 18px 4px 18px. Other messages: left-aligned with avatar, gray background, default text color, border-radius 18px 18px 18px 4px. Shows sender name (in group chats only for others), message content (rendered HTML), timestamp, and attachments if any.",
+    "Create app/javascript/mastodon/features/dm/components/message_compose.tsx: Bottom input area. Contains a textarea (auto-expands, max 150px height), emoji button placeholder, attach button placeholder, and send button (active only when text is non-empty). Enter sends message (calls sendMessage action), Shift+Enter adds newline. Clear input after successful send.",
+    "Create app/javascript/mastodon/features/dm/components/empty_state.tsx: Shows when no room is selected (desktop) or when no rooms exist. Displays icon + message + optional 'Start a conversation' button.",
+    "Create app/javascript/mastodon/features/dm/components/date_separator.tsx: Simple horizontal line with centered date text (e.g., 'January 15, 2025').",
+    "Create app/javascript/styles/mastodon/dm.scss: Styles for all DM components following the design doc colors and typography. Include dark/light mode support using CSS variables. Key classes: .dm-page, .dm-panel-left, .dm-panel-right, .dm-chat-room-list, .dm-chat-room-item, .dm-message-list, .dm-message-bubble--own, .dm-message-bubble--other, .dm-message-compose, .dm-empty-state, .dm-date-separator. Import this file in the main stylesheet (app/javascript/styles/mastodon.scss or appropriate entry point)."
+  ],
+  "acceptance_criteria": [
+    "DM page renders 2-panel layout at desktop widths",
+    "Chat room list displays rooms with avatars, names, previews, timestamps, and unread indicators",
+    "Message view shows chronological messages with proper bubble styling (own=right/blue, other=left/gray)",
+    "Message compose area allows typing and sending with Enter key",
+    "Components properly connect to Redux store and dispatch actions",
+    "Responsive behavior switches to single-panel below 768px",
+    "SCSS file provides proper dark/light mode styling"
+  ],
+  "verification": [
+    "Verify all new .tsx files are syntactically valid TypeScript/JSX",
+    "Verify the SCSS file compiles without errors",
+    "Grep for import statements to confirm components are properly wired together"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

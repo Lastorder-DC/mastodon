@@ -34,6 +34,10 @@ export function DirectTimeline() {
   return import('../../direct_timeline');
 }
 
+export function DirectMessages() {
+  return import('../../dm');
+}
+
 export function ListTimeline () {
   return import('../../list_timeline');
 }

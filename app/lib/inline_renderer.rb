@@ -16,6 +16,8 @@ class InlineRenderer
       serializer = REST::NotificationSerializer
     when :conversation
       serializer = REST::ConversationSerializer
+    when :dm_message
+      serializer = REST::DmMessageSerializer
     when :announcement
       serializer = REST::AnnouncementSerializer
     when :reaction

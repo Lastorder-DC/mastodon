@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-004",
+  "type": "fix",
+  "description": "Address review issues: fix N+1 read_receipts query, fix BigInt comparison for Snowflake IDs, remove dead EmptyState component, add staleness guard on read endpoint.",
+  "status": "completed",
+  "steps": [
+    "1. Fix N+1 in read_receipts serializer method: filter in Ruby on preloaded data instead of issuing SQL query.",
+    "2. Fix BigInt comparison in message_list.tsx for Snowflake IDs, add pending guard.",
+    "3. Remove dead empty_state.tsx component and its i18n keys and CSS.",
+    "4. Add staleness guard in chat_rooms_controller.rb read action to skip broadcast if last_read unchanged."
+  ],
+  "acceptance_criteria": [
+    "Serializer filters read_receipts in Ruby using select on preloaded association",
+    "message_list.tsx uses BigInt comparison and !message.pending guard",
+    "empty_state.tsx file is deleted",
+    "dm.empty_state.* keys removed from en.json and ko.json",
+    ".dm-empty-state CSS removed from dm.scss",
+    "read action only broadcasts when last_read_message_id actually changes",
+    "TypeScript compiles without errors"
+  ],
+  "verification": [
+    "npx tsc --noEmit --project tsconfig.json 2>&1 | head -50",
+    "test ! -f app/javascript/mastodon/features/dm/components/empty_state.tsx && echo 'empty_state.tsx removed'",
+    "grep -n 'BigInt' app/javascript/mastodon/features/dm/components/message_list.tsx",
+    "grep -n 'select.*left_at' app/serializers/rest/dm_chat_room_serializer.rb",
+    "grep -n 'previous_last_read' app/controllers/api/v1/dm/chat_rooms_controller.rb"
+  ],
+  "blocked_reason": null,
+  "findings": "All four review issues addressed. TypeScript compiles cleanly. No pre-existing test failures."
+}

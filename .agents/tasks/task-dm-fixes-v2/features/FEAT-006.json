@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-006",
+  "type": "fix",
+  "description": "Fix issues identified in semantic review: UUID migration race condition, duplicated set_chat_room logic, i18n TODO for notification, and add-member bug that omits current user filtering.",
+  "status": "completed",
+  "steps": [
+    "Rewrite db/migrate/20260602000006_add_uuid_to_dm_chat_rooms.rb to fix unique-index race condition",
+    "Create app/controllers/concerns/dm_chat_room_finder.rb concern to DRY up set_chat_room",
+    "Update all three DM controllers to use the concern",
+    "Add i18n TODO comment in streaming_dm.ts",
+    "Fix room_settings_modal.tsx to filter out current user in add-member flow"
+  ],
+  "acceptance_criteria": [
+    "Migration adds column as nullable, backfills, then adds NOT NULL and unique index",
+    "All three controllers use DmChatRoomFinder concern instead of duplicated set_chat_room",
+    "streaming_dm.ts has TODO comment about i18n limitation",
+    "room_settings_modal.tsx filters out current user from participant_ids when creating group room"
+  ],
+  "verification": [
+    "Run: ruby -c db/migrate/20260602000006_add_uuid_to_dm_chat_rooms.rb",
+    "Run: ruby -c app/controllers/concerns/dm_chat_room_finder.rb",
+    "Run: ruby -c app/controllers/api/v1/dm/chat_rooms_controller.rb",
+    "Run: ruby -c app/controllers/api/v1/dm/chat_room_messages_controller.rb",
+    "Run: ruby -c app/controllers/api/v1/dm/chat_room_members_controller.rb",
+    "Run: npx tsc --noEmit --project /projects/sandbox/mastodon/tsconfig.json 2>&1 | head -50"
+  ],
+  "blocked_reason": null,
+  "findings": "All Ruby syntax checks and TypeScript compilation pass cleanly. Migration rewritten to add column as nullable, backfill UUIDs, then add NOT NULL and unique index. DmChatRoomFinder concern extracts duplicated set_chat_room logic. Room settings modal now filters current user from participant_ids to avoid duplicate membership."
+}

@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Implement backend service classes (CreateDmChatRoomService, SendDmMessageService, NotifyDmService), serializers (REST::DmChatRoomSerializer, REST::DmMessageSerializer), API routes, and all controllers for the DM system under /api/v1/dm/ namespace.",
+  "status": "in_progress",
+  "steps": [
+    "Create app/services/create_dm_chat_room_service.rb following the spec: #call(owner, account_ids:, title: '') method. Logic: determine room_type from account_ids count (1=direct, 2+=group). For direct rooms, find existing room with same participants and return it if found. Validate no blocks between owner and participants (check Block table). Create DmChatRoom record. Create DmChatRoomAccount for owner (accepted: true, joined_at: Time.current). Create DmChatRoomAccounts for each participant (accepted: auto_accept for direct, false for group). Return the chat room.",
+    "Create app/services/send_dm_message_service.rb following the spec: #call(account, chat_room, content:, media_ids: [], in_reply_to_id: nil, language: nil). Logic: verify membership (active dm_chat_room_account exists for account). Create DmMessage with processed content (HTML escape + basic formatting). Set content_plain by stripping HTML tags. Attach media if media_ids present (find MediaAttachment by ids belonging to account, create DmMessageAttachment records). Return the message. Note: the model callbacks handle updating room timestamp, marking others unread, and pushing to streaming.",
+    "Create app/services/notify_dm_service.rb: #call(recipient, dm_message). Logic: return if recipient is the sender. Return if blocking relationship exists. For now, just handle web push notification logic placeholder (can be expanded later). Call Web::PushDmNotificationWorker.perform_async if recipient has push subscriptions.",
+    "Create app/serializers/rest/dm_chat_room_serializer.rb: attributes :id, :room_type, :title, :last_message_at, :unread, :created_at. has_one :owner (serializer: REST::AccountSerializer, key: :owner). Define participants method returning active accounts. Define last_message method returning most recent visible message. Define unread method checking current user's membership. ID fields returned as strings.",
+    "Create app/serializers/rest/dm_message_serializer.rb: attributes :id, :dm_chat_room_id, :content, :content_plain, :in_reply_to_id, :created_at, :language. has_one :account (serializer: REST::AccountSerializer). Define media_attachments method. All IDs as strings.",
+    "Add routes to config/routes/api.rb inside the 'namespace :v1 do' block. Add: namespace :dm do; resources :chat_rooms, only: [:index, :show, :create, :update, :destroy] do; member do; post :read; end; resources :messages, only: [:index, :create, :destroy], controller: 'chat_room_messages'; resources :members, only: [:create, :destroy], controller: 'chat_room_members' do; collection do; post :accept; end; end; end; get :unread_count, to: 'unread#count'; end",
+    "Create app/controllers/api/v1/dm/chat_rooms_controller.rb: Inherit from Api::BaseController. before_action doorkeeper_authorize! :read, :'read:dm' for index/show. before_action doorkeeper_authorize! :write, :'write:dm' for create/update/destroy/read. before_action :require_user!. Implement index (paginated list of active rooms for current_account, ordered by last_message_at desc, with Link headers), show, create (delegate to CreateDmChatRoomService), update (owner only, update title), destroy (set left_at on membership), read (set unread=false, update last_read_message_id).",
+    "Create app/controllers/api/v1/dm/chat_room_messages_controller.rb: Inherit from Api::BaseController. Authorize with read:dm for index, write:dm for create/destroy. Implement index (paginated messages for room, visible only, reverse chronological with Link headers), create (delegate to SendDmMessageService), destroy (soft delete - set hidden=true, only if message belongs to current user).",
+    "Create app/controllers/api/v1/dm/chat_room_members_controller.rb: Inherit from Api::BaseController. Authorize write:dm. Implement create (add members to group room, owner only), destroy (remove member, owner only), accept (current user accepts invitation, sets accepted=true).",
+    "Create app/controllers/api/v1/dm/unread_controller.rb: Inherit from Api::BaseController. Authorize read:dm. Implement count action returning JSON {count: N} where N is the number of active rooms with unread=true for current_account."
+  ],
+  "acceptance_criteria": [
+    "CreateDmChatRoomService correctly handles 1:1 deduplication and block validation",
+    "SendDmMessageService creates messages and handles media attachments",
+    "All 4 controllers exist with proper authorization and CRUD actions",
+    "Routes are properly nested under /api/v1/dm/ namespace",
+    "Serializers return IDs as strings and include proper associations",
+    "Pagination uses Link headers following the existing Mastodon pattern (to_a_paginated_by_id or similar)"
+  ],
+  "verification": [
+    "Run `ruby -c` on all new Ruby files to check syntax",
+    "Run `bundle exec rails routes | grep dm` to verify routes are registered (if rails is available)",
+    "Verify route structure matches the spec's API design"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

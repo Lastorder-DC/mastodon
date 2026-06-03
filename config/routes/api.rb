@@ -346,6 +346,18 @@ namespace :api, format: false do
         end
       end
     end
+
+    namespace :dm do
+      resources :chat_rooms, only: [:index, :show, :create, :update, :destroy] do
+        member do
+          post :read
+          post :accept, to: 'chat_room_members#accept'
+        end
+        resources :messages, only: [:index, :create, :destroy], controller: 'chat_room_messages'
+        resources :members, only: [:create, :destroy], controller: 'chat_room_members'
+      end
+      get :unread_count, to: 'unread#count'
+    end
   end
 
   namespace :v2 do

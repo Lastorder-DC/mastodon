@@ -7,6 +7,7 @@ import { Provider as ReduxProvider } from 'react-redux';
 
 import { hydrateStore } from 'mastodon/actions/store';
 import { connectUserStream } from 'mastodon/actions/streaming';
+import { connectDmStream } from 'mastodon/actions/streaming_dm';
 import ErrorBoundary from 'mastodon/components/error_boundary';
 import { Router } from 'mastodon/components/router';
 import UI from 'mastodon/features/ui';
@@ -31,6 +32,9 @@ export default class Mastodon extends PureComponent {
   componentDidMount() {
     if (this.identity.signedIn) {
       this.disconnect = store.dispatch(connectUserStream());
+      console.log('[DM Stream] Connecting DM stream...');
+      this.disconnectDm = store.dispatch(connectDmStream());
+      console.log('[DM Stream] connectDmStream dispatched, disconnect fn:', typeof this.disconnectDm);
     }
   }
 
@@ -38,6 +42,10 @@ export default class Mastodon extends PureComponent {
     if (this.disconnect) {
       this.disconnect();
       this.disconnect = null;
+    }
+    if (this.disconnectDm) {
+      this.disconnectDm();
+      this.disconnectDm = null;
     }
   }
 

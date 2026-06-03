@@ -446,6 +446,8 @@ const startServer = async () => {
       return 'hashtag:local';
     case '/api/v1/streaming/direct':
       return 'direct';
+    case '/api/v1/streaming/dm':
+      return 'dm';
     case '/api/v1/streaming/list':
       return 'list';
     default:
@@ -474,6 +476,9 @@ const startServer = async () => {
     // as well, this is handled separately.
     if (channelName === 'user:notification') {
       requiredScopes.push('read:notifications');
+    } else if (channelName === 'dm') {
+      requiredScopes.push('read:dm');
+      requiredScopes.push('read');
     } else {
       requiredScopes.push('read:statuses');
     }
@@ -1123,6 +1128,13 @@ const startServer = async () => {
     case 'direct':
       resolve({
         channelIds: [`timeline:direct:${req.accountId}`],
+        options: { needsFiltering: false },
+      });
+
+      break;
+    case 'dm':
+      resolve({
+        channelIds: [`timeline:dm:${req.accountId}`],
         options: { needsFiltering: false },
       });
 
