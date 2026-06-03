@@ -53,6 +53,7 @@ import {
   COMPOSE_CHANGE_MEDIA_ORDER,
   COMPOSE_SET_STATUS,
   COMPOSE_FOCUS,
+  COMPOSE_OCCM_GROUP_CHANGE,
 } from '../actions/compose';
 import { REDRAFT } from '../actions/statuses';
 import { STORE_HYDRATE } from '../actions/store';
@@ -98,6 +99,9 @@ const initialState = ImmutableMap({
   quote_policy: 'public',
   default_quote_policy: 'public', // Set in hydration.
   fetching_link: null,
+
+  // OCCM Groups
+  occm_group_id: null,
 });
 
 const initialPoll = ImmutableMap({
@@ -135,6 +139,7 @@ function clearAll(state) {
     map.set('quoted_status_id', null);
     map.set('quote_policy', state.get('default_quote_policy'));
     map.set('isDragDisabled', false);
+    map.set('occm_group_id', null);
   });
 }
 
@@ -426,6 +431,7 @@ export const composeReducer = (state = initialState, action) => {
       map.set('preselectDate', new Date());
       map.set('idempotencyKey', uuid());
       map.set('quoted_status_id', null);
+      map.set('occm_group_id', action.occmGroupId !== undefined ? action.occmGroupId : state.get('occm_group_id'));
 
       map.update('media_attachments', list => list.filter(media => media.get('unattached')));
 
@@ -622,6 +628,8 @@ export const composeReducer = (state = initialState, action) => {
 
       return list.splice(indexA, 1).splice(indexB, 0, moveItem);
     });
+  case COMPOSE_OCCM_GROUP_CHANGE:
+    return state.set('occm_group_id', action.groupId).set('idempotencyKey', uuid());
   default:
     return state;
   }

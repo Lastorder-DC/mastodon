@@ -9,6 +9,7 @@ import { Helmet } from '@unhead/react/helmet';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import PeopleIcon from '@/material-icons/400-24px/group.svg?react';
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
+import { changeComposeOccmGroup } from 'mastodon/actions/compose';
 import { fetchOccmGroup, joinOccmGroup } from 'mastodon/actions/occm_groups';
 import { connectOccmGroupStream } from 'mastodon/actions/streaming';
 import { expandOccmGroupTimeline } from 'mastodon/actions/timelines';
@@ -19,8 +20,6 @@ import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import BundleColumnError from 'mastodon/features/ui/components/bundle_column_error';
 import StatusListContainer from 'mastodon/features/ui/containers/status_list_container';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
-
-import { OccmGroupCompose } from './components/occm_group_compose';
 
 const OccmGroupTimeline: React.FC<{
   multiColumn?: boolean;
@@ -59,6 +58,15 @@ const OccmGroupTimeline: React.FC<{
 
     return () => {
       disconnect?.();
+    };
+  }, [dispatch, id, isMember]);
+
+  useEffect(() => {
+    if (isMember) {
+      dispatch(changeComposeOccmGroup(id));
+    }
+    return () => {
+      dispatch(changeComposeOccmGroup(null));
     };
   }, [dispatch, id, isMember]);
 
@@ -178,8 +186,6 @@ const OccmGroupTimeline: React.FC<{
           </section>
         </div>
       </ColumnHeader>
-
-      <OccmGroupCompose groupId={id} />
 
       <StatusListContainer
         trackScroll

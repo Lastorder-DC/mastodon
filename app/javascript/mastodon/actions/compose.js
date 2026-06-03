@@ -81,6 +81,8 @@ export const COMPOSE_CHANGE_MEDIA_ORDER       = 'COMPOSE_CHANGE_MEDIA_ORDER';
 export const COMPOSE_SET_STATUS = 'COMPOSE_SET_STATUS';
 export const COMPOSE_FOCUS = 'COMPOSE_FOCUS';
 
+export const COMPOSE_OCCM_GROUP_CHANGE = 'COMPOSE_OCCM_GROUP_CHANGE';
+
 const messages = defineMessages({
   uploadErrorLimit: { id: 'upload_error.limit', defaultMessage: 'File upload limit exceeded.' },
   uploadErrorPoll:  { id: 'upload_error.poll', defaultMessage: 'File upload not allowed with polls.' },
@@ -234,10 +236,24 @@ export function submitCompose(successCallback) {
     }
 
     const visibility = getState().getIn(['compose', 'privacy']);
-    api().request({
-      url: statusId === null ? '/api/v1/statuses' : `/api/v1/statuses/${statusId}`,
-      method: statusId === null ? 'post' : 'put',
-      data: {
+    const occmGroupId = getState().getIn(['compose', 'occm_group_id']);
+    const isGroupPost = occmGroupId && statusId === null;
+
+    let apiUrl;
+    let data;
+
+    if (isGroupPost) {
+      apiUrl = `/api/v1/occm_groups/${occmGroupId}/statuses`;
+      data = {
+        status,
+        spoiler_text,
+        in_reply_to_id: getState().getIn(['compose', 'in_reply_to'], null),
+        media_ids: media.map(item => item.get('id')),
+        sensitive: getState().getIn(['compose', 'sensitive']),
+      };
+    } else {
+      apiUrl = statusId === null ? '/api/v1/statuses' : `/api/v1/statuses/${statusId}`;
+      data = {
         status,
         spoiler_text,
         in_reply_to_id: getState().getIn(['compose', 'in_reply_to'], null),
@@ -249,7 +265,13 @@ export function submitCompose(successCallback) {
         language: getState().getIn(['compose', 'language']),
         quoted_status_id: getState().getIn(['compose', 'quoted_status_id']),
         quote_approval_policy: visibility === 'private' || visibility === 'direct' ? 'nobody' : getState().getIn(['compose', 'quote_policy']),
-      },
+      };
+    }
+
+    api().request({
+      url: apiUrl,
+      method: statusId === null ? 'post' : 'put',
+      data,
       headers: {
         'Idempotency-Key': getState().getIn(['compose', 'idempotencyKey']),
       },
@@ -286,6 +308,10 @@ export function submitCompose(successCallback) {
         insertIfOnline('community');
         insertIfOnline('public');
         insertIfOnline(`account:${response.data.account.id}`);
+      }
+
+      if (occmGroupId) {
+        insertIfOnline(`occm_group:${occmGroupId}`);
       }
 
       dispatch(showAlert({
@@ -868,4 +894,9 @@ export const changeMediaOrder = (a, b) => ({
   type: COMPOSE_CHANGE_MEDIA_ORDER,
   a,
   b,
+});
+
+export const changeComposeOccmGroup = (groupId) => ({
+  type: COMPOSE_OCCM_GROUP_CHANGE,
+  groupId,
 });
