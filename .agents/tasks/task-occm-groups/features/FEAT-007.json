@@ -1,0 +1,39 @@
+{
+  "id": "FEAT-007",
+  "type": "chore",
+  "description": "Phase 12: RSpec tests for models, services, and request specs for all API endpoints. Comprehensive test coverage for the OCCM Groups feature.",
+  "status": "in_progress",
+  "steps": [
+    "Create spec/models/occm_group_spec.rb - test validations (title presence, title max length 100, description max length 500, group limit of 50), test associations, test Paginable inclusion",
+    "Create spec/models/occm_group_membership_spec.rb - test enum values (role: admin/moderator/user, state: pending/active/rejected), test uniqueness constraint, test scopes (active, pending, admins, moderators, with_moderation_role)",
+    "Create spec/models/occm_group_status_spec.rb - test associations, test uniqueness constraint on status_id scoped to occm_group_id",
+    "Create spec/models/occm_group_report_spec.rb - test enum values (category), test comment length validation, test scopes (unresolved, resolved)",
+    "Create spec/services/create_occm_group_service_spec.rb - test successful creation with admin membership, test group limit enforcement, test transaction rollback on failure",
+    "Create spec/services/join_occm_group_service_spec.rb - test join with approval_required (pending membership created, notifications sent to mods), test join without approval (active membership, counter incremented), test already_member error, test already_pending error",
+    "Create spec/services/approve_occm_group_member_service_spec.rb - test state change from pending to active, test member_count increment, test notification to requester",
+    "Create spec/services/reject_occm_group_member_service_spec.rb - test state change to rejected, test notification to requester",
+    "Create spec/services/remove_occm_group_member_service_spec.rb - test successful removal, test member_count decrement, test admin_cannot_leave error, test self-removal for non-admin",
+    "Create spec/services/transfer_occm_group_admin_service_spec.rb - test successful transfer (roles swap, account_id updated), test error if target not active member",
+    "Create spec/services/post_to_occm_group_service_spec.rb - test successful post creation (limited visibility, local_only, OccmGroupStatus created), test non-member rejection",
+    "Create spec/requests/api/v1/occm_groups_spec.rb - test index (returns user's groups), show, create, update (admin only), destroy (admin only), transfer (admin only). Test auth (missing token, wrong scope). Test 404 for non-existent groups",
+    "Create spec/requests/api/v1/occm_groups/members_spec.rb - test index (active members), pending (mod only), create (join), approve (mod only), reject (mod only), destroy (self-leave and admin-remove). Test pagination Link headers",
+    "Create spec/requests/api/v1/occm_groups/statuses_spec.rb - test create (post to group, requires active membership), destroy (admin/mod only)",
+    "Create spec/requests/api/v1/occm_groups/timelines_spec.rb - test show (paginated statuses, requires active membership, returns 404 for non-members), test pagination params (max_id, since_id, limit)",
+    "Create spec/requests/api/v1/occm_groups/reports_spec.rb - test index (mod only, pagination, resolved filter), create (active member), resolve (mod only with action param)"
+  ],
+  "acceptance_criteria": [
+    "All model specs pass: bundle exec rspec spec/models/occm_group*",
+    "All service specs pass: bundle exec rspec spec/services/*occm*",
+    "All request specs pass: bundle exec rspec spec/requests/api/v1/occm_groups*",
+    "Tests cover happy paths, error cases, and authorization failures",
+    "Fabricators produce valid test objects",
+    "No flaky tests (deterministic assertions)"
+  ],
+  "verification": [
+    "Run: bundle exec rspec spec/models/occm_group_spec.rb spec/models/occm_group_membership_spec.rb spec/models/occm_group_status_spec.rb spec/models/occm_group_report_spec.rb",
+    "Run: bundle exec rspec spec/services/create_occm_group_service_spec.rb spec/services/join_occm_group_service_spec.rb",
+    "Run: bundle exec rspec spec/requests/api/v1/occm_groups_spec.rb"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
