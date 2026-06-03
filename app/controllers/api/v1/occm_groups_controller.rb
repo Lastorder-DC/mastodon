@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Api::V1::OccmGroupsController < Api::BaseController
+  include Authorization
+
   before_action -> { doorkeeper_authorize! :read, :'read:occm_groups' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:occm_groups' }, except: [:index, :show]
 

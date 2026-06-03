@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Api::V1::OccmGroups::ModeratorsController < Api::BaseController
+  include Authorization
+
   before_action -> { doorkeeper_authorize! :write, :'write:occm_groups' }
 
   before_action :require_user!
