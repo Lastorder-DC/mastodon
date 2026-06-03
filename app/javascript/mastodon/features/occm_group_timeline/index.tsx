@@ -74,7 +74,9 @@ const OccmGroupTimeline: React.FC<{
   );
 
   const handleJoin = useCallback(() => {
-    void dispatch(joinOccmGroup(id));
+    void dispatch(joinOccmGroup(id)).then(() => {
+      void dispatch(fetchOccmGroup(id));
+    });
   }, [dispatch, id]);
 
   const title = group ? (group.get('title') as string) : id;
@@ -114,7 +116,12 @@ const OccmGroupTimeline: React.FC<{
                 />
               </p>
             ) : (
-              <button type='button' className='button' onClick={handleJoin}>
+              <button
+                type='button'
+                className='button'
+                onClick={handleJoin}
+                style={{ marginTop: '20px' }}
+              >
                 <FormattedMessage
                   id='occm_groups.join'
                   defaultMessage='Join group'
