@@ -1,0 +1,136 @@
+import type React from 'react';
+import { useCallback } from 'react';
+
+import { defineMessages, useIntl } from 'react-intl';
+
+import type { DmChatRoomParticipant, DmMessage } from 'mastodon/reducers/dm';
+
+const messages = defineMessages({
+  retry: { id: 'dm.message_item.retry', defaultMessage: 'Failed to send. Tap to retry' },
+  read_status: { id: 'dm.message_item.read', defaultMessage: 'Read' },
+});
+
+interface MessageItemProps {
+  message: DmMessage;
+  isOwn: boolean;
+  isRead?: boolean;
+  showAvatar: boolean;
+  showName: boolean;
+  onRetry?: (message: DmMessage) => void;
+  account?: DmChatRoomParticipant;
+}
+
+export const MessageItem: React.FC<MessageItemProps> = ({
+  message,
+  isOwn,
+  isRead,
+  showAvatar,
+  showName,
+  onRetry,
+  account,
+}) => {
+  const intl = useIntl();
+  const time = new Date(message.created_at).toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const classNames = [
+    'dm-message-item',
+    isOwn ? 'dm-message-item--own' : 'dm-message-item--other',
+    !showAvatar ? 'dm-message-item--consecutive' : '',
+    message.pending ? 'dm-message-item--pending' : '',
+    message.failed ? 'dm-message-item--failed' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className={classNames}>
+      {!isOwn && (
+        <div className='dm-message-item__avatar'>
+          {showAvatar && (
+            account?.avatar_static ? (
+              <img
+                className='dm-message-item__avatar-img'
+                src={account.avatar_static}
+                alt=''
+                width='24'
+                height='24'
+              />
+            ) : (
+              <div className='dm-message-item__avatar-placeholder' />
+            )
+          )}
+        </div>
+      )}
+      <div className='dm-message-item__bubble-wrapper'>
+        {showName && !isOwn && (
+          <span className='dm-message-item__sender-name'>
+            {account?.display_name || account?.username || message.account_id}
+          </span>
+        )}
+        {/* Safety: message.content is HTML-escaped server-side in
+            SendDmMessageService#process_content via ERB::Util.html_escape
+            before being wrapped in a <p> tag. Only safe HTML is stored.
+            Optimistic messages are also HTML-escaped client-side in the
+            reducer before being set as content. */}
+        <div
+          className={`dm-message-bubble ${isOwn ? 'dm-message-bubble--own' : 'dm-message-bubble--other'}`}
+        >
+          {message.attachments && message.attachments.length > 0 && (
+            <div className='dm-message-bubble__attachments'>
+              {(message.attachments as Array<{ id: string; preview_url?: string; url?: string; type?: string }>).map((attachment) => (
+                <img
+                  key={attachment.id}
+                  className='dm-message-bubble__attachment-img'
+                  src={attachment.preview_url || attachment.url}
+                  alt=''
+                />
+              ))}
+            </div>
+          )}
+          {message.content && (
+            <div dangerouslySetInnerHTML={{ __html: message.content }} />
+          )}
+        </div>
+        <span className='dm-message-item__time'>{time}</span>
+        {isOwn && isRead && (
+          <span className='dm-message-item__read-status'>
+            {intl.formatMessage(messages.read_status)}
+          </span>
+        )}
+        {message.failed && (
+          <FailedMessageRetry message={message} onRetry={onRetry} />
+        )}
+      </div>
+    </div>
+  );
+};
+
+interface FailedMessageRetryProps {
+  message: DmMessage;
+  onRetry?: (message: DmMessage) => void;
+}
+
+const FailedMessageRetry: React.FC<FailedMessageRetryProps> = ({
+  message,
+  onRetry,
+}) => {
+  const intl = useIntl();
+  const handleClick = useCallback(() => {
+    if (onRetry) {
+      onRetry(message);
+    }
+  }, [onRetry, message]);
+
+  return (
+    <button
+      type='button'
+      className='dm-message-item__retry'
+      onClick={handleClick}
+    >
+      {intl.formatMessage(messages.retry)}
+    </button>
+  );
+};

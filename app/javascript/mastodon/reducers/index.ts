@@ -11,6 +11,7 @@ import announcements from './announcements';
 import { composeReducer } from './compose';
 import { contextsReducer } from './contexts';
 import conversations from './conversations';
+import dm from './dm';
 import { dropdownMenuReducer } from './dropdown_menu';
 import filters from './filters';
 import height_cache from './height_cache';
@@ -72,6 +73,7 @@ const reducers = {
   followedTags: followedTagsReducer,
   filters,
   conversations,
+  dm,
   suggestions: suggestionsReducer,
   polls: pollsReducer,
   trends,
