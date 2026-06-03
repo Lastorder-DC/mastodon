@@ -24,6 +24,7 @@ import type {
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
+import type { IconProp } from 'mastodon/components/icon';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import ScrollableList from 'mastodon/components/scrollable_list';
 import { me } from 'mastodon/initial_state';
@@ -241,6 +242,21 @@ const AccountLine: React.FC<{
   </div>
 );
 
+const GroupSectionLink: React.FC<{
+  to: string;
+  icon?: IconProp;
+  title: React.ReactNode;
+  meta?: React.ReactNode;
+}> = ({ to, icon, title, meta }) => (
+  <div className='lists__item'>
+    <Link to={to} className='lists__item__title'>
+      {icon && <Icon id='groups' icon={icon} />}
+      <span>{title}</span>
+    </Link>
+    {meta && <span>{meta}</span>}
+  </div>
+);
+
 const PlainButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({
   children,
   ...props
@@ -258,13 +274,80 @@ const SecondaryButton: React.FC<
   </button>
 );
 
+const JoinByTokenScreen: React.FC<{ multiColumn?: boolean }> = ({
+  multiColumn,
+}) => {
+  const intl = useIntl();
+  const history = useHistory();
+  const [token, setToken] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState<string>();
+
+  const handleJoinByToken = useCallback(async () => {
+    setError(undefined);
+
+    try {
+      await api().post('/api/v1/groups/join_by_token', { token, message });
+      history.push('/groups');
+    } catch (err) {
+      setError(errorText(err) ?? intl.formatMessage(messages.loadFailed));
+    }
+  }, [history, intl, message, token]);
+
+  return (
+    <Column
+      bindToDocument={!multiColumn}
+      label={intl.formatMessage(messages.joinByToken)}
+    >
+      <ColumnHeader
+        title={intl.formatMessage(messages.joinByToken)}
+        icon='person-add'
+        iconComponent={PersonAddIcon}
+        multiColumn={multiColumn}
+        showBackButton
+      />
+
+      <div className='follow_requests-unlocked_explanation'>
+        {error && <p className='warning-hint'>{error}</p>}
+
+        <h3>{intl.formatMessage(messages.joinByToken)}</h3>
+        <input
+          className='setting-text'
+          value={token}
+          onChange={(e) => {
+            setToken(e.currentTarget.value);
+          }}
+          placeholder={intl.formatMessage(messages.shareToken)}
+        />
+        <textarea
+          className='setting-text light'
+          value={message}
+          onChange={(e) => {
+            setMessage(e.currentTarget.value);
+          }}
+          placeholder={intl.formatMessage(messages.joinMessage)}
+        />
+        <p>
+          <PlainButton onClick={handleJoinByToken} disabled={!token.trim()}>
+            <Icon id='person-add' icon={PersonAddIcon} />{' '}
+            {intl.formatMessage(messages.join)}
+          </PlainButton>
+        </p>
+      </div>
+
+      <Helmet>
+        <title>{intl.formatMessage(messages.joinByToken)}</title>
+        <meta name='robots' content='noindex' />
+      </Helmet>
+    </Column>
+  );
+};
+
 const GroupsList: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const [groups, setGroups] = useState<ApiCommunityGroupJSON[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
-  const [token, setToken] = useState('');
-  const [message, setMessage] = useState('');
 
   const loadGroups = useCallback(async () => {
     setLoading(true);
@@ -285,13 +368,6 @@ const GroupsList: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     void loadGroups();
   }, [loadGroups]);
 
-  const handleJoinByToken = useCallback(async () => {
-    await api().post('/api/v1/groups/join_by_token', { token, message });
-    setToken('');
-    setMessage('');
-    await loadGroups();
-  }, [loadGroups, message, token]);
-
   return (
     <Column
       bindToDocument={!multiColumn}
@@ -303,14 +379,24 @@ const GroupsList: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         iconComponent={GroupsIcon}
         multiColumn={multiColumn}
         extraButton={
-          <Link
-            to='/groups/new'
-            className='column-header__button'
-            title={intl.formatMessage(messages.createGroup)}
-            aria-label={intl.formatMessage(messages.createGroup)}
-          >
-            <Icon id='plus' icon={AddIcon} />
-          </Link>
+          <>
+            <Link
+              to='/groups/join'
+              className='column-header__button'
+              title={intl.formatMessage(messages.joinByToken)}
+              aria-label={intl.formatMessage(messages.joinByToken)}
+            >
+              <Icon id='person-add' icon={PersonAddIcon} />
+            </Link>
+            <Link
+              to='/groups/new'
+              className='column-header__button'
+              title={intl.formatMessage(messages.createGroup)}
+              aria-label={intl.formatMessage(messages.createGroup)}
+            >
+              <Icon id='plus' icon={AddIcon} />
+            </Link>
+          </>
         }
       />
 
@@ -319,51 +405,31 @@ const GroupsList: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         bindToDocument={!multiColumn}
         isLoading={loading}
         showLoading={loading}
-        emptyMessage={
-          <FormattedMessage
-            id='community_groups.empty'
-            defaultMessage='No groups yet. Create one or join with a share token.'
-          />
-        }
         alwaysPrepend
         prepend={
-          <div className='follow_requests-unlocked_explanation'>
-            {error && <p className='warning-hint'>{error}</p>}
-
-            <h3>
-              <FormattedMessage
-                id='community_groups.join_by_token'
-                defaultMessage='Join by share token'
-              />
-            </h3>
-            <input
-              className='setting-text'
-              value={token}
-              onChange={(e) => {
-                setToken(e.currentTarget.value);
-              }}
-              placeholder={intl.formatMessage(messages.shareToken)}
+          <>
+            {error && (
+              <div className='follow_requests-unlocked_explanation'>
+                <p className='warning-hint'>{error}</p>
+              </div>
+            )}
+            <GroupSectionLink
+              to='/groups/join'
+              icon={PersonAddIcon}
+              title={intl.formatMessage(messages.joinByToken)}
+              meta={intl.formatMessage(messages.join)}
             />
-            <input
-              className='setting-text'
-              value={message}
-              onChange={(e) => {
-                setMessage(e.currentTarget.value);
-              }}
-              placeholder={intl.formatMessage(messages.joinMessage)}
-            />
-            <p>
-              <SecondaryButton
-                onClick={handleJoinByToken}
-                disabled={!token.trim()}
-              >
-                <Icon id='person-add' icon={PersonAddIcon} />{' '}
-                {intl.formatMessage(messages.join)}
-              </SecondaryButton>
-            </p>
-          </div>
+          </>
         }
       >
+        {!loading && groups.length === 0 && (
+          <div className='follow_requests-unlocked_explanation'>
+            <FormattedMessage
+              id='community_groups.empty'
+              defaultMessage='No groups yet. Create one or join with a share token.'
+            />
+          </div>
+        )}
         {groups.map((group) => (
           <div className='lists__item' key={group.id}>
             <Link to={`/groups/${group.id}`} className='lists__item__title'>
@@ -385,10 +451,11 @@ const GroupsList: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 };
 
-const GroupsDetail: React.FC<{ id: string; multiColumn?: boolean }> = ({
-  id,
-  multiColumn,
-}) => {
+const GroupsDetail: React.FC<{
+  id: string;
+  section?: string;
+  multiColumn?: boolean;
+}> = ({ id, section = 'overview', multiColumn }) => {
   const intl = useIntl();
   const history = useHistory();
   const [group, setGroup] = useState<ApiCommunityGroupJSON>();
@@ -658,13 +725,12 @@ const GroupsDetail: React.FC<{ id: string; multiColumn?: boolean }> = ({
     return <LoadingIndicator />;
   }
 
+  const groupBasePath = `/groups/${id}`;
+  const title = group?.display_name ?? intl.formatMessage(messages.heading);
   return (
-    <Column
-      bindToDocument={!multiColumn}
-      label={group?.display_name ?? intl.formatMessage(messages.heading)}
-    >
+    <Column bindToDocument={!multiColumn} label={title}>
       <ColumnHeader
-        title={group?.display_name ?? intl.formatMessage(messages.heading)}
+        title={title}
         icon='groups'
         iconComponent={GroupsIcon}
         multiColumn={multiColumn}
@@ -672,7 +738,7 @@ const GroupsDetail: React.FC<{ id: string; multiColumn?: boolean }> = ({
       />
 
       <ScrollableList
-        scrollKey={`community_group_${id}`}
+        scrollKey={`community_group_${id}_${section}`}
         bindToDocument={!multiColumn}
         isLoading={loading}
         prepend={
@@ -680,33 +746,136 @@ const GroupsDetail: React.FC<{ id: string; multiColumn?: boolean }> = ({
             {error && <p className='warning-hint'>{error}</p>}
             {group && <p>{group.note}</p>}
 
-            <h3>
-              <FormattedMessage
-                id='community_groups.post'
-                defaultMessage='Post to group'
-              />
-            </h3>
-            <textarea
-              className='setting-text light'
-              value={postText}
-              onChange={(e) => {
-                setPostText(e.currentTarget.value);
-              }}
-              placeholder={intl.formatMessage(messages.postPlaceholder)}
+            {section !== 'overview' && (
+              <p>
+                <Link to={groupBasePath} className='button button-secondary'>
+                  {intl.formatMessage(messages.heading)}
+                </Link>
+              </p>
+            )}
+          </div>
+        }
+      >
+        {section === 'overview' && (
+          <>
+            <GroupSectionLink
+              to={`${groupBasePath}/timeline`}
+              icon={AddIcon}
+              title={intl.formatMessage(messages.timeline)}
+              meta={statuses.length}
             />
-            <p>
-              <PlainButton onClick={handlePost} disabled={!postText.trim()}>
-                <Icon id='plus' icon={AddIcon} />{' '}
-                {intl.formatMessage(messages.post)}
-              </PlainButton>
-            </p>
+            <GroupSectionLink
+              to={`${groupBasePath}/members`}
+              icon={GroupsIcon}
+              title={intl.formatMessage(messages.members)}
+              meta={memberships.length}
+            />
+            <GroupSectionLink
+              to={`${groupBasePath}/settings`}
+              icon={GroupsIcon}
+              title={intl.formatMessage(messages.groupSettings)}
+            />
+            {isManager && (
+              <>
+                <GroupSectionLink
+                  to={`${groupBasePath}/requests`}
+                  icon={PersonAddIcon}
+                  title={intl.formatMessage(messages.requests)}
+                  meta={requests.length}
+                />
+                <GroupSectionLink
+                  to={`${groupBasePath}/invitations`}
+                  icon={PersonAddIcon}
+                  title={intl.formatMessage(messages.invitations)}
+                  meta={invitations.length}
+                />
+                <GroupSectionLink
+                  to={`${groupBasePath}/bans`}
+                  icon={BlockIcon}
+                  title={intl.formatMessage(messages.bans)}
+                  meta={blocks.length}
+                />
+                <GroupSectionLink
+                  to={`${groupBasePath}/reports`}
+                  icon={ReportIcon}
+                  title={intl.formatMessage(messages.reports)}
+                  meta={reports.length}
+                />
+              </>
+            )}
+          </>
+        )}
 
-            <h3>
-              <FormattedMessage
-                id='community_groups.group_settings'
-                defaultMessage='Group settings'
+        {section === 'timeline' && (
+          <>
+            <section className='follow_requests-unlocked_explanation'>
+              <h3>{intl.formatMessage(messages.post)}</h3>
+              <textarea
+                className='setting-text light'
+                value={postText}
+                onChange={(e) => {
+                  setPostText(e.currentTarget.value);
+                }}
+                placeholder={intl.formatMessage(messages.postPlaceholder)}
               />
-            </h3>
+              <p>
+                <PlainButton onClick={handlePost} disabled={!postText.trim()}>
+                  <Icon id='plus' icon={AddIcon} />{' '}
+                  {intl.formatMessage(messages.post)}
+                </PlainButton>
+              </p>
+            </section>
+
+            {statuses.map((status) => (
+              <article key={status.id} className='notification__message'>
+                <AccountLine
+                  account={status.account}
+                  meta={status.approval_status}
+                />
+                <div
+                  className='status__content'
+                  dangerouslySetInnerHTML={{ __html: status.content ?? '' }}
+                />
+                <textarea
+                  className='setting-text light'
+                  value={reportReasonByStatus[status.id] ?? ''}
+                  onChange={(e) => {
+                    setReportReasonByStatus((current) => ({
+                      ...current,
+                      [status.id]: e.currentTarget.value,
+                    }));
+                  }}
+                  placeholder={intl.formatMessage(messages.reportReason)}
+                />
+                <p>
+                  <SecondaryButton
+                    onClick={() => {
+                      void handleReportStatus(status);
+                    }}
+                    disabled={!reportReasonByStatus[status.id]?.trim()}
+                  >
+                    <Icon id='report' icon={ReportIcon} />{' '}
+                    {intl.formatMessage(messages.report)}
+                  </SecondaryButton>
+                  {isManager && (
+                    <SecondaryButton
+                      onClick={() => {
+                        void handleDeleteStatus(status.id);
+                      }}
+                    >
+                      <Icon id='delete' icon={DeleteIcon} />{' '}
+                      {intl.formatMessage(messages.deleteStatus)}
+                    </SecondaryButton>
+                  )}
+                </p>
+              </article>
+            ))}
+          </>
+        )}
+
+        {section === 'settings' && (
+          <section className='follow_requests-unlocked_explanation'>
+            <h3>{intl.formatMessage(messages.groupSettings)}</h3>
             {isAdmin ? (
               <>
                 <input
@@ -770,18 +939,8 @@ const GroupsDetail: React.FC<{ id: string; multiColumn?: boolean }> = ({
 
             {isManager && (
               <>
-                <h3>
-                  <FormattedMessage
-                    id='community_groups.management'
-                    defaultMessage='Management'
-                  />
-                </h3>
-                <p>
-                  <FormattedMessage
-                    id='community_groups.manager_hint'
-                    defaultMessage='Admins and moderators can manage members, invitations, join requests, bans, reports, and group posts here.'
-                  />
-                </p>
+                <h3>{intl.formatMessage(messages.management)}</h3>
+                <p>{intl.formatMessage(messages.managerHint)}</p>
 
                 {shareTokenValue && (
                   <input
@@ -798,50 +957,6 @@ const GroupsDetail: React.FC<{ id: string; multiColumn?: boolean }> = ({
                     </SecondaryButton>
                   </p>
                 )}
-
-                <input
-                  className='setting-text'
-                  value={inviteAccountId}
-                  onChange={(e) => {
-                    setInviteAccountId(e.currentTarget.value);
-                  }}
-                  placeholder={intl.formatMessage(messages.inviteAccount)}
-                />
-                <p>
-                  <SecondaryButton
-                    onClick={handleInvite}
-                    disabled={!inviteAccountId.trim()}
-                  >
-                    <Icon id='person-add' icon={PersonAddIcon} />{' '}
-                    {intl.formatMessage(messages.invite)}
-                  </SecondaryButton>
-                </p>
-
-                <input
-                  className='setting-text'
-                  value={banAccountId}
-                  onChange={(e) => {
-                    setBanAccountId(e.currentTarget.value);
-                  }}
-                  placeholder={intl.formatMessage(messages.banAccount)}
-                />
-                <input
-                  className='setting-text'
-                  value={banReason}
-                  onChange={(e) => {
-                    setBanReason(e.currentTarget.value);
-                  }}
-                  placeholder={intl.formatMessage(messages.reason)}
-                />
-                <p>
-                  <SecondaryButton
-                    onClick={handleBan}
-                    disabled={!banAccountId.trim()}
-                  >
-                    <Icon id='block' icon={BlockIcon} />{' '}
-                    {intl.formatMessage(messages.ban)}
-                  </SecondaryButton>
-                </p>
 
                 {isAdmin && (
                   <>
@@ -865,218 +980,214 @@ const GroupsDetail: React.FC<{ id: string; multiColumn?: boolean }> = ({
                 )}
               </>
             )}
-          </div>
-        }
-      >
-        <section className='follow_requests-unlocked_explanation'>
-          <h3>{intl.formatMessage(messages.timeline)}</h3>
-          {statuses.map((status) => (
-            <article key={status.id} className='notification__message'>
+          </section>
+        )}
+
+        {section === 'members' && (
+          <section className='follow_requests-unlocked_explanation'>
+            <h3>{intl.formatMessage(messages.members)}</h3>
+            {memberships.map((membership) => (
               <AccountLine
-                account={status.account}
-                meta={status.approval_status}
+                key={membership.id}
+                account={membership.account}
+                meta={
+                  <>
+                    <span>{membership.role}</span>
+                    {isAdmin && membership.role === 'member' && (
+                      <SecondaryButton
+                        onClick={() => {
+                          void handleMembershipRole(membership, 'moderator');
+                        }}
+                      >
+                        {intl.formatMessage(messages.makeModerator)}
+                      </SecondaryButton>
+                    )}
+                    {isAdmin && membership.role === 'moderator' && (
+                      <SecondaryButton
+                        onClick={() => {
+                          void handleMembershipRole(membership, 'member');
+                        }}
+                      >
+                        {intl.formatMessage(messages.makeMember)}
+                      </SecondaryButton>
+                    )}
+                    {isManager && membership.role !== 'admin' && (
+                      <SecondaryButton
+                        onClick={() => {
+                          void handleRemoveMembership(membership);
+                        }}
+                      >
+                        {intl.formatMessage(messages.remove)}
+                      </SecondaryButton>
+                    )}
+                  </>
+                }
               />
-              <div
-                className='status__content'
-                dangerouslySetInnerHTML={{ __html: status.content ?? '' }}
+            ))}
+          </section>
+        )}
+
+        {isManager && section === 'requests' && (
+          <section className='follow_requests-unlocked_explanation'>
+            <h3>{intl.formatMessage(messages.requests)}</h3>
+            {requests.map((request) => (
+              <AccountLine
+                key={request.id}
+                account={request.account}
+                meta={
+                  <>
+                    <span>{request.message}</span>
+                    <SecondaryButton
+                      onClick={() => {
+                        void handleJoinRequest(request.id, 'authorize');
+                      }}
+                    >
+                      <Icon id='check' icon={CheckIcon} />{' '}
+                      {intl.formatMessage(messages.approve)}
+                    </SecondaryButton>
+                    <SecondaryButton
+                      onClick={() => {
+                        void handleJoinRequest(request.id, 'reject');
+                      }}
+                    >
+                      <Icon id='close' icon={CloseIcon} />{' '}
+                      {intl.formatMessage(messages.reject)}
+                    </SecondaryButton>
+                  </>
+                }
               />
-              <textarea
-                className='setting-text light'
-                value={reportReasonByStatus[status.id] ?? ''}
-                onChange={(e) => {
-                  setReportReasonByStatus((current) => ({
-                    ...current,
-                    [status.id]: e.currentTarget.value,
-                  }));
-                }}
-                placeholder={intl.formatMessage(messages.reportReason)}
+            ))}
+          </section>
+        )}
+
+        {isManager && section === 'invitations' && (
+          <section className='follow_requests-unlocked_explanation'>
+            <h3>{intl.formatMessage(messages.invitations)}</h3>
+            <input
+              className='setting-text'
+              value={inviteAccountId}
+              onChange={(e) => {
+                setInviteAccountId(e.currentTarget.value);
+              }}
+              placeholder={intl.formatMessage(messages.inviteAccount)}
+            />
+            <p>
+              <SecondaryButton
+                onClick={handleInvite}
+                disabled={!inviteAccountId.trim()}
+              >
+                <Icon id='person-add' icon={PersonAddIcon} />{' '}
+                {intl.formatMessage(messages.invite)}
+              </SecondaryButton>
+            </p>
+            {invitations.map((invitation) => (
+              <AccountLine
+                key={invitation.id}
+                account={invitation.account}
+                meta={invitation.status}
               />
-              <p>
+            ))}
+          </section>
+        )}
+
+        {isManager && section === 'bans' && (
+          <section className='follow_requests-unlocked_explanation'>
+            <h3>{intl.formatMessage(messages.bans)}</h3>
+            <input
+              className='setting-text'
+              value={banAccountId}
+              onChange={(e) => {
+                setBanAccountId(e.currentTarget.value);
+              }}
+              placeholder={intl.formatMessage(messages.banAccount)}
+            />
+            <input
+              className='setting-text'
+              value={banReason}
+              onChange={(e) => {
+                setBanReason(e.currentTarget.value);
+              }}
+              placeholder={intl.formatMessage(messages.reason)}
+            />
+            <p>
+              <SecondaryButton
+                onClick={handleBan}
+                disabled={!banAccountId.trim()}
+              >
+                <Icon id='block' icon={BlockIcon} />{' '}
+                {intl.formatMessage(messages.ban)}
+              </SecondaryButton>
+            </p>
+            {blocks.map((block) => (
+              <AccountLine
+                key={block.id}
+                account={block.account}
+                meta={
+                  <SecondaryButton
+                    onClick={() => {
+                      void handleUnban(block.account.id);
+                    }}
+                  >
+                    {intl.formatMessage(messages.remove)}
+                  </SecondaryButton>
+                }
+              />
+            ))}
+          </section>
+        )}
+
+        {isManager && section === 'reports' && (
+          <section className='follow_requests-unlocked_explanation'>
+            <h3>{intl.formatMessage(messages.reports)}</h3>
+            <p>{intl.formatMessage(messages.manualReportHint)}</p>
+            {reports.map((report) => (
+              <div key={report.id} className='notification__message'>
+                <AccountLine
+                  account={report.account}
+                  meta={
+                    report.action_taken
+                      ? intl.formatMessage(messages.resolve)
+                      : intl.formatMessage(messages.reopen)
+                  }
+                />
+                <p>{report.comment}</p>
+                <p>
+                  @{report.target_account.acct} · #
+                  {report.status_ids.join(', #')}
+                </p>
                 <SecondaryButton
                   onClick={() => {
-                    void handleReportStatus(status);
+                    void handleReportResolution(report);
                   }}
-                  disabled={!reportReasonByStatus[status.id]?.trim()}
                 >
-                  <Icon id='report' icon={ReportIcon} />{' '}
-                  {intl.formatMessage(messages.report)}
+                  {report.action_taken
+                    ? intl.formatMessage(messages.reopen)
+                    : intl.formatMessage(messages.resolve)}
                 </SecondaryButton>
-                {isManager && (
-                  <SecondaryButton
-                    onClick={() => {
-                      void handleDeleteStatus(status.id);
-                    }}
-                  >
-                    <Icon id='delete' icon={DeleteIcon} />{' '}
-                    {intl.formatMessage(messages.deleteStatus)}
-                  </SecondaryButton>
-                )}
-              </p>
-            </article>
-          ))}
-        </section>
-
-        <section className='follow_requests-unlocked_explanation'>
-          <h3>{intl.formatMessage(messages.members)}</h3>
-          {memberships.map((membership) => (
-            <AccountLine
-              key={membership.id}
-              account={membership.account}
-              meta={
-                <>
-                  <span>{membership.role}</span>
-                  {isAdmin && membership.role === 'member' && (
-                    <SecondaryButton
-                      onClick={() => {
-                        void handleMembershipRole(membership, 'moderator');
-                      }}
-                    >
-                      {intl.formatMessage(messages.makeModerator)}
-                    </SecondaryButton>
-                  )}
-                  {isAdmin && membership.role === 'moderator' && (
-                    <SecondaryButton
-                      onClick={() => {
-                        void handleMembershipRole(membership, 'member');
-                      }}
-                    >
-                      {intl.formatMessage(messages.makeMember)}
-                    </SecondaryButton>
-                  )}
-                  {isManager && membership.role !== 'admin' && (
-                    <SecondaryButton
-                      onClick={() => {
-                        void handleRemoveMembership(membership);
-                      }}
-                    >
-                      {intl.formatMessage(messages.remove)}
-                    </SecondaryButton>
-                  )}
-                </>
-              }
-            />
-          ))}
-        </section>
-
-        {isManager && (
-          <>
-            <section className='follow_requests-unlocked_explanation'>
-              <h3>{intl.formatMessage(messages.requests)}</h3>
-              {requests.map((request) => (
-                <AccountLine
-                  key={request.id}
-                  account={request.account}
-                  meta={
-                    <>
-                      <span>{request.message}</span>
-                      <SecondaryButton
-                        onClick={() => {
-                          void handleJoinRequest(request.id, 'authorize');
-                        }}
-                      >
-                        <Icon id='check' icon={CheckIcon} />{' '}
-                        {intl.formatMessage(messages.approve)}
-                      </SecondaryButton>
-                      <SecondaryButton
-                        onClick={() => {
-                          void handleJoinRequest(request.id, 'reject');
-                        }}
-                      >
-                        <Icon id='close' icon={CloseIcon} />{' '}
-                        {intl.formatMessage(messages.reject)}
-                      </SecondaryButton>
-                    </>
-                  }
-                />
-              ))}
-            </section>
-
-            <section className='follow_requests-unlocked_explanation'>
-              <h3>{intl.formatMessage(messages.invitations)}</h3>
-              {invitations.map((invitation) => (
-                <AccountLine
-                  key={invitation.id}
-                  account={invitation.account}
-                  meta={invitation.status}
-                />
-              ))}
-            </section>
-
-            <section className='follow_requests-unlocked_explanation'>
-              <h3>{intl.formatMessage(messages.bans)}</h3>
-              {blocks.map((block) => (
-                <AccountLine
-                  key={block.id}
-                  account={block.account}
-                  meta={
-                    <SecondaryButton
-                      onClick={() => {
-                        void handleUnban(block.account.id);
-                      }}
-                    >
-                      {intl.formatMessage(messages.remove)}
-                    </SecondaryButton>
-                  }
-                />
-              ))}
-            </section>
-
-            <section className='follow_requests-unlocked_explanation'>
-              <h3>{intl.formatMessage(messages.reports)}</h3>
-              <p>
-                <FormattedMessage
-                  id='community_groups.manual_report_hint'
-                  defaultMessage='Group reports currently support only a manually entered reason.'
-                />
-              </p>
-              {reports.map((report) => (
-                <div key={report.id} className='notification__message'>
-                  <AccountLine
-                    account={report.account}
-                    meta={
-                      report.action_taken
-                        ? intl.formatMessage(messages.resolve)
-                        : intl.formatMessage(messages.reopen)
-                    }
-                  />
-                  <p>{report.comment}</p>
-                  <p>
-                    @{report.target_account.acct} · #
-                    {report.status_ids.join(', #')}
-                  </p>
-                  <SecondaryButton
-                    onClick={() => {
-                      void handleReportResolution(report);
-                    }}
-                  >
-                    {report.action_taken
-                      ? intl.formatMessage(messages.reopen)
-                      : intl.formatMessage(messages.resolve)}
-                  </SecondaryButton>
-                </div>
-              ))}
-            </section>
-          </>
+              </div>
+            ))}
+          </section>
         )}
       </ScrollableList>
 
       <Helmet>
-        <title>
-          {group?.display_name ?? intl.formatMessage(messages.heading)}
-        </title>
+        <title>{title}</title>
         <meta name='robots' content='noindex' />
       </Helmet>
     </Column>
   );
 };
-
 const CommunityGroups: React.FC<{ multiColumn?: boolean }> = ({
   multiColumn,
 }) => {
-  const { id } = useParams<{ id?: string }>();
+  const { id, section } = useParams<{ id?: string; section?: string }>();
+
+  if (id === 'join') {
+    return <JoinByTokenScreen multiColumn={multiColumn} />;
+  }
 
   if (id) {
-    return <GroupsDetail id={id} multiColumn={multiColumn} />;
+    return <GroupsDetail id={id} section={section} multiColumn={multiColumn} />;
   }
 
   return <GroupsList multiColumn={multiColumn} />;
