@@ -1,0 +1,35 @@
+{
+  "id": "FEAT-001",
+  "type": "docs",
+  "description": "Create the technical design document (docs/occm_groups_design.md) and the implementation task breakdown document (docs/occm_groups_tasks.md) based on the existing spec and migration plan. The design document explains the architecture, data flows, design decisions, component interactions, security, performance, error handling, and testing strategy. The task document breaks implementation into ordered phases with granular tasks, dependencies, complexity estimates, and acceptance criteria.",
+  "status": "in_progress",
+  "steps": [
+    "Read docs/occm_groups_spec.md fully to understand the complete feature specification including DB schema, API endpoints, permissions, notifications, streaming, frontend architecture, and i18n",
+    "Read docs/occm_groups_migration_plan.md fully to understand migration/rollback considerations",
+    "Study the existing codebase patterns by examining: app/controllers/api/v1/lists_controller.rb (controller pattern), app/models/list.rb (model pattern), app/services/add_accounts_to_list_service.rb (service pattern), app/serializers/rest/list_serializer.rb (serializer pattern), app/policies/ (Pundit policy pattern), app/models/notification.rb (notification registration pattern), streaming/index.js (streaming channel registration), config/initializers/doorkeeper.rb (OAuth scope registration), config/routes/api.rb (route registration), app/javascript/mastodon/features/lists/ (frontend feature pattern), app/javascript/mastodon/api/lists.ts (frontend API pattern), app/javascript/mastodon/actions/streaming.js (streaming connection pattern)",
+    "Create docs/occm_groups_design.md with sections: 1) System Architecture Overview (how OCCM Groups integrates into Mastodon architecture), 2) Data Flow Diagrams (text/ASCII for post creation, join flow, streaming, notifications), 3) Key Design Decisions and Rationale (why limited visibility, why occm_ prefix, why separate report system, why local-only, why junction table), 4) Component Interaction (backend services/controllers/models, frontend state/streaming), 5) Security Considerations (membership enforcement, visibility checks, authorization), 6) Performance Considerations (counter caches, N+1 prevention, streaming vs polling, pagination), 7) Error Handling Strategy (validation errors, authorization failures, race conditions), 8) Testing Strategy (model specs, request specs, service specs, frontend tests)",
+    "Create docs/occm_groups_tasks.md with implementation phases: Phase 1 (Database & Models), Phase 2 (Services & Business Logic), Phase 3 (API Controllers & Serializers), Phase 4 (OAuth Scopes & Routes), Phase 5 (Notifications), Phase 6 (Streaming), Phase 7 (Frontend State & API), Phase 8 (Frontend UI Components), Phase 9 (i18n), Phase 10 (Testing & Integration). Each task should have: description, specific file paths to create/modify, dependencies on other tasks, complexity estimate (S/M/L/XL), and acceptance criteria",
+    "Ensure the design document references actual file paths and patterns from the Mastodon codebase",
+    "Ensure the task document is practical enough that a developer can pick up any task and implement it without needing to ask many questions",
+    "Both documents must reference the i18n requirement (en and ko) and the occm_ prefix convention"
+  ],
+  "acceptance_criteria": [
+    "docs/occm_groups_design.md exists and contains all 8 major sections specified",
+    "docs/occm_groups_tasks.md exists and contains ordered implementation phases with granular tasks",
+    "Design document explains WHY specific choices were made (limited visibility, occm_ prefix, separate report system, junction table approach)",
+    "Design document includes text/ASCII data flow diagrams",
+    "Task document includes complexity estimates (S/M/L/XL) for each task",
+    "Task document includes dependencies between tasks",
+    "Task document includes acceptance criteria for each task",
+    "Both documents reference actual Mastodon codebase file paths and patterns",
+    "Both documents address i18n in both en and ko",
+    "Neither existing spec document (occm_groups_spec.md, occm_groups_migration_plan.md) is modified"
+  ],
+  "verification": [
+    "Verify docs/occm_groups_design.md exists and is non-empty",
+    "Verify docs/occm_groups_tasks.md exists and is non-empty",
+    "Verify docs/occm_groups_spec.md and docs/occm_groups_migration_plan.md are unmodified (git status shows no changes to these files)"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
