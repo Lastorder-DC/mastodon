@@ -166,7 +166,7 @@ This document breaks the OCCM Groups feature into ordered implementation phases 
 - `app/services/approve_occm_group_member_service.rb`
 - `app/services/reject_occm_group_member_service.rb`
 
-**Dependencies**: Task 1.2, Task 3.8 (NotifyOccmGroupService -- can be stubbed initially)
+**Dependencies**: Task 1.2, Task 3.8a (NotifyOccmGroupService -- can be stubbed initially)
 
 **Complexity**: M (medium, 1-3 hours)
 
@@ -276,12 +276,11 @@ This document breaks the OCCM Groups feature into ordered implementation phases 
 
 ---
 
-### Task 3.8: OccmGroupCounterReconciliationWorker & NotifyOccmGroupService
+### Task 3.8a: NotifyOccmGroupService
 
-**Description**: Background worker for counter cache reconciliation and the notification dispatch service.
+**Description**: Service that creates OCCM group notification records and publishes them to Redis for streaming delivery. This is a critical dependency for multiple other services (JoinOccmGroupService, ApproveOccmGroupMemberService, etc.) and must render notifications via InlineRenderer before publishing the rendered payload to Redis.
 
 **Files to create**:
-- `app/workers/occm_group_counter_reconciliation_worker.rb`
 - `app/services/notify_occm_group_service.rb`
 
 **Dependencies**: Task 1.2
@@ -289,11 +288,85 @@ This document breaks the OCCM Groups feature into ordered implementation phases 
 **Complexity**: M (medium, 1-3 hours)
 
 **Acceptance criteria**:
-- [ ] Worker processes groups in batches of 200 via `find_each`
-- [ ] Compares `member_count` to actual `occm_group_memberships.active.count`
-- [ ] Uses `update_column` for efficiency (no callbacks/validations)
-- [ ] Worker configured: `queue: 'scheduler'`, `retry: 0`
-- [ ] `NotifyOccmGroupService`: Creates `Notification` record with correct type and activity; publishes to Redis notification channel
+- [ ] Creates `Notification` record with correct type and activity polymorphic association
+- [ ] Renders the notification via `InlineRenderer.render(notification, recipient, :notification)`
+- [ ] Publishes rendered payload to Redis channel `timeline:{recipient_account_id}` with event type `:notification`
+- [ ] Handles all 4 notification types: `occm_group_join_request`, `occm_group_join_approved`, `occm_group_join_rejected`, `occm_group_post_deleted`
+- [ ] Follows `BaseService` pattern (inherits from `BaseService`, defines `call` method)
+- [ ] Does not send notification if recipient has muted the notification type
+- [ ] Triggers `WebPushNotificationWorker` for push notification delivery (if recipient has web push configured)
+
+---
+
+### Task 3.8b: OccmGroupCounterReconciliationWorker
+
+**Description**: Background Sidekiq worker that periodically reconciles the `member_count` counter cache on `occm_groups` by comparing it to the actual count of active memberships. This corrects drift caused by race conditions, cascading deletes, or missed decrements.
+
+**Files to create**:
+- `app/workers/occm_group_counter_reconciliation_worker.rb`
+
+**Dependencies**: Task 1.2
+
+**Complexity**: S (small, < 1 hour)
+
+**Acceptance criteria**:
+- [ ] Processes groups in batches of 200 via `find_each`
+- [ ] Compares `member_count` to actual `occm_group_memberships.where(state: :active).count`
+- [ ] Uses `update_column` for efficiency (no callbacks/validations) only when count differs
+- [ ] Configured with `queue: 'scheduler'`, `retry: 0`
+- [ ] Idempotent (safe to run multiple times)
+- [ ] Does not lock rows (read-only check, single column update)
+
+---
+
+### Task 3.9: Home Feed and Timeline Exclusion of Group Posts
+
+**Description**: Modify existing home-feed/timeline code paths to exclude group posts from appearing outside the dedicated group timeline. Group posts (statuses with an `occm_group_statuses` record) must be filtered out of the home feed fanout, account timeline API responses, and search indexing. This references spec Section 11.2.1 query scopes.
+
+**Files to modify**:
+- `app/services/fan_out_on_write_service.rb` -- skip group posts during home feed fanout (check for `occm_group_statuses` association)
+- `app/models/concerns/status/threading_concern.rb` -- exclude group posts from conversation threads visible to non-members
+- `app/controllers/api/v1/accounts/statuses_controller.rb` -- exclude group posts from account timeline API unless the viewer is a group member
+- `app/models/status.rb` or `app/models/concerns/status/occm_group_visibility.rb` -- add scope `excluding_occm_group_posts` for use in timeline queries
+- `app/services/search_service.rb` (or equivalent search indexing) -- ensure group posts are not indexed for public search
+
+**Dependencies**: Task 1.2 (OccmGroupStatus model and `Status::OccmGroupVisibility` concern must exist)
+
+**Complexity**: L (large, 3-8 hours)
+
+**Note**: These changes touch some of the most performance-sensitive queries in Mastodon (home feed fanout in particular). The exclusion filter must use an efficient anti-join or `NOT EXISTS` subquery against `occm_group_statuses` rather than loading records into memory. Careful benchmarking is recommended.
+
+**Acceptance criteria**:
+- [ ] Group posts do not appear in any member's home timeline feed
+- [ ] Group posts do not appear in account timeline API responses for viewers who are not members of the group
+- [ ] Group posts are not included in search index results
+- [ ] The `excluding_occm_group_posts` scope uses an efficient SQL pattern (NOT EXISTS subquery or LEFT JOIN IS NULL)
+- [ ] `FanOutOnWriteService` skips fanout to home feeds for statuses that have an `occm_group_statuses` record
+- [ ] Existing home feed performance is not degraded for non-group statuses (filter is efficient/indexed)
+- [ ] Group posts still appear in the dedicated group timeline endpoint
+
+---
+
+### Task 3.10: Status Visibility Integration (StatusPolicy, StatusFilter)
+
+**Description**: Integrate the `Status::OccmGroupVisibility` concern into existing status access check code paths so that group posts are properly gated. Task 1.2 creates the concern, but this task wires it into the actual enforcement points: `StatusPolicy`, `StatusFilter`, and any other code paths that determine whether a given account can see a specific status.
+
+**Files to modify**:
+- `app/policies/status_policy.rb` -- add group membership check for statuses with `limited` visibility that have an `occm_group_statuses` record
+- `app/models/concerns/status_thread_finder.rb` -- exclude group posts from thread context for non-members
+- `app/lib/status_filter.rb` (or equivalent) -- integrate `visible_to_occm_group_member?` check
+- `app/controllers/api/v1/statuses_controller.rb` -- ensure `GET /api/v1/statuses/:id` returns 404 for non-members viewing a group post
+
+**Dependencies**: Task 1.2, Task 3.9
+
+**Complexity**: M (medium, 1-3 hours)
+
+**Acceptance criteria**:
+- [ ] `StatusPolicy#show?` returns false for group posts when the viewer is not an active member of the group
+- [ ] `GET /api/v1/statuses/:id` returns 404 (not 403) for group posts viewed by non-members
+- [ ] Group posts do not leak through context/thread endpoints for non-members
+- [ ] `StatusFilter` (or equivalent) correctly filters group posts in bulk status lookups
+- [ ] Existing status visibility checks continue to work correctly for non-group statuses (no regression)
 
 ---
 
@@ -509,7 +582,7 @@ This document breaks the OCCM Groups feature into ordered implementation phases 
 
 ### Task 6.2: NotifyOccmGroupService Integration
 
-**Description**: Ensure `NotifyOccmGroupService` (Task 3.8) is properly integrated with all services that dispatch notifications.
+**Description**: Ensure `NotifyOccmGroupService` (Task 3.8a) is properly integrated with all services that dispatch notifications.
 
 **Files to modify**:
 - `app/services/join_occm_group_service.rb` -- dispatch join_request notification
@@ -517,7 +590,7 @@ This document breaks the OCCM Groups feature into ordered implementation phases 
 - `app/services/reject_occm_group_member_service.rb` -- dispatch join_rejected notification
 - `app/services/delete_occm_group_status_service.rb` -- dispatch post_deleted notification
 
-**Dependencies**: Task 3.2, Task 3.6, Task 3.8, Task 6.1
+**Dependencies**: Task 3.2, Task 3.6, Task 3.8a, Task 6.1
 
 **Complexity**: S (small, < 1 hour)
 
@@ -559,14 +632,18 @@ This document breaks the OCCM Groups feature into ordered implementation phases 
 
 **Dependencies**: Task 1.1 (needs DB tables for authorization query)
 
-**Complexity**: M (medium, 1-3 hours)
+**Complexity**: L (large, 3-8 hours)
+
+**Note on cross-runtime complexity**: This task operates in the Node.js streaming server, which does not use ActiveRecord. Membership authorization requires writing a raw PostgreSQL query via the `pg` library, managing connection pooling (the streaming server maintains its own pg pool), handling error cases (group does not exist, membership expired, database connection timeout), and integrating with the existing channel multiplexer pattern. There is also limited existing test infrastructure for the streaming server, so manual integration testing against a running Rails backend + Redis is required. The cross-runtime context switch (Ruby/Rails conventions vs. Node.js/pg conventions) adds additional overhead.
 
 **Acceptance criteria**:
 - [ ] Client can subscribe to channel `occm_group` with param `group={id}`
-- [ ] Server verifies account has active membership in the specified group before subscribing
+- [ ] Server verifies account has active membership in the specified group before subscribing via raw PG query
+- [ ] PG connection pool is used correctly (acquire/release) with proper error handling
 - [ ] Unauthorized subscriptions are rejected (401)
 - [ ] Authorized subscriptions receive Redis events from `timeline:occm_group:{id}`
 - [ ] Events relayed: `update` (new post), `delete` (post removed)
+- [ ] `revoke` events are intercepted and used to force-unsubscribe removed members (see design doc Section 6.4.1)
 
 ---
 
@@ -829,6 +906,34 @@ This document breaks the OCCM Groups feature into ordered implementation phases 
 
 ---
 
+### Task 10.7: Frontend Notification Rendering for OCCM Group Types
+
+**Description**: Add rendering components for the 4 new OCCM group notification types (`occm_group_join_request`, `occm_group_join_approved`, `occm_group_join_rejected`, `occm_group_post_deleted`) to the existing notification column. Each notification type needs appropriate text, icons, action buttons, and navigation behavior.
+
+**Files to create**:
+- `app/javascript/mastodon/features/notifications/components/occm_group_notification.tsx` (or extend existing notification rendering switch)
+
+**Files to modify**:
+- `app/javascript/mastodon/features/notifications/components/notification.tsx` (or equivalent) -- add cases for the 4 new notification types in the render switch
+- `app/javascript/mastodon/locales/en.json` -- add notification text keys (e.g., `notification.occm_group_join_request`, `notification.occm_group_join_approved`, etc.)
+- `app/javascript/mastodon/locales/ko.json` -- add Korean notification text keys
+
+**Dependencies**: Task 6.1 (notification types registered), Task 9.4 (reducer handles notification data), Task 10.6 (routing exists)
+
+**Complexity**: M (medium, 1-3 hours)
+
+**Acceptance criteria**:
+- [ ] `occm_group_join_request` notification renders: "{user} requested to join {group}" with approve/reject action buttons (for admin/mod)
+- [ ] `occm_group_join_approved` notification renders: "Your request to join {group} was approved" with link to group timeline
+- [ ] `occm_group_join_rejected` notification renders: "Your request to join {group} was declined"
+- [ ] `occm_group_post_deleted` notification renders: "A moderator removed your post in {group}"
+- [ ] Each notification type has an appropriate icon
+- [ ] Clicking the notification navigates to the relevant group or group timeline
+- [ ] Notification text is translated in both en and ko
+- [ ] Notification types are filterable in notification settings
+
+---
+
 ## Phase 11: Frontend i18n
 
 ### Task 11.1: Add Frontend Locale Keys
@@ -961,23 +1066,37 @@ This document breaks the OCCM Groups feature into ordered implementation phases 
 
 ```
 Phase 1 (DB & Models) ----+----> Phase 3 (Services) ----+----> Phase 5 (Controllers) ---+
+                          |        |                     |                               |
+                          |        +-- Task 3.8a --------+                               |
+                          |        |   (NotifyService)   |                               |
+                          |        +-- Task 3.8b         |                               |
+                          |        |   (Reconciliation)  |                               |
+                          |        +-- Task 3.9 ---------+                               |
+                          |        |   (Home Feed Excl)  |                               |
+                          |        +-- Task 3.10 --------+                               |
+                          |            (Visibility Integ) |                               |
                           |                              |                               |
                           +----> Phase 4 (Policies/     -+                               |
                           |      Serializers)                                            |
                           |                                                              |
 Phase 2 (Scopes/Routes) -+                                                              |
                                                                                          |
-Phase 6 (Notifications) <---- Phase 3 + Phase 1                                         |
+Phase 6 (Notifications) <---- Phase 3 (3.8a) + Phase 1                                  |
                                                                                          |
 Phase 7 (Streaming) <---- Phase 3 + Phase 1                                             |
+  Task 7.2 (L) requires raw PG queries, connection pooling,                             |
+  revoke event handling                                                                  |
                                                                                          |
 Phase 8 (Backend i18n) ---- independent, can start anytime                              |
                                                                                          |
 Phase 9 (Frontend State) ---- can start after API types defined                         |
                           |                                                              |
                           +----> Phase 10 (Frontend UI) ----+                            |
-                                                            |                            |
-Phase 11 (Frontend i18n) <---- Phase 10                     |                            |
+                          |       +-- Task 10.7             |                            |
+                          |       |   (Notification         |                            |
+                          |       |    Rendering)           |                            |
+                          |                                 |                            |
+Phase 11 (Frontend i18n) <---- Phase 10                    |                            |
                                                             v                            v
                                                     Phase 12 (Integration Testing & QA)
 ```
@@ -988,11 +1107,11 @@ Phase 11 (Frontend i18n) <---- Phase 10                     |                   
 
 | Complexity | Count | Estimated Hours |
 |-----------|-------|----------------|
-| S (< 1 hour) | 16 tasks | ~12 hours |
-| M (1-3 hours) | 16 tasks | ~32 hours |
-| L (3-8 hours) | 4 tasks | ~20 hours |
+| S (< 1 hour) | 17 tasks | ~13 hours |
+| M (1-3 hours) | 17 tasks | ~34 hours |
+| L (3-8 hours) | 6 tasks | ~33 hours |
 | XL (8+ hours) | 1 task | ~10 hours |
-| **Total** | **37 tasks** | **~74 hours** |
+| **Total** | **41 tasks** | **~90 hours** |
 
 ---
 

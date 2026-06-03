@@ -240,19 +240,28 @@ NotifyOccmGroupService
     | 1. Create Notification record in DB
     |      (account: recipient, type: :occm_group_join_approved, activity: membership)
     |
-    | 2. Publish to Redis:
-    |      Channel: "timeline:{recipient_account_id}:notifications"
-    |      Payload: { event: :notification, payload: notification_id }
+    | 2. Render notification JSON via InlineRenderer:
+    |      payload = InlineRenderer.render(notification, recipient, :notification)
+    |
+    | 3. Publish rendered payload to Redis:
+    |      Channel: "timeline:{recipient_account_id}"
+    |      Event: "notification"
+    |      Payload: rendered notification JSON string
+    |
+    | 4. Push to web push subscriptions (if configured):
+    |      WebPushNotificationWorker.perform_async(...)
     v
 Redis  ------->  Node.js Streaming Server
                        |
-                       | Relay to recipient's notification WebSocket
+                       | Relay the rendered notification payload to recipient's WebSocket
                        v
                  Recipient's Browser
                        |
                        | Redux: add notification to notifications list
                        | Display: toast / badge update
 ```
+
+**Note on delivery pattern:** The notification is rendered server-side and published as a complete JSON payload to Redis. The streaming server does not fetch the notification by ID -- it relays the pre-rendered payload directly to the WebSocket client. This matches Mastodon's existing `NotifyService` behavior where `Redis.publish("timeline:#{recipient.id}", Oj.dump(event: :notification, payload: payload))` delivers the full notification object.
 
 ---
 
@@ -382,13 +391,13 @@ Controller action
 | `JoinOccmGroupService` | OccmGroupMembership, NotifyOccmGroupService | Creates membership, notifies admin/mods (if approval required) |
 | `ApproveOccmGroupMemberService` | OccmGroupMembership, NotifyOccmGroupService | Updates state, increments counter, notifies requester |
 | `RejectOccmGroupMemberService` | OccmGroupMembership, NotifyOccmGroupService | Updates state, notifies requester |
-| `RemoveOccmGroupMemberService` | OccmGroupMembership | Validates admin-cannot-leave, decrements counter |
+| `RemoveOccmGroupMemberService` | OccmGroupMembership, Redis | Validates admin-cannot-leave, decrements counter, publishes revoke event to streaming channel |
 | `TransferOccmGroupAdminService` | OccmGroupMembership | Atomically swaps roles in transaction |
 | `PostToOccmGroupService` | PostStatusService, OccmGroupStatus, DistributeOccmGroupStatusService | Creates status, links to group, streams |
 | `DeleteOccmGroupStatusService` | OccmGroupStatus, NotifyOccmGroupService, DistributeOccmGroupStatusService | Removes post, notifies author, streams delete event |
 | `DistributeOccmGroupStatusService` | Redis, InlineRenderer | Publishes to streaming channel |
 | `ResolveOccmGroupReportService` | OccmGroupReport | Marks resolved, optionally triggers delete/remove actions |
-| `NotifyOccmGroupService` | Notification, Redis | Creates notification record, pushes to streaming |
+| `NotifyOccmGroupService` | Notification, Redis, InlineRenderer | Creates notification record, renders via InlineRenderer, publishes rendered payload to Redis |
 
 ### 5.3 Frontend State Management
 
@@ -527,6 +536,45 @@ The Node.js streaming server (`streaming/index.js`) must verify group membership
 ```
 
 This mirrors the existing `authorizeListAccess` pattern used for list timeline streams.
+
+### 6.4.1 Streaming Revocation on Member Removal
+
+Authorization at subscribe time is not sufficient for a private-group feature. If a member is removed or kicked while they have an active WebSocket subscription, they will continue receiving group events until they disconnect or reload the page. This creates a fail-open window for private content.
+
+**Mechanism: Revoke Event via Redis**
+
+When `RemoveOccmGroupMemberService` removes a member, it publishes a `revoke` event on the group streaming channel that the Node.js streaming server intercepts:
+
+```
+RemoveOccmGroupMemberService
+    |
+    | 1. Destroy OccmGroupMembership record
+    | 2. Decrement member_count
+    | 3. Publish revoke event to Redis:
+    |      Channel: "timeline:occm_group:{group_id}"
+    |      Payload: { event: "revoke", payload: { account_id: removed_account_id } }
+    v
+Redis Pub/Sub  -------->  Node.js Streaming Server
+                                |
+                                | 4. Intercept "revoke" event before relaying
+                                | 5. Look up active WebSocket sessions for this channel
+                                | 6. For matching account_id: force-unsubscribe the client
+                                |    (send a "disconnect" frame, then close the channel subscription)
+                                | 7. Do NOT relay the "revoke" event to other subscribers
+                                v
+                          Removed member's WebSocket is closed for this channel
+```
+
+**Implementation details:**
+
+- The streaming server maintains a mapping of `(channel, account_id) -> WebSocket session`. On receiving a `revoke` event, it finds the matching session and terminates the subscription.
+- The removed client receives a WebSocket close frame with a reason code indicating revoked access. The frontend handles this by removing the group from its active streams and displaying an appropriate message.
+- The `revoke` event is never forwarded to other subscribers -- it is consumed exclusively by the streaming server.
+- This approach adds minimal latency (single Redis publish) and requires no periodic polling or re-authentication cycles.
+
+**Fallback: Periodic re-authorization** (defense in depth)
+
+As a secondary safeguard, the streaming server should periodically re-verify membership for long-lived subscriptions (e.g., every 5 minutes). If membership no longer exists, the subscription is terminated. This handles edge cases where the revoke event is missed due to a transient Redis failure.
 
 ### 6.5 Prevention of Content Leaking
 

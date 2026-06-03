@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "docs",
   "description": "Create the technical design document (docs/occm_groups_design.md) and the implementation task breakdown document (docs/occm_groups_tasks.md) based on the existing spec and migration plan. The design document explains the architecture, data flows, design decisions, component interactions, security, performance, error handling, and testing strategy. The task document breaks implementation into ordered phases with granular tasks, dependencies, complexity estimates, and acceptance criteria.",
-  "status": "completed",
+  "status": "in_progress",
   "steps": [
     "Read docs/occm_groups_spec.md fully to understand the complete feature specification including DB schema, API endpoints, permissions, notifications, streaming, frontend architecture, and i18n",
     "Read docs/occm_groups_migration_plan.md fully to understand migration/rollback considerations",
