@@ -1,0 +1,7 @@
+{
+  "task_id": "task-occm-groups-spec",
+  "task_description": "Write comprehensive feature specification documents for the OCCM Groups feature in Mastodon. Includes main spec (docs/occm_groups_spec.md) and migration/rollback plan (docs/occm_groups_migration_plan.md). These are design documents grounded in actual Mastodon codebase patterns, not code implementation.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}
