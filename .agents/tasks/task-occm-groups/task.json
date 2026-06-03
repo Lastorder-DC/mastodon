@@ -1,0 +1,22 @@
+{
+  "task_id": "task-occm-groups",
+  "task_description": "Implement the OCCM Groups feature for Mastodon - private, local-only group functionality with self-moderation. Covers database schema, models, services, API controllers, streaming, frontend UI, and i18n in both English and Korean.",
+  "status": "completed",
+  "feature_order": [
+    "FEAT-001",
+    "FEAT-002",
+    "FEAT-003",
+    "FEAT-004",
+    "FEAT-005",
+    "FEAT-006",
+    "FEAT-007"
+  ],
+  "blocked_reason": null,
+  "verification": {
+    "build": "pass",
+    "tests": "skipped",
+    "test_quality": "pass",
+    "docker_build": "skipped",
+    "summary": "All Ruby files pass syntax checks (ruby -c). TypeScript compiles without errors (npx tsc --noEmit). Node.js streaming server passes syntax check (node --check). Semantic review completed (v1) and all critical issues fixed. RSpec cannot fully run due to missing libvips system dependency (pre-existing). 92 files changed, 4422 insertions across 7 features implementing all 12 phases of the OCCM Groups specification."
+  }
+}
