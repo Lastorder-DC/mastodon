@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "docs",
   "description": "Create the technical design document (docs/occm_groups_design.md) and the implementation task breakdown document (docs/occm_groups_tasks.md) based on the existing spec and migration plan. The design document explains the architecture, data flows, design decisions, component interactions, security, performance, error handling, and testing strategy. The task document breaks implementation into ordered phases with granular tasks, dependencies, complexity estimates, and acceptance criteria.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Read docs/occm_groups_spec.md fully to understand the complete feature specification including DB schema, API endpoints, permissions, notifications, streaming, frontend architecture, and i18n",
     "Read docs/occm_groups_migration_plan.md fully to understand migration/rollback considerations",
@@ -31,5 +31,5 @@
     "Verify docs/occm_groups_spec.md and docs/occm_groups_migration_plan.md are unmodified (git status shows no changes to these files)"
   ],
   "blocked_reason": null,
-  "findings": "Both documents created successfully. Design doc has 787 lines covering all 9 sections (architecture, data flows, design decisions, component interaction, security, performance, error handling, testing). Task doc has 1007 lines with 37 tasks across 12 phases, each with description, file paths, dependencies, complexity estimate, and acceptance criteria. Existing spec documents unmodified."
+  "findings": "Both documents created successfully. Design doc has 787 lines covering all 9 sections (architecture, data flows, design decisions, component interaction, security, performance, error handling, testing). Task doc has 1007 lines with 37 tasks across 12 phases, each with description, file paths, dependencies, complexity estimate, and acceptance criteria. Existing spec documents unmodified. Review feedback addressed: added streaming revocation mechanism (Section 6.4.1), fixed NotifyOccmGroupService Redis delivery pseudocode, upgraded Task 7.2 to L complexity, split Task 3.8 into 3.8a/3.8b, added Tasks 3.9 (home-feed exclusion), 3.10 (status visibility integration), and 10.7 (notification rendering). Total tasks now 41 across 12 phases (~90 hours estimated)."
 }
