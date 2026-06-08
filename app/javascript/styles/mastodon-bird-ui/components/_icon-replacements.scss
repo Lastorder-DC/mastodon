@@ -101,13 +101,12 @@
     display: none;
   }
 
-  // ...except for these icons, we kinda like them as they are or there are no bird-ui icon
+  // ...except for these icons, we kinda like them as they are
   .icon-user-plus.column-link__icon path,
+  .icon.icon-collections path,
   .icon.icon-undefined path,
   .icon.icon-users path,
   .icon.icon-swap-horiz path,
-  .icon.icon-collections path,
-  .icon.icon-chat_bubble path,
   [class*='_comp_account_header__buttons'] .optional path,
   [class*='_comp_account_header__buttons'] .icon.icon-user-plus path,
   .notification__filter-bar .icon.icon-user-plus path,
