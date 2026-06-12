@@ -41,6 +41,7 @@ class Vacuum::MediaAttachmentsVacuum
   def orphaned_media_attachments
     MediaAttachment
       .unattached
+      .where.not(id: DmMessageAttachment.select(:media_attachment_id))
       .created_before(TTL.ago)
   end
 

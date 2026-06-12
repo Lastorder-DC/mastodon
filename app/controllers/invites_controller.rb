@@ -42,6 +42,6 @@ class InvitesController < ApplicationController
   end
 
   def resource_params
-    params.expect(invite: [:max_uses, :expires_in, :autofollow, :comment])
+    params.expect(invite: [:max_uses, :expires_in, :autofollow, :force_custom_branding, :comment])
   end
 end

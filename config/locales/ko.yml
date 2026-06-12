@@ -1558,9 +1558,13 @@ ko:
     max_uses_prompt: 제한 없음
     prompt: 이 서버에 대한 초대 링크를 만들고 공유합니다
     table:
+      autofollow: 팔로우
       expires_at: 만료
+      force_custom_branding: 커스텀
       uses: 이용 수
     title: 초대하기
+    force_custom_branding_notice: "이 초대로 가입하면 초대자의 커스텀 로고와 배경 이미지를 강제로 사용하게 됩니다."
+    force_custom_branding_restricted: "제한된 기능입니다. 커스텀 브랜딩은 초대한 계정에 의해 관리됩니다."
   link_preview:
     author_html: "%{name} 작성"
     potentially_sensitive_content:

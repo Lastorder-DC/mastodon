@@ -76,18 +76,25 @@ export const MessageList: React.FC<MessageListProps> = ({
         const showAvatar = prevMessage?.account_id !== message.account_id;
         const showName = isGroupChat && !isOwn && showAvatar;
 
-        const isRead =
+        // Calculate unread count for the message
+        let unreadCount: number | undefined;
+        if (
           isOwn &&
           !message.pending &&
           !message.failed &&
           /^\d+$/.test(message.id) &&
-          Object.entries(readReceipts).some(
+          room
+        ) {
+          const totalOtherMembers = (room.participant_ids?.length ?? 1) - 1;
+          const readCount = Object.entries(readReceipts).filter(
             ([accountId, lastReadId]) =>
-              accountId !== currentAccountId &&
+              accountId !== message.account_id &&
               lastReadId &&
               /^\d+$/.test(lastReadId) &&
               BigInt(lastReadId) >= BigInt(message.id),
-          );
+          ).length;
+          unreadCount = totalOtherMembers - readCount;
+        }
 
         const showDateSeparator =
           !prevMessage ||
@@ -99,7 +106,8 @@ export const MessageList: React.FC<MessageListProps> = ({
             <MessageItem
               message={message}
               isOwn={isOwn}
-              isRead={isRead}
+              unreadCount={unreadCount}
+              isGroupChat={isGroupChat}
               showAvatar={showAvatar}
               showName={showName}
               onRetry={handleRetry}

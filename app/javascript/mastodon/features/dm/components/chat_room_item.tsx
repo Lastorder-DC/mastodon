@@ -19,7 +19,8 @@ interface ChatRoomItemProps {
 export const ChatRoomItem: React.FC<ChatRoomItemProps> = ({ room, active }) => {
   const intl = useIntl();
   const otherParticipant = room.participants.find(p => p.id !== me);
-  const roomName = room.room_type === 'direct'
+  const isGroupChat = room.room_type === 'group_chat';
+  const roomName = !isGroupChat
     ? (otherParticipant?.display_name || otherParticipant?.username || room.title || `Chat ${room.id}`)
     : (room.title || `Chat ${room.id}`);
   const lastMessagePreview = room.last_message?.content_plain ?? '';
@@ -29,7 +30,7 @@ export const ChatRoomItem: React.FC<ChatRoomItemProps> = ({ room, active }) => {
   return (
     <Link
       to={`/conversations/${room.uuid}`}
-      className={`dm-chat-room-item ${active ? 'dm-chat-room-item--active' : ''} ${room.unread ? 'dm-chat-room-item--unread' : ''} ${!room.accepted ? 'dm-chat-room-item--pending' : ''}`}
+      className={`dm-chat-room-item ${active ? 'dm-chat-room-item--active' : ''} ${room.unread ? 'dm-chat-room-item--unread' : ''} ${!room.accepted ? 'dm-chat-room-item--pending' : ''} ${isGroupChat ? 'dm-chat-room-item--group' : ''}`}
     >
       <div className='dm-chat-room-item__avatar'>
         {avatarUrl ? (
@@ -42,6 +43,11 @@ export const ChatRoomItem: React.FC<ChatRoomItemProps> = ({ room, active }) => {
           />
         ) : (
           <div className='dm-chat-room-item__avatar-placeholder' />
+        )}
+        {isGroupChat && (
+          <span className='dm-chat-room-item__group-badge'>
+            {room.participant_ids?.length ?? room.participants.length}
+          </span>
         )}
       </div>
       <div className='dm-chat-room-item__content'>

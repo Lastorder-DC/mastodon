@@ -7,9 +7,17 @@
   overflow: hidden;
 
   @media screen and (width <= 759px) {
-    // Account for mobile bottom navigation bar (~50px)
     height: calc(100dvh - 50px - env(safe-area-inset-bottom, 0px));
   }
+}
+
+// Prevent outer page scroll when DM page is displayed
+.columns-area--mobile:has(> .dm-page) {
+  overflow: hidden;
+}
+
+body.app-body:has(.dm-page) {
+  overflow: hidden;
 }
 
 // Chat Room List
@@ -127,6 +135,25 @@
 .dm-chat-room-item__avatar {
   margin-inline-end: 12px;
   flex-shrink: 0;
+  position: relative;
+}
+
+.dm-chat-room-item__group-badge {
+  position: absolute;
+  bottom: -2px;
+  inset-inline-end: -4px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--highlight-text-color, #6364ff);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--background-color, #1a1a2e);
 }
 
 .dm-chat-room-item__avatar-placeholder {
@@ -468,6 +495,11 @@
   margin-top: 2px;
   text-align: end;
   margin-inline-end: 4px;
+}
+
+.dm-message-item__unread-count {
+  color: var(--highlight-text-color, #6364ff);
+  font-weight: 700;
 }
 
 // Message Compose

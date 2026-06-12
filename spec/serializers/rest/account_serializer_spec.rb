@@ -75,6 +75,81 @@ RSpec.describe REST::AccountSerializer do
     end
   end
 
+  # Tasks 4.5/4.6: Custom logo and background image privacy scoping
+  describe 'custom logo and background image fields' do
+    let(:account) { Fabricate(:account) }
+
+    before do
+      account.custom_logo = fixture_file_upload('avatar.gif', 'image/gif')
+      account.custom_logo_description = 'My logo'
+      account.custom_logo_enabled = true
+      account.background_image = fixture_file_upload('attachment.jpg', 'image/jpeg')
+      account.background_image_enabled = true
+      account.save!
+    end
+
+    context 'when the serialized account is the current user' do
+      let(:current_user) { account.user }
+
+      it 'includes the custom logo and background image fields' do
+        expect(subject).to include(
+          'custom_logo', 'custom_logo_static', 'custom_logo_description',
+          'custom_logo_enabled', 'background_image', 'background_image_static',
+          'background_image_enabled'
+        )
+        expect(subject['custom_logo']).to match(%r{https?://})
+        expect(subject['custom_logo_description']).to eq('My logo')
+        expect(subject['custom_logo_enabled']).to be true
+        expect(subject['background_image']).to match(%r{https?://})
+        expect(subject['background_image_enabled']).to be true
+      end
+    end
+
+    context 'when the serialized account is NOT the current user' do
+      let(:current_user) { Fabricate(:user) }
+
+      it 'does not include the custom logo and background image fields' do
+        expect(subject).not_to include(
+          'custom_logo', 'custom_logo_static', 'custom_logo_description',
+          'custom_logo_enabled', 'background_image', 'background_image_static',
+          'background_image_enabled'
+        )
+      end
+    end
+
+    # Feature: custom-logo-and-background, Property 5: Current-user privacy scoping
+    # Validates: Requirements 11.5, 13.1
+    describe 'Property 5: Current-user privacy scoping' do
+      [true, false].product([true, false]).each do |is_owner, has_images|
+        context "when is_owner=#{is_owner}, has_images=#{has_images}" do
+          let(:current_user) { is_owner ? account.user : Fabricate(:user) }
+
+          before do
+            unless has_images
+              account.custom_logo = nil
+              account.background_image = nil
+              account.save!
+            end
+          end
+
+          it "includes custom logo/background fields iff owned (is_owner=#{is_owner})" do
+            scoped_keys = %w[custom_logo custom_logo_static custom_logo_description custom_logo_enabled background_image background_image_static background_image_enabled]
+
+            if is_owner
+              scoped_keys.each do |key|
+                expect(subject).to have_key(key)
+              end
+            else
+              scoped_keys.each do |key|
+                expect(subject).not_to have_key(key)
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
   describe '#feature_approval' do
     context 'when account is local' do
       context 'when account is discoverable' do

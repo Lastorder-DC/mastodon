@@ -39,6 +39,7 @@ ko:
         text: 처벌에 대해 단 한 번만 이의제기를 할 수 있습니다
       defaults:
         autofollow: 이 초대로 가입한 사람은 나를 팔로우하게 됩니다.
+        force_custom_branding: 이 초대로 가입한 사람은 내 커스텀 로고와 배경 이미지를 강제로 사용합니다
         avatar: WEBP, PNG, GIF 혹은 JPG. 최대 %{size}. %{dimensions}px로 축소됨
         bot: 이 계정이 대부분 자동으로 작업을 수행하고 잘 확인하지 않는다는 것을 알립니다.
         context: 필터를 적용 할 한 개 이상의 컨텍스트
@@ -201,6 +202,7 @@ ko:
         text: 이 결정을 번복해야만 하는 이유가 무엇입니까
       defaults:
         autofollow: 초대를 통한 팔로우
+        force_custom_branding: 내 로고/배경 강제 적용
         avatar: 프로필 사진
         bot: 이것은 자동화된 계정입니다
         chosen_languages: 언어 필터링

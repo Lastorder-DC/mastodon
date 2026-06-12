@@ -6,15 +6,25 @@ class Api::V1::Dm::ChatRoomMembersController < Api::BaseController
   before_action :require_user!
   before_action :set_chat_room
 
+  MAX_MEMBER_IDS = 20
+
   def create
     raise Mastodon::NotPermittedError unless @chat_room.owner_account_id == current_account.id
     raise Mastodon::NotPermittedError unless @chat_room.group_chat?
 
-    account = Account.find(member_params[:account_id])
-    validate_no_blocks!(account)
+    account_ids = member_params[:account_ids] || [member_params[:account_id]].compact
+    raise ActiveRecord::RecordNotFound if account_ids.empty?
+    raise Mastodon::ValidationError, 'Cannot add more than 20 members at once' if account_ids.size > MAX_MEMBER_IDS
 
-    membership = @chat_room.dm_chat_room_accounts.find_or_initialize_by(account: account)
-    membership.update!(accepted: false, left_at: nil)
+    ActiveRecord::Base.transaction do
+      account_ids.each do |account_id|
+        account = Account.find(account_id)
+        validate_no_blocks!(account)
+
+        membership = @chat_room.dm_chat_room_accounts.find_or_initialize_by(account: account)
+        membership.update!(accepted: false, left_at: nil)
+      end
+    end
 
     render json: @chat_room, serializer: REST::DmChatRoomSerializer
   end
@@ -40,7 +50,7 @@ class Api::V1::Dm::ChatRoomMembersController < Api::BaseController
   private
 
   def member_params
-    params.permit(:account_id)
+    params.permit(:account_id, account_ids: [])
   end
 
   def validate_no_blocks!(account)

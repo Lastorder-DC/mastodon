@@ -21,6 +21,14 @@ class REST::AccountSerializer < ActiveModel::Serializer
 
   attribute :memorial, if: :memorial?
 
+  attribute :custom_logo, if: :owned_by_current_user?
+  attribute :custom_logo_static, if: :owned_by_current_user?
+  attribute :custom_logo_description, if: :owned_by_current_user?
+  attribute :custom_logo_enabled, if: :owned_by_current_user?
+  attribute :background_image, if: :owned_by_current_user?
+  attribute :background_image_static, if: :owned_by_current_user?
+  attribute :background_image_enabled, if: :owned_by_current_user?
+
   attribute :feature_approval
   attribute :email_subscriptions, if: -> { Rails.application.config.x.email_subscriptions && Setting.email_subscriptions }
 
@@ -181,4 +189,50 @@ class REST::AccountSerializer < ActiveModel::Serializer
   def email_subscriptions
     object.user_can?(:manage_email_subscriptions) && object.user_email_subscriptions_enabled?
   end
+
+  def custom_logo
+    source = branding_source_account
+    source.custom_logo_file_name.present? ? full_asset_url(source.custom_logo_original_url) : nil
+  end
+
+  def custom_logo_static
+    source = branding_source_account
+    source.custom_logo_file_name.present? ? full_asset_url(source.custom_logo_static_url) : nil
+  end
+
+  def custom_logo_description
+    branding_source_account.custom_logo_description
+  end
+
+  def custom_logo_enabled
+    branding_source_account.custom_logo_enabled || object.custom_branding_source_account_id.present?
+  end
+
+  def background_image
+    source = branding_source_account
+    source.background_image_file_name.present? ? full_asset_url(source.background_image_original_url) : nil
+  end
+
+  def background_image_static
+    source = branding_source_account
+    source.background_image_file_name.present? ? full_asset_url(source.background_image_static_url) : nil
+  end
+
+  def background_image_enabled
+    branding_source_account.background_image_enabled || object.custom_branding_source_account_id.present?
+  end
+
+  def owned_by_current_user?
+    current_user.present? && current_user.account_id == object.id
+  end
+
+  def branding_source_account
+    if object.custom_branding_source_account_id.present?
+      object.custom_branding_source_account || object
+    else
+      object
+    end
+  end
+
+  private
 end
