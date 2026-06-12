@@ -121,6 +121,8 @@ namespace :api, format: false do
       scope module: :profile do
         resource :avatar, only: :destroy
         resource :header, only: :destroy
+        resource :custom_logo, only: :destroy
+        resource :background_image, only: :destroy
       end
     end
 

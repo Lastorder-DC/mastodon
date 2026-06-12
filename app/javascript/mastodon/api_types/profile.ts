@@ -12,6 +12,13 @@ export interface ApiProfileJSON {
   header: string;
   header_static: string;
   header_description: string;
+  custom_logo: string | null;
+  custom_logo_static: string | null;
+  custom_logo_description: string;
+  custom_logo_enabled: boolean;
+  background_image: string | null;
+  background_image_static: string | null;
+  background_image_enabled: boolean;
   locked: boolean;
   bot: boolean;
   hide_collections: boolean;
@@ -30,6 +37,9 @@ export type ApiProfileUpdateParams = Partial<
     ApiProfileJSON,
     | 'avatar_description'
     | 'header_description'
+    | 'custom_logo_description'
+    | 'custom_logo_enabled'
+    | 'background_image_enabled'
     | 'display_name'
     | 'note'
     | 'locked'

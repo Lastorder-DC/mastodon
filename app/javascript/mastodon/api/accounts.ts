@@ -81,5 +81,11 @@ export const apiDeleteProfileAvatar = () =>
 export const apiDeleteProfileHeader = () =>
   apiRequestDelete('v1/profile/header');
 
+export const apiDeleteProfileCustomLogo = () =>
+  apiRequestDelete('v1/profile/custom_logo');
+
+export const apiDeleteProfileBackgroundImage = () =>
+  apiRequestDelete('v1/profile/background_image');
+
 export const apiSubscribeByEmail = (id: string, email: string) =>
   apiRequestPost(`v1/accounts/${id}/email_subscriptions`, { email });

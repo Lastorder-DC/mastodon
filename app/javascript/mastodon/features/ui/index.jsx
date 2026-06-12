@@ -30,6 +30,7 @@ import { clearHeight } from '../../actions/height_cache';
 import { fetchServer, fetchServerTranslationLanguages } from '../../actions/server';
 import { expandHomeTimeline } from '../../actions/timelines';
 import { initialState, me, owner, singleUserMode, trendsEnabled, landingPage, localLiveFeedAccess, disableHoverCards, domain } from '../../initial_state';
+import { useBackgroundImage } from './hooks/useBackgroundImage';
 
 import BundleColumnError from './components/bundle_column_error';
 import { NavigationBar } from './components/navigation_bar';
@@ -271,6 +272,11 @@ class SwitchingColumnsArea extends PureComponent {
     );
   }
 
+}
+
+function BackgroundImageEffect() {
+  useBackgroundImage();
+  return null;
 }
 
 class UI extends PureComponent {
@@ -659,6 +665,7 @@ class UI extends PureComponent {
 
           {!minimalShell && <NavigationBar />}
           {layout !== 'mobile' && <PictureInPicture />}
+          <BackgroundImageEffect />
           <AlertsController />
           {!disableHoverCards && <HoverCardController />}
           <HashtagMenuController />

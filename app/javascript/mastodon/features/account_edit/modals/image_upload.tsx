@@ -33,6 +33,14 @@ const messages = defineMessages({
     id: 'account_edit.upload_modal.title_add.header',
     defaultMessage: 'Add cover photo',
   },
+  custom_logoAdd: {
+    id: 'account_edit.upload_modal.title_add.custom_logo',
+    defaultMessage: 'Add custom logo',
+  },
+  background_imageAdd: {
+    id: 'account_edit.upload_modal.title_add.background_image',
+    defaultMessage: 'Add background image',
+  },
   avatarReplace: {
     id: 'account_edit.upload_modal.title_replace.avatar',
     defaultMessage: 'Replace profile photo',
@@ -40,6 +48,14 @@ const messages = defineMessages({
   headerReplace: {
     id: 'account_edit.upload_modal.title_replace.header',
     defaultMessage: 'Replace cover photo',
+  },
+  custom_logoReplace: {
+    id: 'account_edit.upload_modal.title_replace.custom_logo',
+    defaultMessage: 'Replace custom logo',
+  },
+  background_imageReplace: {
+    id: 'account_edit.upload_modal.title_replace.background_image',
+    defaultMessage: 'Replace background image',
   },
   zoomLabel: {
     id: 'account_edit.upload_modal.step_crop.zoom',
@@ -59,16 +75,21 @@ export const ImageUploadModal: FC<
   );
 
   // State for individual steps.
-  const [step, setStep] = useState<'select' | 'crop' | 'alt'>('select');
+  const [step, setStep] = useState<'select' | 'crop' | 'alt' | 'save'>('select');
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [imageBlob, setImageBlob] = useState<Blob | null>(null);
 
   const handleFile = useCallback((file: File) => {
     try {
-      // If the image is animated, skip cropping and go straight to alt text.
+      // If the image is animated, skip cropping and go straight to alt text
+      // (or directly to save for locations without alt text).
       if (file.type === 'image/gif') {
         setImageBlob(file);
-        setStep('alt');
+        if (location === 'background_image') {
+          setStep('save');
+        } else {
+          setStep('alt');
+        }
         return;
       }
 
@@ -86,7 +107,7 @@ export const ImageUploadModal: FC<
       console.warn('Error with image parsing:', error);
       setStep('select');
     }
-  }, []);
+  }, [location]);
 
   const handleCrop = useCallback(
     (crop: Area) => {
@@ -96,10 +117,14 @@ export const ImageUploadModal: FC<
       }
       void calculateCroppedImage(imageSrc, crop).then((blob) => {
         setImageBlob(blob);
-        setStep('alt');
+        if (location === 'background_image') {
+          setStep('save');
+        } else {
+          setStep('alt');
+        }
       });
     },
-    [imageSrc],
+    [imageSrc, location],
   );
 
   const dispatch = useAppDispatch();
@@ -115,6 +140,16 @@ export const ImageUploadModal: FC<
     },
     [dispatch, imageBlob, location, onClose],
   );
+
+  // When a location has no alt text (e.g. background_image), skip the alt step
+  // and save immediately with empty alt text.
+  useEffect(() => {
+    if (step === 'save' && imageBlob) {
+      void dispatch(uploadImage({ location, imageBlob, altText: '' })).then(
+        onClose,
+      );
+    }
+  }, [step, imageBlob, dispatch, location, onClose]);
 
   const handleCancel = useCallback(() => {
     if (step === 'crop') {
@@ -169,6 +204,13 @@ const ALLOWED_MIME_TYPES = [
   'image/gif',
   'image/webp',
 ];
+
+const UPLOAD_SIZE_HINT: Record<ImageLocation, { width: number; height: number }> = {
+  avatar: { width: 400, height: 400 },
+  header: { width: 1500, height: 500 },
+  custom_logo: { width: 522, height: 132 },
+  background_image: { width: 1920, height: 1080 },
+};
 
 const StepUpload: FC<{
   location: ImageLocation;
@@ -277,8 +319,8 @@ const StepUpload: FC<{
         values={{
           br: <br />,
           limit: 8,
-          width: location === 'avatar' ? 400 : 1500,
-          height: location === 'avatar' ? 400 : 500,
+          width: UPLOAD_SIZE_HINT[location].width,
+          height: UPLOAD_SIZE_HINT[location].height,
         }}
         tagName='p'
       />
@@ -302,6 +344,13 @@ const StepUpload: FC<{
       />
     </div>
   );
+};
+
+const CROP_ASPECT: Record<ImageLocation, number> = {
+  avatar: 1,
+  header: 3 / 1,
+  custom_logo: 261 / 66,
+  background_image: 16 / 9,
 };
 
 const StepCrop: FC<{
@@ -340,7 +389,7 @@ const StepCrop: FC<{
           zoom={zoom}
           onCropChange={setCrop}
           onCropComplete={handleCropComplete}
-          aspect={location === 'avatar' ? 1 : 3 / 1}
+          aspect={CROP_ASPECT[location]}
           disableAutomaticStylesInjection
         />
       </div>
@@ -393,7 +442,7 @@ const StepAlt: FC<{
         imageSrc={imageSrc}
         altText={altText}
         onChange={setAltText}
-        hideTip={location === 'header'}
+        hideTip={location === 'header' || location === 'background_image'}
       />
 
       <div className={classes.cropActions}>

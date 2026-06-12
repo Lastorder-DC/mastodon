@@ -162,8 +162,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_000001) do
     t.string "avatar_remote_url"
     t.integer "avatar_storage_schema_version"
     t.datetime "avatar_updated_at", precision: nil
+    t.string "background_image_content_type"
+    t.boolean "background_image_enabled", default: false, null: false
+    t.string "background_image_file_name"
+    t.integer "background_image_file_size"
+    t.datetime "background_image_updated_at"
     t.string "collections_url"
     t.datetime "created_at", precision: nil, null: false
+    t.string "custom_logo_content_type"
+    t.string "custom_logo_description", default: "", null: false
+    t.boolean "custom_logo_enabled", default: false, null: false
+    t.string "custom_logo_file_name"
+    t.integer "custom_logo_file_size"
+    t.datetime "custom_logo_updated_at"
     t.boolean "discoverable"
     t.string "display_name", default: "", null: false
     t.string "domain"

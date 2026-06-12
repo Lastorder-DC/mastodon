@@ -8,6 +8,8 @@ class REST::ProfileSerializer < ActiveModel::Serializer
   attributes :id, :display_name, :note, :fields,
              :formatted_note, :formatted_fields,
              :avatar, :avatar_static, :avatar_description, :header, :header_static, :header_description,
+             :custom_logo, :custom_logo_static, :custom_logo_description, :custom_logo_enabled,
+             :background_image, :background_image_static, :background_image_enabled,
              :locked, :bot,
              :hide_collections, :discoverable, :indexable,
              :show_media, :show_media_replies, :show_featured,
@@ -46,5 +48,21 @@ class REST::ProfileSerializer < ActiveModel::Serializer
 
   def header_static
     object.header_file_name.present? ? full_asset_url(object.header_static_url) : nil
+  end
+
+  def custom_logo
+    object.custom_logo_file_name.present? ? full_asset_url(object.custom_logo_original_url) : nil
+  end
+
+  def custom_logo_static
+    object.custom_logo_file_name.present? ? full_asset_url(object.custom_logo_static_url) : nil
+  end
+
+  def background_image
+    object.background_image_file_name.present? ? full_asset_url(object.background_image_original_url) : nil
+  end
+
+  def background_image_static
+    object.background_image_file_name.present? ? full_asset_url(object.background_image_static_url) : nil
   end
 end

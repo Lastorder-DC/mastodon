@@ -60,6 +60,11 @@ class Api::V1::ProfilesController < Api::BaseController
       :show_media_replies,
       :show_featured,
       :protected_account,
+      :custom_logo,
+      :custom_logo_description,
+      :custom_logo_enabled,
+      :background_image,
+      :background_image_enabled,
       attribution_domains: [],
       fields_attributes: [:name, :value]
     )

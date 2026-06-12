@@ -1,0 +1,773 @@
+{
+  "pbtResults": {
+    "3.8 Property test P8 (Avatar/header independence) in `profiles_spec.rb`": {
+      "status": "passed",
+      "lastRunTimestamp": 1781241515703
+    },
+    "11.3 Property test P4 (Background activation decision) in `useBackgroundImage.test.tsx`": {
+      "status": "passed",
+      "lastRunTimestamp": 1781241647847
+    },
+    "10.3 Property test P2 (Logo render decision) in `navigation_logo.test.tsx`": {
+      "status": "passed",
+      "lastRunTimestamp": 1781241683496
+    },
+    "10.4 Property test P3 (Logo alternative-text default) in `navigation_logo.test.tsx`": {
+      "status": "passed",
+      "lastRunTimestamp": 1781241684454
+    }
+  },
+  "executionHistory": {
+    "1.1 Write the `AddCustomLogoAndBackgroundImageToAccounts` migration": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978126
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239985231
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240070507
+      }
+    ],
+    "1.2 Regenerate and verify `db/schema.rb`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978131
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240179602
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240357867
+      }
+    ],
+    "2.1 Create the `Account::CustomLogo` concern": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978134
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240361968
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240489088
+      }
+    ],
+    "2.2 Create the `Account::BackgroundImage` concern": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978137
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240362732
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240489871
+      }
+    ],
+    "2.3 Include both concerns in the `Account` model": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978140
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240651496
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240812317
+      }
+    ],
+    "3.1 Permit the new params in `Api::V1::ProfilesController`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978146
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240827772
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240896360
+      }
+    ],
+    "3.2 Create `Api::V1::Profile::CustomLogosController`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978153
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240827775
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240897119
+      }
+    ],
+    "3.3 Create `Api::V1::Profile::BackgroundImagesController`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978160
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240828113
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240897846
+      }
+    ],
+    "3.4 Add the delete routes": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978167
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240828800
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240898789
+      }
+    ],
+    "4.1 Extend `REST::ProfileSerializer`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978178
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240829604
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240899503
+      }
+    ],
+    "4.2 Extend `REST::AccountSerializer` with current-user-scoped attributes": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978181
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240903461
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241186651
+      }
+    ],
+    "5. Checkpoint - server layer": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978185
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241205388
+      }
+    ],
+    "6.1 Extend profile API types": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978187
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239985923
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240071203
+      }
+    ],
+    "6.2 Extend account API types with owner-only optional fields": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978190
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239986723
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240073388
+      }
+    ],
+    "6.3 Add defaults to the Immutable `Account` model": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978193
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240180445
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240356284
+      }
+    ],
+    "6.4 Add the delete request helpers": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978196
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239987416
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240073446
+      }
+    ],
+    "7.1 Widen `ImageLocation` and extend `transformProfile`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978199
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240181269
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240356985
+      }
+    ],
+    "7.2 Extend the `deleteImage` thunk": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978204
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240363483
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240490612
+      }
+    ],
+    "8.1 Add the Custom Logo and Background Image sections": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978207
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240364241
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240491408
+      }
+    ],
+    "8.2 Add preview styles": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978210
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239988263
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240073620
+      }
+    ],
+    "9.1 Add per-location crop aspect": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978213
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240365151
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240492137
+      }
+    ],
+    "9.2 Add per-location modal copy and suppress alt for background": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978217
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240652203
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240813864
+      }
+    ],
+    "10.1 Create the `NavigationLogo` component": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978220
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240495511
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240646980
+      }
+    ],
+    "10.2 Wire `NavigationLogo` into the navigation panel": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978223
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240653000
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240813055
+      }
+    ],
+    "11.1 Add the `useBackgroundImage` hook and mount it": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978228
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240496343
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240647768
+      }
+    ],
+    "11.2 Add the background SCSS rule": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978231
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240076844
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240174460
+      }
+    ],
+    "12.1 Add new message strings to `en.json`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978235
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240077652
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240175423
+      }
+    ],
+    "12.2 Synchronize extracted default messages": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978238
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240904464
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241187600
+      }
+    ],
+    "13. Final checkpoint - full feature wiring": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781239978241
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781242237980
+      }
+    ],
+    "6. Client API types and request helpers": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240356287
+      }
+    ],
+    "1. Database migration and schema": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240357878
+      }
+    ],
+    "7. Redux `profile_edit` slice": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240490615
+      }
+    ],
+    "8. Profile edit page sections": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240491416
+      }
+    ],
+    "11. Background image rendering": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240647772
+      }
+    ],
+    "2. Account model concerns": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240812320
+      }
+    ],
+    "10. Custom logo rendering": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240813059
+      }
+    ],
+    "9. Image upload modal (crop aspect and per-location copy)": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240813876
+      }
+    ],
+    "3. Profile API: permitted params, delete controllers, routes, and request specs": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781240898793
+      }
+    ],
+    "4. Serialization": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241186655
+      }
+    ],
+    "12. Internationalization": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241187604
+      }
+    ],
+    "4.3 Create `spec/serializers/rest/profile_serializer_spec.rb` (example tests)": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241216514
+      }
+    ],
+    "4.4 Property test P7 (Stored-attachment URL presence) in `profile_serializer_spec.rb`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241217362
+      }
+    ],
+    "4.5 Extend `spec/serializers/rest/account_serializer_spec.rb` (privacy examples)": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241218122
+      }
+    ],
+    "4.6 Property test P5 (Current-user privacy scoping) in `account_serializer_spec.rb`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241218972
+      }
+    ],
+    "4.7 Add federation-exclusion regression spec": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241219745
+      }
+    ],
+    "2.4 Write model spec for `Account::CustomLogo`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241223474
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241440978
+      }
+    ],
+    "2.5 Write model spec for `Account::BackgroundImage`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241224226
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241441716
+      }
+    ],
+    "3.5 Extend `spec/requests/api/v1/profiles_spec.rb` with example/edge-case specs": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241225061
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241442770
+      }
+    ],
+    "3.6 Property test P1 (Enable-flag round-trip) in `profiles_spec.rb`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241225946
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241443718
+      }
+    ],
+    "3.7 Property test P6 (Omitted-field preservation) in `profiles_spec.rb`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241226808
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241444585
+      }
+    ],
+    "3.8 Property test P8 (Avatar/header independence) in `profiles_spec.rb`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241449213
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241767978
+      }
+    ],
+    "7.3 Write `reducers/slices/profile_edit.test.ts` (colocated Vitest)": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241450775
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241769131
+      }
+    ],
+    "10.3 Property test P2 (Logo render decision) in `navigation_logo.test.tsx`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241451939
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241765568
+      }
+    ],
+    "10.4 Property test P3 (Logo alternative-text default) in `navigation_logo.test.tsx`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241452854
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241766333
+      }
+    ],
+    "11.3 Property test P4 (Background activation decision) in `useBackgroundImage.test.tsx`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241454002
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241767102
+      }
+    ],
+    "8.3 Write `features/account_edit/index.test.tsx` (Vitest + `@testing-library/react`)": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241773659
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781242233516
+      }
+    ],
+    "9.3 Write `modals/image_upload.test.tsx` (Vitest + `@testing-library/react`)": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241774604
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781242232621
+      }
+    ],
+    "10.5 Logo link-target test in `features/navigation_panel/index.test.tsx`": [
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781241775709
+      },
+      {
+        "executionId": "b8b03fff-56e0-451d-a45f-a42bc80f1cd2",
+        "chatSessionId": "2f5883e3-24df-4198-905d-2caa0eec4707",
+        "timestamp": 1781242234382
+      }
+    ]
+  }
+}

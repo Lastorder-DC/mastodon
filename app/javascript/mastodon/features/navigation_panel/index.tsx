@@ -37,7 +37,7 @@ import { openNavigation, closeNavigation } from 'mastodon/actions/navigation';
 import { Account } from 'mastodon/components/account';
 import { Icon } from 'mastodon/components/icon';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
-import { WordmarkLogo } from 'mastodon/components/logo';
+import { NavigationLogo } from './components/navigation_logo';
 import { Search } from 'mastodon/features/compose/components/search';
 import { AccountSwitcher } from 'mastodon/features/ui/components/account_switcher';
 import { ColumnLink } from 'mastodon/features/ui/components/column_link';
@@ -260,7 +260,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
           className='column-link column-link--logo'
           id={getNavigationSkipLinkId()}
         >
-          <WordmarkLogo />
+          <NavigationLogo />
         </Link>
       </div>
 
