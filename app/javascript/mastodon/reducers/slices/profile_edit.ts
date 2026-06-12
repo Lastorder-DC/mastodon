@@ -4,6 +4,8 @@ import { fetchAccount } from '@/mastodon/actions/accounts';
 import {
   apiDeleteFeaturedTag,
   apiDeleteProfileAvatar,
+  apiDeleteProfileBackgroundImage,
+  apiDeleteProfileCustomLogo,
   apiDeleteProfileHeader,
   apiGetCurrentFeaturedTags,
   apiGetProfile,
@@ -167,6 +169,13 @@ const transformProfile = (result: ApiProfileJSON): ProfileData => ({
   header: result.header,
   headerStatic: result.header_static,
   headerDescription: result.header_description,
+  customLogo: result.custom_logo,
+  customLogoStatic: result.custom_logo_static,
+  customLogoDescription: result.custom_logo_description,
+  customLogoEnabled: result.custom_logo_enabled,
+  backgroundImage: result.background_image,
+  backgroundImageStatic: result.background_image_static,
+  backgroundImageEnabled: result.background_image_enabled,
   locked: result.locked,
   bot: result.bot,
   hideCollections: result.hide_collections,
@@ -201,7 +210,10 @@ export const patchProfile = createDataLoadingThunk(
   },
 );
 
-export type ImageLocation = 'avatar' | 'header';
+export type ImageLocation = 'avatar' | 'header' | 'custom_logo' | 'background_image';
+
+const snakeToCamel = (s: string): string =>
+  s.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
 
 export const selectImageInfo = createAppSelector(
   [
@@ -213,10 +225,16 @@ export const selectImageInfo = createAppSelector(
       return {};
     }
 
+    const key = snakeToCamel(location);
     return {
-      src: profile[location],
-      static: profile[`${location}Static`],
-      alt: profile[`${location}Description`],
+      src: profile[key as keyof typeof profile] as string | null | undefined,
+      static: profile[`${key}Static` as keyof typeof profile] as
+        | string
+        | null
+        | undefined,
+      alt: profile[`${key}Description` as keyof typeof profile] as
+        | string
+        | undefined,
     };
   },
 );
@@ -244,10 +262,15 @@ export const uploadImage = createDataLoadingThunk(
 export const deleteImage = createDataLoadingThunk(
   `${profileEditSlice.name}/deleteImage`,
   (arg: { location: ImageLocation }) => {
-    if (arg.location === 'avatar') {
-      return apiDeleteProfileAvatar();
-    } else {
-      return apiDeleteProfileHeader();
+    switch (arg.location) {
+      case 'avatar':
+        return apiDeleteProfileAvatar();
+      case 'header':
+        return apiDeleteProfileHeader();
+      case 'custom_logo':
+        return apiDeleteProfileCustomLogo();
+      case 'background_image':
+        return apiDeleteProfileBackgroundImage();
     }
   },
   async (_, { dispatch, getState }) => {

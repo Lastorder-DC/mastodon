@@ -14,6 +14,15 @@ class Api::V1::ProfilesController < Api::BaseController
     @account = current_account
     merged_params = account_params.to_h
 
+    # Prevent modifying custom branding when forced by invite
+    if @account.custom_branding_source_account_id.present?
+      merged_params.delete('custom_logo')
+      merged_params.delete('custom_logo_description')
+      merged_params.delete('custom_logo_enabled')
+      merged_params.delete('background_image')
+      merged_params.delete('background_image_enabled')
+    end
+
     if params.key?(:protected_account)
       if ActiveModel::Type::Boolean.new.cast(params[:protected_account])
         merged_params[:locked] = true
@@ -60,6 +69,11 @@ class Api::V1::ProfilesController < Api::BaseController
       :show_media_replies,
       :show_featured,
       :protected_account,
+      :custom_logo,
+      :custom_logo_description,
+      :custom_logo_enabled,
+      :background_image,
+      :background_image_enabled,
       attribution_domains: [],
       fields_attributes: [:name, :value]
     )

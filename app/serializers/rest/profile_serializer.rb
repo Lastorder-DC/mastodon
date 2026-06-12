@@ -8,6 +8,8 @@ class REST::ProfileSerializer < ActiveModel::Serializer
   attributes :id, :display_name, :note, :fields,
              :formatted_note, :formatted_fields,
              :avatar, :avatar_static, :avatar_description, :header, :header_static, :header_description,
+             :custom_logo, :custom_logo_static, :custom_logo_description, :custom_logo_enabled,
+             :background_image, :background_image_static, :background_image_enabled,
              :locked, :bot,
              :hide_collections, :discoverable, :indexable,
              :show_media, :show_media_replies, :show_featured,
@@ -46,5 +48,47 @@ class REST::ProfileSerializer < ActiveModel::Serializer
 
   def header_static
     object.header_file_name.present? ? full_asset_url(object.header_static_url) : nil
+  end
+
+  def custom_logo
+    source = branding_source_account
+    source.custom_logo_file_name.present? ? full_asset_url(source.custom_logo_original_url) : nil
+  end
+
+  def custom_logo_static
+    source = branding_source_account
+    source.custom_logo_file_name.present? ? full_asset_url(source.custom_logo_static_url) : nil
+  end
+
+  def custom_logo_description
+    branding_source_account.custom_logo_description
+  end
+
+  def custom_logo_enabled
+    branding_source_account.custom_logo_enabled || object.custom_branding_source_account_id.present?
+  end
+
+  def background_image
+    source = branding_source_account
+    source.background_image_file_name.present? ? full_asset_url(source.background_image_original_url) : nil
+  end
+
+  def background_image_static
+    source = branding_source_account
+    source.background_image_file_name.present? ? full_asset_url(source.background_image_static_url) : nil
+  end
+
+  def background_image_enabled
+    branding_source_account.background_image_enabled || object.custom_branding_source_account_id.present?
+  end
+
+  private
+
+  def branding_source_account
+    if object.custom_branding_source_account_id.present?
+      object.custom_branding_source_account || object
+    else
+      object
+    end
   end
 end

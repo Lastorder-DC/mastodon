@@ -37,6 +37,29 @@ RSpec.describe ActivityPub::ActorSerializer do
     end
   end
 
+  # Feature: custom-logo-and-background — federation-exclusion regression test
+  # Validates: Requirement 13.2
+  describe 'federation exclusion of custom_logo and background_image' do
+    let(:record) { Fabricate(:account) }
+
+    before do
+      record.custom_logo = fixture_file_upload('avatar.gif', 'image/gif')
+      record.custom_logo_description = 'My logo'
+      record.custom_logo_enabled = true
+      record.background_image = fixture_file_upload('attachment.jpg', 'image/jpeg')
+      record.background_image_enabled = true
+      record.save!
+    end
+
+    it 'does not include custom_logo keys in the serialized actor' do
+      expect(subject.keys).not_to include('custom_logo', 'custom_logo_static', 'custom_logo_description', 'custom_logo_enabled', 'customLogo', 'customLogoStatic', 'customLogoDescription', 'customLogoEnabled')
+    end
+
+    it 'does not include background_image keys in the serialized actor' do
+      expect(subject.keys).not_to include('background_image', 'background_image_static', 'background_image_enabled', 'backgroundImage', 'backgroundImageStatic', 'backgroundImageEnabled')
+    end
+  end
+
   describe '#interactionPolicy' do
     let(:record) { Fabricate(:account) }
 

@@ -275,3 +275,29 @@
 .sectionSubtitle {
   color: var(--color-text-secondary);
 }
+
+// Override for image edit buttons used inside section headers (not absolutely positioned)
+.sectionImageButton {
+  position: static;
+}
+
+// Custom logo preview
+
+.customLogoPreview {
+  max-width: 522px;
+  max-height: 522px;
+  object-fit: contain;
+  display: block;
+  margin-top: 12px;
+}
+
+// Background image preview
+
+.backgroundImagePreview {
+  max-width: 100%;
+  max-height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  margin-top: 12px;
+}

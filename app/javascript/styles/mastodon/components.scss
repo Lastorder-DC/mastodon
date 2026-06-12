@@ -3770,6 +3770,11 @@ a.account__display-name {
   .logo {
     height: 30px;
     width: auto;
+
+    &.logo--custom {
+      height: auto;
+      max-width: 100%;
+    }
   }
 
   &__logo {
@@ -4114,6 +4119,21 @@ a.account__display-name {
   &--logo {
     padding: 8px;
     padding-inline-start: 12px;
+  }
+
+  &--logo:has(.logo--custom) {
+    background-image: none !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 0 !important;
+  }
+
+  &--logo .logo--custom {
+    display: block !important;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
   }
 }
 

@@ -3,6 +3,7 @@
 require_relative 'base'
 
 require_relative 'accounts'
+require_relative 'branding'
 require_relative 'cache'
 require_relative 'canonical_email_blocks'
 require_relative 'domains'
@@ -23,6 +24,9 @@ module Mastodon::CLI
   class Main < Base
     desc 'media SUBCOMMAND ...ARGS', 'Manage media files'
     subcommand 'media', Media
+
+    desc 'branding SUBCOMMAND ...ARGS', 'Manage custom branding'
+    subcommand 'branding', Branding
 
     desc 'emoji SUBCOMMAND ...ARGS', 'Manage custom emoji'
     subcommand 'emoji', Emoji

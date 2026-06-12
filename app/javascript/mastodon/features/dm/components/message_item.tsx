@@ -13,7 +13,8 @@ const messages = defineMessages({
 interface MessageItemProps {
   message: DmMessage;
   isOwn: boolean;
-  isRead?: boolean;
+  unreadCount?: number;
+  isGroupChat?: boolean;
   showAvatar: boolean;
   showName: boolean;
   onRetry?: (message: DmMessage) => void;
@@ -23,7 +24,8 @@ interface MessageItemProps {
 export const MessageItem: React.FC<MessageItemProps> = ({
   message,
   isOwn,
-  isRead,
+  unreadCount,
+  isGroupChat,
   showAvatar,
   showName,
   onRetry,
@@ -95,7 +97,12 @@ export const MessageItem: React.FC<MessageItemProps> = ({
           )}
         </div>
         <span className='dm-message-item__time'>{time}</span>
-        {isOwn && isRead && (
+        {isOwn && isGroupChat && unreadCount !== undefined && unreadCount > 0 && (
+          <span className='dm-message-item__read-status dm-message-item__unread-count'>
+            {unreadCount}
+          </span>
+        )}
+        {isOwn && !isGroupChat && unreadCount !== undefined && unreadCount === 0 && (
           <span className='dm-message-item__read-status'>
             {intl.formatMessage(messages.read_status)}
           </span>

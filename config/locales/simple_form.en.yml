@@ -40,6 +40,7 @@ en:
         text: You can only appeal a strike once
       defaults:
         autofollow: People who sign up through the invite will automatically follow you
+        force_custom_branding: People who sign up through the invite will use your custom logo and background image
         avatar: WEBP, PNG, GIF or JPG. At most %{size}. Will be downscaled to %{dimensions}px
         bot: Signal to others that the account mainly performs automated actions and might not be monitored
         context: One or multiple contexts where the filter should apply
@@ -216,6 +217,7 @@ en:
         text: Explain why this decision should be reversed
       defaults:
         autofollow: Invite to follow your account
+        force_custom_branding: Force my custom logo/background
         avatar: Profile picture
         bot: This is an automated account
         chosen_languages: Filter languages

@@ -328,3 +328,40 @@ article {
     z-index: unset !important;
   }
 }
+
+
+@media screen and (min-width: 890px) {
+  body.custom-background::before {
+    z-index: -1;
+    content: '';
+    background: var(--custom-background-image) top / cover no-repeat fixed;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    inset: 0;
+  }
+}
+
+// Ensure content areas remain opaque with custom background active
+body.custom-background {
+  background: transparent !important;
+
+  .columns-area.columns-area--mobile,
+  .tabs-bar__wrapper {
+    background-color: var(--color-bg-primary);
+  }
+
+  .tabs-bar__wrapper {
+    border-top-color: transparent !important;
+  }
+
+  .columns-area__panels__main {
+    background-color: transparent !important;
+  }
+}
+
+// Also handle bird-ui theme body background overrides
+body.custom-background.layout-single-column,
+body.custom-background.layout-multiple-columns {
+  background-color: transparent !important;
+}

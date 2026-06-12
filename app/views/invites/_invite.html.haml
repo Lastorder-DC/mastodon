@@ -16,8 +16,12 @@
       - else
         %time.formatted{ datetime: invite.expires_at.iso8601, title: l(invite.expires_at) }
           = l invite.expires_at
+    %td
+      = invite.autofollow? ? '✅' : '❌'
+    %td
+      = invite.force_custom_branding? ? '✅' : '❌'
   - else
-    %td{ colspan: 2 }
+    %td{ colspan: 4 }
       = t('invites.expired')
 
   %td
