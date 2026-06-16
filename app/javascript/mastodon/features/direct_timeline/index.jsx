@@ -55,7 +55,7 @@ const DirectTimeline = ({ columnId, multiColumn }) => {
   }, [dispatch]);
 
   return (
-    <Column bindToDocument={!multiColumn} ref={columnRef} label={intl.formatMessage(messages.title)}>
+    <Column bindToDocument={!multiColumn} ref={columnRef} label={intl.formatMessage(messages.title)} className='column--direct'>
       <ColumnHeader
         icon='at'
         iconComponent={AlternateEmailIcon}

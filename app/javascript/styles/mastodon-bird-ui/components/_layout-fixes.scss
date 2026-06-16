@@ -1,3 +1,17 @@
+// Fix outer scrollbar on conversations page in single-column layout
+// Override the body-delegated scroll (.scrollable overflow: visible) to keep
+// content within the viewport when the sticky compose pane is present.
+.layout-single-column {
+  .columns-area--mobile .column--direct {
+    height: calc(100vh - 10px);
+    overflow: hidden;
+
+    .scrollable {
+      overflow-y: auto;
+    }
+  }
+}
+
 // Small layout fixes
 .layout-single-column,
 .layout-multiple-columns {
