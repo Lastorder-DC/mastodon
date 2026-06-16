@@ -351,6 +351,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_000002) do
     t.datetime "finished_at", precision: nil
     t.integer "imported_items", default: 0, null: false
     t.boolean "likely_mismatched", default: false, null: false
+    t.boolean "missing_status", default: false, null: false
     t.string "original_filename", default: "", null: false
     t.boolean "overwrite", default: false, null: false
     t.integer "processed_items", default: 0, null: false
@@ -832,6 +833,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_000002) do
   create_table "notification_policies", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
+    t.integer "for_bots", default: 0, null: false
     t.integer "for_limited_accounts", default: 1, null: false
     t.integer "for_new_accounts", default: 0, null: false
     t.integer "for_not_followers", default: 0, null: false

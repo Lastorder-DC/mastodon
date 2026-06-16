@@ -4,6 +4,7 @@ pt-BR:
     about_mastodon_html: 'A rede social do futuro: Sem anúncios, sem vigilância corporativa, com design ético e muita descentralização! Possua seus próprios dados com o Mastodon!'
     contact_missing: Não definido
     contact_unavailable: Não disponível
+    default_thumbnail_description: Dois mastodontes sorridentes de desenho (que parecem dois elefantes) lançam um avião de papel entre eles. Eles estão arrodeados por um céu azul brilhante e planetas flutuantes com árvores e mais mastodontes neles.
     hosted_on: Mastodon hospedado em %{domain}
     title: Sobre
   accounts:
@@ -505,6 +506,21 @@ pt-BR:
           no_lists_yet: Não há listas ainda
         last_email: Último email
         lead: Contas que ativaram o recurso e têm inscritos aparecerão abaixo.
+        show:
+          confirm_disable_feature: Desativar e-mails de notícia de %{name}? Os e-mails de notícia não serão mais enviados a esta conta. O usuário poderá reativar este recurso através das opções da conta. Para remover acesso permanente a este recurso, edite as permissões da conta em Cargos.
+          confirm_remove_subscriber: "%{email} não receberá mais e-mails de %{name}. Esta ação não pode ser desfeita."
+          consent: Os inscritos só permitiram receber publicações por e-mail. Não use esta lista para outra coisa.
+          date: Data de registro
+          disable_feature: Desativar recurso
+          disabled: O recurso foi desativado e os e-mails não são mais enviados a esta lista.
+          email: Endereço de e-mail
+          empty:
+            hint: Ninguém ainda se inscreveu a esta conta.
+            no_subscribers_yet: Nenhum inscrito ainda
+          enable_feature: Ativar recurso
+          no_access_html: Esta conta não tem mais as permissões necessárias para ativar o recurso. Altere isso em <a href="%{roles_path}">Cargos</a>.
+          title: E-mails de notícia de %{name}
+          view_account: Ver conta
         status: Estado
         subscribers: Inscritos
         title: Listas de envio
@@ -1532,7 +1548,9 @@ pt-BR:
         success_html: Agora você começará a receber e-mails quando %{name} publicar novas postagens. Adicione %{sender} para seus contatos para que essas publicações não apareçam em sua caixa de Spam.
         title: Você está registrado
         unsubscribe: Cancelar inscrição
+    disabled: Desativado
     inactive: Inativo
+    no_access: Sem acesso
     status: Situação
     subscribers: Inscritos
   emoji_styles:
@@ -1648,7 +1666,9 @@ pt-BR:
       empty: Arquivo CSV vazio
       incompatible_type: Incompatível com o tipo de importação selecionado
       invalid_csv_file: 'Arquivo CSV inválido. Erro: %{error}'
+      invalid_json_file: 'Arquivo JSON inválido. Erro: %{error}'
       over_rows_processing_limit: contém mais de %{count} linhas
+      status_not_found_warning: Alguns filtros seus ocultam publicações específicas que não são conhecidas neste servidor. Estas publicações serão filtradas automaticamente se forem descobertas depois pelo servidor.
       too_large: O arquivo é muito grande
     failures: Falhas
     imported: Importado
@@ -1665,6 +1685,9 @@ pt-BR:
       bookmarks_html:
         one: Você está prestes a <strong>substituir seus salvos</strong> por até <strong>%{count} publicação</strong> de <strong>%{filename}</strong>.
         other: Você está prestes a <strong>substituir seus salvos</strong> por até <strong>%{count} publicações</strong> de <strong>%{filename}</strong>.
+      custom_filters_html:
+        one: Você está prestes a <strong>substituir seus filtros</strong> com conteúdos de <strong>%{filename}</strong>. Até <strong>%{count} filtro</strong> será adicionado aos novos filtros.
+        other: Você está prestes a <strong>substituir seus filtros</strong> com conteúdos de <strong>%{filename}</strong>. Até <strong>%{count} filtros</strong> será adicionado aos novos filtros.
       domain_blocking_html:
         one: Você está prestes a <strong>substituir seu bloco de lista do domínio</strong> com <strong>%{count} domínio</strong> de <strong>%{filename}</strong>.
         other: Você está prestes a <strong>substituir sua lista de bloqueio de domínio</strong> com <strong>domínios%{count}</strong> de <strong>%{filename}</strong>.
@@ -1684,6 +1707,9 @@ pt-BR:
       bookmarks_html:
         one: Você está prestes a adicionar até <strong>%{count} post</strong> de <strong>%{filename}</strong> aos seus <strong>favoritos</strong>.
         other: Você está prestes a adicionar até <strong>%{count} posts</strong> de <strong>%{filename}</strong> aos seus <strong>favoritos</strong>.
+      custom_filters_html:
+        one: Você está prestes a adicionar até <strong>%{count} filtro</strong> de <strong>%{filename}</strong> para seus <strong>filtros</strong>.
+        other: Você está prestes a adicionar até <strong>%{count} filtros</strong> de <strong>%{filename}</strong> para seus <strong>filtros</strong>.
       domain_blocking_html:
         one: Você está prestes a <strong>bloquear</strong> até <strong>%{count} domínio</strong> de <strong>%{filename}</strong>.
         other: Você está prestes a <strong>bloquear</strong> até <strong>%{count} domínios</strong> de <strong>%{filename}</strong>.
@@ -1720,6 +1746,7 @@ pt-BR:
     types:
       blocking: Lista de bloqueio
       bookmarks: Marcadores
+      custom_filters: Filtros
       domain_blocking: Lista de domínios bloqueados
       following: Pessoas que você segue
       lists: Listas
