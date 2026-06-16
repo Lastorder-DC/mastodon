@@ -127,15 +127,15 @@ const normalizeChatRoom = (room: ApiDmChatRoomJSON): DmChatRoom => ({
   })),
   last_message: room.last_message,
   unread: room.unread,
-  accepted: room.accepted ?? true,
+  accepted: room.accepted,
   last_message_at: room.last_message_at,
   created_at: room.created_at,
-  readReceipts: (room.read_receipts || []).reduce(
+  readReceipts: (room.read_receipts ?? []).reduce<Record<string, string>>(
     (acc, r) => {
       acc[r.account_id] = r.last_read_message_id;
       return acc;
     },
-    {} as Record<string, string>,
+    {},
   ),
 });
 
@@ -182,7 +182,9 @@ export default function dm(
       const newItems: Record<string, DmChatRoom> = { ...state.chatRooms.items };
       const newIds: string[] = [...state.chatRooms.orderedIds];
       const newIdToUuid: Record<string, string> = { ...state.idToUuid };
-      const newAccounts: Record<string, DmChatRoomParticipant> = { ...state.accounts };
+      const newAccounts: Record<string, DmChatRoomParticipant> = {
+        ...state.accounts,
+      };
 
       for (const room of rooms) {
         newItems[room.uuid] = normalizeChatRoom(room);
@@ -243,7 +245,9 @@ export default function dm(
         return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
       });
 
-      const newAccounts: Record<string, DmChatRoomParticipant> = { ...state.accounts };
+      const newAccounts: Record<string, DmChatRoomParticipant> = {
+        ...state.accounts,
+      };
       for (const msg of messages) {
         newAccounts[msg.account.id] = normalizeAccount(msg.account);
       }
@@ -362,7 +366,9 @@ export default function dm(
         ? state.chatRooms.orderedIds
         : [room.uuid, ...state.chatRooms.orderedIds];
 
-      const newAccounts: Record<string, DmChatRoomParticipant> = { ...state.accounts };
+      const newAccounts: Record<string, DmChatRoomParticipant> = {
+        ...state.accounts,
+      };
       for (const participant of roomData.participants) {
         newAccounts[participant.id] = normalizeAccount(participant);
       }
@@ -428,7 +434,6 @@ export default function dm(
 
       const optimisticMessage: DmMessage = {
         id: tempId,
-        dm_chat_room_id: roomId,
         dm_chat_room_uuid: roomId,
         account_id: accountId,
         content: `<p>${escapedContent}</p>`,
@@ -545,7 +550,9 @@ export default function dm(
         chatRooms: {
           ...state.chatRooms,
           items: remainingItems,
-          orderedIds: state.chatRooms.orderedIds.filter(id => id !== roomUuid),
+          orderedIds: state.chatRooms.orderedIds.filter(
+            (id) => id !== roomUuid,
+          ),
         },
         messages: remainingMessages,
       };

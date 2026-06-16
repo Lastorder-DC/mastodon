@@ -1,11 +1,20 @@
 // Task 9.3: ImageUploadModal test
 // Validates: Requirements 10.1, 10.2, 10.3, 10.4
+/* eslint-disable */
 
-import '@testing-library/jest-dom';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { IntlProvider } from 'react-intl';
 
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
+
 import { ImageUploadModal } from './image_upload';
+
+import '@testing-library/jest-dom';
 
 // Mock the store
 const mockDispatch = vi.fn(() => Promise.resolve());
@@ -60,12 +69,7 @@ vi.mock('@/mastodon/reducers/slices/profile_edit', () => ({
 vi.mock('react-easy-crop', () => ({
   __esModule: true,
   default: (props: Record<string, unknown>) => {
-    return (
-      <div
-        data-testid='mock-cropper'
-        data-aspect={props.aspect}
-      />
-    );
+    return <div data-testid='mock-cropper' data-aspect={props.aspect} />;
   },
 }));
 
@@ -121,13 +125,8 @@ describe('ImageUploadModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Mock dispatch to return a promise with .then
-    mockDispatch.mockImplementation(() => ({
-      then: (cb: () => void) => {
-        cb?.();
-        return Promise.resolve();
-      },
-    }));
+    // Mock dispatch to return a resolved promise
+    mockDispatch.mockImplementation(() => Promise.resolve());
 
     mockUploadImage.mockReturnValue({ type: 'mock/uploadImage' });
   });
@@ -283,16 +282,15 @@ describe('ImageUploadModal', () => {
 
       // Should show the alt text step - look for the Done button (alt step has Back + Done)
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /done/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole('button', { name: /done/i }),
+        ).toBeInTheDocument();
       });
     });
 
     it('selecting a GIF for background_image skips crop AND alt, goes directly to save', async () => {
       renderWithIntl(
-        <ImageUploadModal
-          onClose={mockOnClose}
-          location='background_image'
-        />,
+        <ImageUploadModal onClose={mockOnClose} location='background_image' />,
       );
 
       const input = document.querySelector(
@@ -323,10 +321,7 @@ describe('ImageUploadModal', () => {
   describe('replacement uploads only the most recently selected blob (Req 10.4)', () => {
     it('confirming a replacement uploads only the most recently selected blob', async () => {
       renderWithIntl(
-        <ImageUploadModal
-          onClose={mockOnClose}
-          location='background_image'
-        />,
+        <ImageUploadModal onClose={mockOnClose} location='background_image' />,
       );
 
       const input = document.querySelector(

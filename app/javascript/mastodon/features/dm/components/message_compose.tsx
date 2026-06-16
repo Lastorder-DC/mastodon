@@ -3,12 +3,9 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import api from 'mastodon/api';
 import { sendMessage } from 'mastodon/actions/dm';
-import {
-  Picker,
-  loadCustomEmojiData,
-} from 'mastodon/features/emoji/emoji_picker';
+import api from 'mastodon/api';
+import { Picker } from 'mastodon/features/emoji/emoji_picker';
 import { useAppDispatch } from 'mastodon/store';
 
 const messages = defineMessages({
@@ -66,17 +63,20 @@ export const MessageCompose: React.FC<MessageComposeProps> = ({ roomId }) => {
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const emojiDataLoadedRef = useRef(false);
   const blobUrlsRef = useRef<Set<string>>(new Set());
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Cleanup blob URLs on unmount
   useEffect(() => {
+    const blobUrls = blobUrlsRef.current;
+    const errorTimer = errorTimerRef.current;
     return () => {
-      blobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-      blobUrlsRef.current.clear();
-      if (errorTimerRef.current) {
-        clearTimeout(errorTimerRef.current);
+      blobUrls.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      blobUrls.clear();
+      if (errorTimer) {
+        clearTimeout(errorTimer);
       }
     };
   }, []);
@@ -122,18 +122,12 @@ export const MessageCompose: React.FC<MessageComposeProps> = ({ roomId }) => {
   );
 
   const handleToggleEmojiPicker = useCallback(() => {
-    setShowEmojiPicker((prev) => {
-      if (!prev && !emojiDataLoadedRef.current) {
-        void loadCustomEmojiData();
-        emojiDataLoadedRef.current = true;
-      }
-      return !prev;
-    });
+    setShowEmojiPicker((prev) => !prev);
   }, []);
 
   const handleEmojiPick = useCallback(
     (emoji: { native?: string; id?: string }) => {
-      const emojiText = emoji.native || `:${emoji.id}:`;
+      const emojiText = emoji.native ?? `:${emoji.id}:`;
       const textarea = textareaRef.current;
       if (textarea) {
         const start = textarea.selectionStart;
@@ -167,22 +161,21 @@ export const MessageCompose: React.FC<MessageComposeProps> = ({ roomId }) => {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, [showEmojiPicker]);
 
-  const showUploadError = useCallback(
-    (message: string) => {
-      setUploadError(message);
-      if (errorTimerRef.current) {
-        clearTimeout(errorTimerRef.current);
-      }
-      errorTimerRef.current = setTimeout(() => {
-        setUploadError(null);
-        errorTimerRef.current = null;
-      }, 3000);
-    },
-    [],
-  );
+  const showUploadError = useCallback((message: string) => {
+    setUploadError(message);
+    if (errorTimerRef.current) {
+      clearTimeout(errorTimerRef.current);
+    }
+    errorTimerRef.current = setTimeout(() => {
+      setUploadError(null);
+      errorTimerRef.current = null;
+    }, 3000);
+  }, []);
 
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -251,7 +244,7 @@ export const MessageCompose: React.FC<MessageComposeProps> = ({ roomId }) => {
             const polledData = await pollForMedia(responseData.id);
             if (polledData) {
               const previewUrl =
-                polledData.preview_url || URL.createObjectURL(file);
+                polledData.preview_url ?? URL.createObjectURL(file);
               if (previewUrl.startsWith('blob:')) {
                 blobUrlsRef.current.add(previewUrl);
               }
@@ -259,7 +252,7 @@ export const MessageCompose: React.FC<MessageComposeProps> = ({ roomId }) => {
             }
             // Polling exhausted, use what we have
             const previewUrl =
-              responseData.preview_url || URL.createObjectURL(file);
+              responseData.preview_url ?? URL.createObjectURL(file);
             if (previewUrl.startsWith('blob:')) {
               blobUrlsRef.current.add(previewUrl);
             }
@@ -268,7 +261,7 @@ export const MessageCompose: React.FC<MessageComposeProps> = ({ roomId }) => {
 
           if (status === 200) {
             const previewUrl =
-              responseData.preview_url || URL.createObjectURL(file);
+              responseData.preview_url ?? URL.createObjectURL(file);
             if (previewUrl.startsWith('blob:')) {
               blobUrlsRef.current.add(previewUrl);
             }
@@ -301,15 +294,28 @@ export const MessageCompose: React.FC<MessageComposeProps> = ({ roomId }) => {
     [mediaAttachments.length, intl, showUploadError],
   );
 
-  const handleRemoveMedia = useCallback((mediaId: string) => {
-    setMediaAttachments((prev) => {
-      const removed = prev.find((m) => m.id === mediaId);
-      if (removed && removed.preview_url.startsWith('blob:')) {
-        URL.revokeObjectURL(removed.preview_url);
-        blobUrlsRef.current.delete(removed.preview_url);
-      }
-      return prev.filter((m) => m.id !== mediaId);
-    });
+  const handleRemoveMedia = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const mediaId = e.currentTarget.dataset.mediaId;
+      if (!mediaId) return;
+      setMediaAttachments((prev) => {
+        const removed = prev.find((m) => m.id === mediaId);
+        if (removed?.preview_url.startsWith('blob:')) {
+          URL.revokeObjectURL(removed.preview_url);
+          blobUrlsRef.current.delete(removed.preview_url);
+        }
+        return prev.filter((m) => m.id !== mediaId);
+      });
+    },
+    [],
+  );
+
+  const handleDismissError = useCallback(() => {
+    setUploadError(null);
+  }, []);
+
+  const handleAttachClick = useCallback(() => {
+    fileInputRef.current?.click();
   }, []);
 
   return (
@@ -319,7 +325,7 @@ export const MessageCompose: React.FC<MessageComposeProps> = ({ roomId }) => {
           <span>{uploadError}</span>
           <button
             type='button'
-            onClick={() => setUploadError(null)}
+            onClick={handleDismissError}
             aria-label='Dismiss'
           >
             &times;
@@ -334,7 +340,8 @@ export const MessageCompose: React.FC<MessageComposeProps> = ({ roomId }) => {
               <button
                 className='dm-message-compose__media-remove'
                 type='button'
-                onClick={() => handleRemoveMedia(media.id)}
+                onClick={handleRemoveMedia}
+                data-media-id={media.id}
                 title={intl.formatMessage(messages.removeImage)}
               >
                 <svg
@@ -384,7 +391,7 @@ export const MessageCompose: React.FC<MessageComposeProps> = ({ roomId }) => {
             className='dm-message-compose__btn'
             type='button'
             title={intl.formatMessage(messages.attachImage)}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={handleAttachClick}
             disabled={mediaAttachments.length >= 4 || uploading}
           >
             <svg
@@ -439,7 +446,6 @@ export const MessageCompose: React.FC<MessageComposeProps> = ({ roomId }) => {
             showSkinTones={false}
             onClick={handleEmojiPick}
             emojiTooltip
-            locale={intl.locale}
           />
         </div>
       )}

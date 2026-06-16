@@ -10,7 +10,9 @@ export const NavigationLogo: React.FC = () => {
     return (
       <img
         src={
-          autoPlayGif ? account.custom_logo : account.custom_logo_static
+          autoPlayGif
+            ? account.custom_logo
+            : (account.custom_logo_static ?? undefined)
         }
         alt={account.custom_logo_description || 'Mastodon'}
         className='logo logo--custom'

@@ -21,8 +21,15 @@ export const ImageAltModal: FC<
 > = ({ onClose, location }) => {
   const { profile, isPending } = useAppSelector((state) => state.profileEdit);
 
-  const initialAlt = profile?.[`${location}Description`];
-  const imageSrc = profile?.[`${location}Static`];
+  const camelLocation = location.replace(/_([a-z])/g, (_, c: string) =>
+    c.toUpperCase(),
+  );
+  const initialAlt = profile?.[
+    `${camelLocation}Description` as keyof typeof profile
+  ] as string | undefined;
+  const imageSrc = profile?.[
+    `${camelLocation}Static` as keyof typeof profile
+  ] as string | undefined;
 
   const [altText, setAltText] = useState(initialAlt ?? '');
 
