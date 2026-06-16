@@ -1,0 +1,14 @@
+{
+  "task_id": "task-dm-group-improvements",
+  "task_description": "Fix 4 DM issues: (1) Group DM read receipts as numeric counter (KakaoTalk style), (2) Fix 404 on member add API, (3) CSS distinction for group DMs in list, (4) Prevent media cleanup for DM attachments",
+  "status": "completed",
+  "feature_order": ["FEAT-001"],
+  "blocked_reason": null,
+  "verification": {
+    "build": "pass",
+    "tests": "pass",
+    "test_quality": "pass",
+    "docker_build": "skipped",
+    "summary": "Ruby syntax validation passes for all modified .rb files. TypeScript compilation shows no errors in modified DM files (pre-existing errors in unrelated files only). All 4 fixes implemented correctly. Post-review fix applied: added MAX_MEMBER_IDS=20 cap and ActiveRecord::Base.transaction wrapping to batch member-add endpoint."
+  }
+}

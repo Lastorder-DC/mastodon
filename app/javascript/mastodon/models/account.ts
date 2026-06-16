@@ -104,6 +104,14 @@ export const accountDefaultValues: AccountShape = {
   moved: null,
   hide_collections: false,
   email_subscriptions: false,
+  // Custom logo and background image fields (per-user customizations)
+  custom_logo: '',
+  custom_logo_static: '',
+  custom_logo_description: '',
+  custom_logo_enabled: false,
+  background_image: '',
+  background_image_static: '',
+  background_image_enabled: false,
   // This comes from `ApiMutedAccountJSON`, but we should eventually
   // store that in a different object.
   mute_expires_at: null,

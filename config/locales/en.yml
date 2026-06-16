@@ -1762,9 +1762,13 @@ en:
     max_uses_prompt: No limit
     prompt: Generate and share links with others to grant access to this server
     table:
+      autofollow: Follow
       expires_at: Expires
+      force_custom_branding: Custom
       uses: Uses
     title: Invite people
+    force_custom_branding_notice: "By signing up with this invite, you will use the inviter's custom logo and background image."
+    force_custom_branding_restricted: "This feature is restricted. Your custom branding is managed by the account that invited you."
   link_preview:
     author_html: By %{name}
     potentially_sensitive_content:

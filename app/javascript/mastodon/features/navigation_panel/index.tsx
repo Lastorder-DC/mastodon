@@ -12,6 +12,7 @@ import { useDrag } from '@use-gesture/react';
 
 import { useAccount } from '@/mastodon/hooks/useAccount';
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import AlternateEmailActiveIcon from '@/material-icons/400-24px/alternate_email-fill.svg?react';
 import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
 import BookmarksActiveIcon from '@/material-icons/400-24px/bookmarks-fill.svg?react';
 import BookmarksIcon from '@/material-icons/400-24px/bookmarks.svg?react';
@@ -33,11 +34,12 @@ import StarIcon from '@/material-icons/400-24px/star.svg?react';
 import SwapHorizIcon from '@/material-icons/400-24px/swap_horiz.svg?react';
 import TrendingUpIcon from '@/material-icons/400-24px/trending_up.svg?react';
 import { fetchFollowRequests } from 'mastodon/actions/accounts';
+import { fetchUnreadCount } from 'mastodon/actions/dm';
 import { openNavigation, closeNavigation } from 'mastodon/actions/navigation';
 import { Account } from 'mastodon/components/account';
 import { Icon } from 'mastodon/components/icon';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
-import { WordmarkLogo } from 'mastodon/components/logo';
+import { NavigationLogo } from './components/navigation_logo';
 import { Search } from 'mastodon/features/compose/components/search';
 import { AccountSwitcher } from 'mastodon/features/ui/components/account_switcher';
 import { ColumnLink } from 'mastodon/features/ui/components/column_link';
@@ -158,6 +160,40 @@ const NotificationsLink = () => {
   );
 };
 
+const DmLink = () => {
+  const count = useAppSelector((state) => state.dm.unreadCount);
+  const dispatch = useAppDispatch();
+  const intl = useIntl();
+
+  useEffect(() => {
+    dispatch(fetchUnreadCount());
+  }, [dispatch]);
+
+  return (
+    <ColumnLink
+      transparent
+      to='/conversations'
+      icon={
+        <IconWithBadge
+          id='at'
+          icon={AlternateEmailIcon}
+          count={count}
+          className='column-link__icon'
+        />
+      }
+      activeIcon={
+        <IconWithBadge
+          id='at'
+          icon={AlternateEmailActiveIcon}
+          count={count}
+          className='column-link__icon'
+        />
+      }
+      text={intl.formatMessage(messages.direct)}
+    />
+  );
+};
+
 const FollowRequestsLink: React.FC = () => {
   const intl = useIntl();
   const count = useAppSelector(
@@ -260,7 +296,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
           className='column-link column-link--logo'
           id={getNavigationSkipLinkId()}
         >
-          <WordmarkLogo />
+          <NavigationLogo />
         </Link>
       </div>
 
@@ -415,13 +451,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               />
             </li>
             <li>
-              <ColumnLink
-                transparent
-                to='/conversations'
-                icon='at'
-                iconComponent={AlternateEmailIcon}
-                text={intl.formatMessage(messages.direct)}
-              />
+              <DmLink />
             </li>
 
             <li role='separator' />

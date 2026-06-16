@@ -17,6 +17,10 @@
       %p.hint= t('invites.invited_by')
       = render 'application/card', account: @invite.user.account
 
+  - if @invite.present? && @invite.force_custom_branding?
+    .fields-group.invited-by
+      %p.hint= t('invites.force_custom_branding_notice')
+
   .fields-group
     = f.simple_fields_for :account do |ff|
       = ff.input :username,

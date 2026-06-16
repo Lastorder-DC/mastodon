@@ -5,6 +5,7 @@ class BootstrapTimelineService < BaseService
     @source_account = source_account
 
     autofollow_inviter!
+    apply_forced_branding!
     notify_staff!
   end
 
@@ -14,6 +15,14 @@ class BootstrapTimelineService < BaseService
     return unless @source_account&.user&.invite&.autofollow?
 
     FollowService.new.call(@source_account, @source_account.user.invite.user.account)
+  end
+
+  def apply_forced_branding!
+    invite = @source_account&.user&.invite
+    return unless invite&.force_custom_branding?
+
+    inviter_account = invite.user.account
+    @source_account.update!(custom_branding_source_account_id: inviter_account.id)
   end
 
   def notify_staff!

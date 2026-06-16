@@ -117,6 +117,24 @@ export const messages = defineMessages({
     id: 'account_edit.advanced_settings.title',
     defaultMessage: 'Advanced settings',
   },
+  customLogoTitle: {
+    id: 'account_edit.custom_logo.title',
+    defaultMessage: 'Custom logo',
+  },
+  customLogoPlaceholder: {
+    id: 'account_edit.custom_logo.placeholder',
+    defaultMessage:
+      'Replace the Mastodon logo with your own custom logo.',
+  },
+  backgroundImageTitle: {
+    id: 'account_edit.background_image.title',
+    defaultMessage: 'Background image',
+  },
+  backgroundImagePlaceholder: {
+    id: 'account_edit.background_image.placeholder',
+    defaultMessage:
+      'Add a background image to customize how you see Mastodon.',
+  },
 });
 
 export const AccountEdit: FC = () => {
@@ -175,6 +193,18 @@ export const AccountEdit: FC = () => {
       patchProfile({ protected_account: !profile?.protectedAccount }),
     );
   }, [dispatch, profile?.protectedAccount]);
+
+  const handleCustomLogoToggle = useCallback(() => {
+    void dispatch(
+      patchProfile({ custom_logo_enabled: !profile?.customLogoEnabled }),
+    );
+  }, [dispatch, profile?.customLogoEnabled]);
+
+  const handleBackgroundImageToggle = useCallback(() => {
+    void dispatch(
+      patchProfile({ background_image_enabled: !profile?.backgroundImageEnabled }),
+    );
+  }, [dispatch, profile?.backgroundImageEnabled]);
 
   // Normally we would use the account emoji, but we want all custom emojis to be available to render after editing.
   const emojis = useCustomEmojis();
@@ -341,6 +371,58 @@ export const AccountEdit: FC = () => {
             </Button>
           }
         />
+
+        <AccountEditSection
+          title={messages.customLogoTitle}
+          description={messages.customLogoPlaceholder}
+          showDescription={!profile.customLogo}
+          buttons={<AccountImageEdit location='custom_logo' className={classes.sectionImageButton} />}
+        >
+          {profile.customLogo && (
+            <img
+              src={profile.customLogo}
+              alt=''
+              className={classes.customLogoPreview}
+            />
+          )}
+          <ToggleField
+            checked={profile.customLogoEnabled}
+            onChange={handleCustomLogoToggle}
+            disabled={isPending}
+            label={
+              <FormattedMessage
+                id='account_edit.custom_logo.enable_label'
+                defaultMessage='Use custom logo'
+              />
+            }
+          />
+        </AccountEditSection>
+
+        <AccountEditSection
+          title={messages.backgroundImageTitle}
+          description={messages.backgroundImagePlaceholder}
+          showDescription={!profile.backgroundImage}
+          buttons={<AccountImageEdit location='background_image' className={classes.sectionImageButton} />}
+        >
+          {profile.backgroundImage && (
+            <img
+              src={profile.backgroundImage}
+              alt=''
+              className={classes.backgroundImagePreview}
+            />
+          )}
+          <ToggleField
+            checked={profile.backgroundImageEnabled}
+            onChange={handleBackgroundImageToggle}
+            disabled={isPending}
+            label={
+              <FormattedMessage
+                id='account_edit.background_image.enable_label'
+                defaultMessage='Use background image'
+              />
+            }
+          />
+        </AccountEditSection>
 
         <AccountEditSection title={messages.advancedSettingsTitle}>
           <ToggleField

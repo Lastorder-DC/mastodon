@@ -121,6 +121,8 @@ namespace :api, format: false do
       scope module: :profile do
         resource :avatar, only: :destroy
         resource :header, only: :destroy
+        resource :custom_logo, only: :destroy
+        resource :background_image, only: :destroy
       end
     end
 
@@ -345,6 +347,18 @@ namespace :api, format: false do
           post :revoke
         end
       end
+    end
+
+    namespace :dm do
+      resources :chat_rooms, only: [:index, :show, :create, :update, :destroy] do
+        member do
+          post :read
+          post :accept, to: 'chat_room_members#accept'
+        end
+        resources :messages, only: [:index, :create, :destroy], controller: 'chat_room_messages'
+        resources :members, only: [:create, :destroy], controller: 'chat_room_members'
+      end
+      get :unread_count, to: 'unread#count'
     end
   end
 

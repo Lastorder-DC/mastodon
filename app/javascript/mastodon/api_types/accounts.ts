@@ -71,6 +71,13 @@ export interface BaseApiAccountJSON {
   memorial?: boolean;
   hide_collections: boolean;
   email_subscriptions?: boolean;
+  custom_logo?: string | null;
+  custom_logo_static?: string | null;
+  custom_logo_description?: string;
+  custom_logo_enabled?: boolean;
+  background_image?: string | null;
+  background_image_static?: string | null;
+  background_image_enabled?: boolean;
 }
 
 // See app/serializers/rest/muted_account_serializer.rb

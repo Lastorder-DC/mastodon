@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Implement frontend DM infrastructure: TypeScript API client, Redux store (reducers + actions), streaming connection for dm channel, and routing setup to wire /conversations to the new DM feature.",
+  "status": "in_progress",
+  "steps": [
+    "Create app/javascript/mastodon/api/dm.ts with typed API functions using apiRequestGet/apiRequestPost/apiRequestDelete from 'mastodon/api': fetchDmChatRooms(params?: {max_id?, since_id?, min_id?, limit?}), fetchDmChatRoom(id: string), createDmChatRoom(params: {account_ids: string[], title?: string}), updateDmChatRoom(id: string, params: {title: string}), deleteDmChatRoom(id: string), fetchDmMessages(roomId: string, params?: {max_id?, since_id?, min_id?, limit?}), sendDmMessage(roomId: string, params: {content: string, media_ids?: string[], in_reply_to_id?: string, language?: string}), deleteDmMessage(roomId: string, messageId: string), markDmChatRoomRead(roomId: string, params?: {last_read_message_id?: string}), addDmChatRoomMembers(roomId: string, params: {account_ids: string[]}), removeDmChatRoomMember(roomId: string, accountId: string), acceptDmChatRoom(roomId: string), fetchDmUnreadCount(). All endpoints under 'v1/dm/' prefix.",
+    "Create app/javascript/mastodon/api_types/dm.ts defining TypeScript interfaces: ApiDmChatRoomJSON (id, room_type, title, owner: ApiAccountJSON, participants: ApiAccountJSON[], last_message: ApiDmMessageJSON|null, unread: boolean, last_message_at: string, created_at: string), ApiDmMessageJSON (id, dm_chat_room_id, account: ApiAccountJSON, content, content_plain, in_reply_to_id: string|null, attachments: ApiMediaAttachmentJSON[], created_at, language: string|null), ApiDmUnreadCountJSON (count: number).",
+    "Create app/javascript/mastodon/reducers/dm.ts: Define DmState interface with chatRooms (items Map<string, DmChatRoom>, isLoading, hasMore), messages (Record<string, {items: DmMessage[], isLoading, hasMore}>), unreadCount (number), activeRoomId (string|null). Export reducer handling actions: DM_CHAT_ROOMS_FETCH_REQUEST/SUCCESS/FAIL, DM_MESSAGES_FETCH_REQUEST/SUCCESS/FAIL, DM_MESSAGE_SEND_SUCCESS, DM_MESSAGE_RECEIVED (from streaming), DM_MESSAGE_DELETED, DM_CHAT_ROOM_UPDATED, DM_CHAT_ROOM_READ, DM_UNREAD_COUNT_FETCH_SUCCESS, DM_SET_ACTIVE_ROOM. Register this reducer in app/javascript/mastodon/reducers/index.ts.",
+    "Create app/javascript/mastodon/actions/dm.ts: Define action creators and async thunks: fetchChatRooms (calls API, dispatches request/success/fail), fetchMessages(roomId), sendMessage(roomId, params), deleteMessage(roomId, messageId), markAsRead(roomId), fetchUnreadCount(), createChatRoom(params), setActiveRoom(roomId). Use the api client from api/dm.ts.",
+    "Create app/javascript/mastodon/actions/streaming_dm.ts: Export connectDmStream() function that subscribes to the 'dm' streaming channel. On 'dm_message' event, dispatch DM_MESSAGE_RECEIVED action and increment unread count. On 'dm_message.delete' event, dispatch DM_MESSAGE_DELETED. On 'dm_chat_room.update' event, dispatch DM_CHAT_ROOM_UPDATED. On 'dm_chat_room.new' event, add new room to store. Follow the pattern from app/javascript/mastodon/actions/streaming.js for connecting to streaming channels.",
+    "Update the frontend routing: In app/javascript/mastodon/features/ui/index.jsx, change the /conversations route to point to a new DM component (lazy loaded). Add route for /conversations/:roomId. The component will be at app/javascript/mastodon/features/dm/index.tsx (created in next feature). For now, create a minimal placeholder at that path that renders a simple div with 'DM Feature' text so routing works."
+  ],
+  "acceptance_criteria": [
+    "API client at api/dm.ts exports all DM-related fetch/mutate functions",
+    "TypeScript types at api_types/dm.ts properly define the API response shapes",
+    "Redux reducer handles all DM action types and maintains proper state shape",
+    "Streaming connection function can subscribe to dm channel and dispatch events",
+    "Route /conversations loads the new DM component instead of DirectTimeline",
+    "Route /conversations/:roomId is also handled"
+  ],
+  "verification": [
+    "Run `npx tsc --noEmit --project app/javascript/mastodon/tsconfig.json` or similar TypeScript check if available",
+    "Verify all new .ts/.tsx files pass syntax validation with `node --check` or equivalent",
+    "Grep the routing file to confirm /conversations now points to new DM feature"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

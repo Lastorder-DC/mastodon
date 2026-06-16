@@ -1,0 +1,38 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Add UUID column to dm_chat_rooms and use it for frontend URLs instead of numeric IDs. This prevents URL guessing attacks. Internal APIs continue to use numeric IDs for efficiency, but the frontend routes and links switch to UUIDs. The backend show endpoint is modified to support lookup by UUID.",
+  "status": "completed",
+  "steps": [
+    "Create a new migration file db/migrate/20260602000006_add_uuid_to_dm_chat_rooms.rb that adds a uuid column (string, null: false) with a unique index to dm_chat_rooms table. Add a before_save hook in the migration to populate existing records with SecureRandom.uuid.",
+    "Update app/models/dm_chat_room.rb to add a before_create callback that generates a UUID using SecureRandom.uuid. Add a class method find_by_uuid_or_id that accepts a string: if it contains dashes (UUID format), find_by!(uuid: value), otherwise find(value).",
+    "Update app/serializers/rest/dm_chat_room_serializer.rb to include :uuid in the attributes list.",
+    "Update app/controllers/api/v1/dm/chat_rooms_controller.rb - modify the set_chat_room private method to use DmChatRoom.find_by_uuid_or_id(params[:id]) instead of just find(params[:id]) so it can resolve either format. This allows the frontend to pass UUIDs while maintaining backward compat.",
+    "Update app/javascript/mastodon/api_types/dm.ts - add uuid: string field to ApiDmChatRoomJSON interface.",
+    "Update app/javascript/mastodon/reducers/dm.ts - add uuid: string to the DmChatRoom interface, update normalizeChatRoom to include uuid from the API response. Add a new uuidToId mapping (Record<string, string>) in DmState, populated when rooms are normalized.",
+    "Update app/javascript/mastodon/features/dm/components/chat_room_item.tsx - change the Link to use /conversations/${room.uuid} instead of /conversations/${room.id}.",
+    "Update app/javascript/mastodon/features/dm/components/new_chat_room_modal.tsx - change history.push to use the uuid from the API response: history.push(`/conversations/${data.uuid}`).",
+    "Update app/javascript/mastodon/features/dm/index.tsx - the roomId from URL params is now a UUID. Add logic to resolve UUID to numeric ID using the uuidToId map from state, or fetch the room by UUID if not in state. Pass the numeric ID to ChatRoomView.",
+    "Update app/javascript/mastodon/features/dm/components/chat_room_view.tsx - ensure it works with numeric room IDs for API calls (fetchMessages, markAsRead still use numeric IDs since those go through the chat room's nested routes).",
+    "Update app/workers/migrate_conversations_to_dm_worker.rb - no changes needed since DmChatRoom.create! will trigger the before_create callback automatically.",
+    "Update app/services/create_dm_chat_room_service.rb - no changes needed since DmChatRoom.create! will trigger the before_create callback automatically."
+  ],
+  "acceptance_criteria": [
+    "dm_chat_rooms table has a uuid column that is NOT NULL, unique, and indexed",
+    "New rooms created via API get a UUID automatically",
+    "The serializer returns uuid in the API response",
+    "Frontend URLs use /conversations/<uuid> format",
+    "The backend show endpoint can look up rooms by UUID string",
+    "Existing numeric ID lookups still work for backward compatibility",
+    "The reducer maintains a uuid-to-id mapping for efficient lookups"
+  ],
+  "verification": [
+    "Run: ruby -c db/migrate/20260602000006_add_uuid_to_dm_chat_rooms.rb",
+    "Run: ruby -c app/models/dm_chat_room.rb",
+    "Run: ruby -c app/controllers/api/v1/dm/chat_rooms_controller.rb",
+    "Run: ruby -c app/serializers/rest/dm_chat_room_serializer.rb",
+    "Run: npx tsc --noEmit --project /projects/sandbox/mastodon/tsconfig.json 2>&1 | head -50 || echo 'TS check done'"
+  ],
+  "blocked_reason": null,
+  "findings": "All Ruby files pass syntax check. TypeScript compiles with no errors. Updated all three DM controllers (chat_rooms, chat_room_messages, chat_room_members) to support UUID lookups. Frontend uses uuidToId map from redux state to resolve UUID params to numeric IDs for API calls; falls back to passing UUID directly to backend on cold loads."
+}

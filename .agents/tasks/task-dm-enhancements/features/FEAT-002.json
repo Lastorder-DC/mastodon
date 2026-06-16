@@ -1,0 +1,37 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Accept/Reject Invite System with follow-based auto-accept. Backend changes to CreateDmChatRoomService to check if invited participant follows the room creator - if yes, auto-accept; otherwise set accepted: false. Frontend changes to show pending invites with accept/reject UI.",
+  "status": "completed",
+  "steps": [
+    "1. Backend - app/services/create_dm_chat_room_service.rb: In the create_room method, change participant creation logic. For each participant, check if Follow.exists?(account: participant, target_account: owner). If the participant follows the owner, set accepted: true, joined_at: Time.current. Otherwise set accepted: false, joined_at: nil.",
+    "2. Backend - app/workers/migrate_conversations_to_dm_worker.rb: Verify that the create_room method already sets accepted: true for migrated rooms (it does - no changes needed, just confirm).",
+    "3. Backend - app/serializers/rest/dm_chat_room_serializer.rb: Add an 'accepted' attribute that returns the current user's membership accepted status. Method: def accepted; membership = object.dm_chat_room_accounts.find_by(account: current_account); membership&.accepted end. Add :accepted to the attributes list.",
+    "4. Frontend types - app/javascript/mastodon/api_types/dm.ts: Add 'accepted: boolean' to ApiDmChatRoomJSON interface.",
+    "5. Frontend reducer - app/javascript/mastodon/reducers/dm.ts: Add 'accepted: boolean' to DmChatRoom interface. Update normalizeChatRoom to include accepted field from the API response.",
+    "6. Frontend actions - app/javascript/mastodon/actions/dm.ts: Add DM_CHAT_ROOM_ACCEPTED constant. Add acceptChatRoom thunk that calls apiAcceptDmChatRoom(uuid), dispatches DM_CHAT_ROOM_UPDATED with the response. Add rejectChatRoom thunk that calls apiDeleteDmChatRoom(uuid), dispatches DM_CHAT_ROOM_LEFT.",
+    "7. Frontend reducer - app/javascript/mastodon/reducers/dm.ts: Handle DM_CHAT_ROOM_ACCEPTED if needed (DM_CHAT_ROOM_UPDATED already handles it since accept returns the updated room).",
+    "8. Frontend - app/javascript/mastodon/features/dm/components/chat_room_item.tsx: If room.accepted === false, show a visual indicator (e.g., a badge/label saying 'Conversation request' or different styling).",
+    "9. Frontend - app/javascript/mastodon/features/dm/components/chat_room_view.tsx: If room.accepted === false, instead of showing MessageCompose at the bottom, show an accept/reject bar with two buttons. Accept calls acceptChatRoom(roomId), reject calls rejectChatRoom(roomId) then navigates to /conversations.",
+    "10. Add translations - en.json: 'dm.invite.accept' = 'Accept', 'dm.invite.reject' = 'Decline', 'dm.invite.pending' = 'Conversation request', 'dm.invite.description' = '{name} wants to start a conversation'. ko.json: '수락', '거절', '대화 요청', '{name}님이 대화를 요청했습니다'.",
+    "11. Styles - app/javascript/styles/mastodon/dm.scss: Add styles for the invite bar (accept/reject buttons, pending badge on chat room items)."
+  ],
+  "acceptance_criteria": [
+    "CreateDmChatRoomService checks Follow relationship and sets accepted accordingly",
+    "Serializer returns 'accepted' field for current user's membership",
+    "Chat room list shows pending indicator for unaccepted rooms",
+    "Chat room view shows accept/reject buttons instead of compose when not accepted",
+    "Accepting updates the room state to accepted: true",
+    "Rejecting removes the room from the list (same as leave)",
+    "Migrated rooms always have accepted: true (already the case)",
+    "TypeScript compiles without errors"
+  ],
+  "verification": [
+    "Run: cd /projects/sandbox/mastodon && ruby -c app/services/create_dm_chat_room_service.rb",
+    "Run: cd /projects/sandbox/mastodon && ruby -c app/serializers/rest/dm_chat_room_serializer.rb",
+    "Run: cd /projects/sandbox/mastodon && npx tsc --noEmit --skipLibCheck 2>&1 | head -50",
+    "Verify en.json and ko.json have all new translations"
+  ],
+  "blocked_reason": null,
+  "findings": "All changes verified: Ruby syntax OK for both backend files, TypeScript compiles cleanly. Backend create_room method now checks Follow.exists? for auto-accept. Serializer returns accepted field. Frontend types/reducer/actions all updated. Chat room item shows pending badge. Chat room view shows accept/reject bar instead of compose when not accepted. Updated apiAcceptDmChatRoom to include ApiDmChatRoomJSON return type generic for better type safety."
+}

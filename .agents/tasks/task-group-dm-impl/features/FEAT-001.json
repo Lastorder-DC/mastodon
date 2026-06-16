@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Create database migrations for 4 new DM tables (dm_chat_rooms, dm_chat_room_accounts, dm_messages, dm_message_attachments) and Rails models with associations, scopes, enums, and callbacks. Also register OAuth scopes read:dm and write:dm in Doorkeeper config.",
+  "status": "in_progress",
+  "steps": [
+    "Create migration db/migrate/20260602000002_create_dm_chat_rooms.rb with columns: owner_account_id (bigint, not null), title (string, default ''), room_type (integer, not null, default 0), last_message_at (datetime), timestamps. Indexes on owner_account_id and last_message_at.",
+    "Create migration db/migrate/20260602000003_create_dm_chat_room_accounts.rb with columns: dm_chat_room_id (bigint, not null), account_id (bigint, not null), accepted (boolean, not null, default false), unread (boolean, not null, default false), last_read_message_id (bigint), joined_at (datetime), left_at (datetime), timestamps. Unique index on [dm_chat_room_id, account_id] named 'index_dm_room_accounts_unique'. Indexes on account_id and [account_id, unread].",
+    "Create migration db/migrate/20260602000004_create_dm_messages.rb with columns: dm_chat_room_id (bigint, not null), account_id (bigint, not null), content (text, not null, default ''), content_plain (text, default ''), in_reply_to_id (bigint), status_id (bigint), language (string), hidden (boolean, not null, default false), timestamps. Indexes on [dm_chat_room_id, created_at], account_id, and status_id (partial where status_id IS NOT NULL).",
+    "Create migration db/migrate/20260602000005_create_dm_message_attachments.rb with columns: dm_message_id (bigint, not null), media_attachment_id (bigint, not null), timestamps. Indexes on dm_message_id and media_attachment_id.",
+    "Create model app/models/dm_chat_room.rb: belongs_to :owner_account (class_name 'Account'), has_many :dm_chat_room_accounts (dependent: :destroy), has_many :accounts (through: :dm_chat_room_accounts), has_many :dm_messages (dependent: :destroy). enum :room_type { direct: 0, group: 1 }. Scopes: active_for_account(account) - joins dm_chat_room_accounts where account_id matches and left_at is nil; ordered - order(last_message_at: :desc).",
+    "Create model app/models/dm_chat_room_account.rb: belongs_to :dm_chat_room, belongs_to :account. Scopes: active (where left_at: nil), unread (where unread: true).",
+    "Create model app/models/dm_message.rb: belongs_to :dm_chat_room, belongs_to :account, belongs_to :in_reply_to (class_name 'DmMessage', optional: true), belongs_to :status (optional: true), has_many :dm_message_attachments (dependent: :destroy), has_many :media_attachments (through: :dm_message_attachments). Scopes: visible (where hidden: false), ordered (order created_at: :asc), reverse_ordered (order created_at: :desc). Callbacks: after_create :update_room_timestamp (update dm_chat_room.last_message_at), after_create :mark_others_unread (set unread=true on other active participants), after_create :push_to_streaming (enqueue PushDmMessageWorker.perform_async(id)).",
+    "Create model app/models/dm_message_attachment.rb: belongs_to :dm_message, belongs_to :media_attachment.",
+    "Add OAuth scopes to config/initializers/doorkeeper.rb: add :'write:dm' to optional_scopes list (after :'write:conversations') and :'read:dm' to optional_scopes list (after :'read:statuses')."
+  ],
+  "acceptance_criteria": [
+    "All 4 migration files exist with correct column definitions and indexes",
+    "All 4 model files exist with correct associations, enums, scopes, and callbacks",
+    "DmChatRoom has room_type enum with direct:0 and group:1",
+    "DmMessage has after_create callbacks for update_room_timestamp, mark_others_unread, and push_to_streaming",
+    "Doorkeeper config includes read:dm and write:dm scopes",
+    "No existing files are modified except config/initializers/doorkeeper.rb"
+  ],
+  "verification": [
+    "Run `ruby -c` on each new Ruby file to verify syntax is valid",
+    "Verify doorkeeper.rb includes the new scopes by grepping for 'read:dm' and 'write:dm'"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

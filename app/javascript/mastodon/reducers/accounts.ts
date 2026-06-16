@@ -18,9 +18,30 @@ const normalizeAccount = (
   state: typeof initialState,
   account: ApiAccountJSON,
 ) => {
+  const existing = state.get(account.id);
+  const newAccount = createAccountFromServerJSON(account);
+
+  // Preserve owner-only fields (custom logo/background) when not in the API response.
+  // These fields are only serialized for the account owner; other API responses
+  // (timelines, notifications) omit them, which would overwrite with empty defaults.
+  const finalAccount =
+    existing && account.custom_logo === undefined
+      ? newAccount
+          .set('custom_logo', existing.custom_logo)
+          .set('custom_logo_static', existing.custom_logo_static)
+          .set(
+            'custom_logo_description',
+            existing.custom_logo_description,
+          )
+          .set('custom_logo_enabled', existing.custom_logo_enabled)
+          .set('background_image', existing.background_image)
+          .set('background_image_static', existing.background_image_static)
+          .set('background_image_enabled', existing.background_image_enabled)
+      : newAccount;
+
   return state.set(
     account.id,
-    createAccountFromServerJSON(account).set(
+    finalAccount.set(
       'hidden',
       state.get(account.id)?.hidden === false
         ? false

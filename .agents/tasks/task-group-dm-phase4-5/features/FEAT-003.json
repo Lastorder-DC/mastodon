@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Mobile single-panel switching with animations and skeleton loading (T-407, T-408, T-411). Enhance the existing responsive layout to properly handle mobile panel transitions with slide animations, back button behavior, and add skeleton loading placeholders for both chat room list and message list.",
+  "status": "completed",
+  "steps": [
+    "Update app/javascript/mastodon/features/dm/index.tsx to: (a) Add CSS transition classes for panel switching instead of just display:none, (b) Use useNavigate() for proper back button handling - when on mobile in a room view, clicking back should navigate to /conversations (list view), (c) Add a back button in the message view header on mobile (visible only below 768px), (d) Integrate with browser History API so hardware/browser back button works correctly.",
+    "Create app/javascript/mastodon/features/dm/components/skeleton_loading.tsx with two variants: (a) ChatRoomListSkeleton - renders 5-6 placeholder items mimicking chat_room_item layout (gray pulsing rectangles for avatar, name, preview), (b) MessageListSkeleton - renders alternating left/right placeholder bubbles mimicking message layout. Use CSS @keyframes pulse animation.",
+    "Update app/javascript/mastodon/features/dm/components/chat_room_list.tsx to show ChatRoomListSkeleton while isLoading is true and items are empty.",
+    "Update app/javascript/mastodon/features/dm/components/chat_room_view.tsx to show MessageListSkeleton while messages are loading for the first time in a room.",
+    "Update app/javascript/mastodon/features/dm/components/chat_room_header.tsx to: (a) accept an optional onBack prop, (b) render a back arrow button when onBack is provided (mobile mode), (c) style the back button consistently with the existing header.",
+    "Add SCSS to app/javascript/styles/mastodon/dm.scss for: (a) .dm-panel-left--slide-out / .dm-panel-right--slide-in animations using transform:translateX with 250ms ease-out transitions (per design doc section 8.3), (b) .dm-skeleton-item (pulsing placeholder with @keyframes shimmer), (c) .dm-skeleton-avatar, .dm-skeleton-text-line, .dm-skeleton-bubble classes for the two skeleton variants, (d) .dm-chat-room-header__back-btn for the mobile back button."
+  ],
+  "acceptance_criteria": [
+    "On screens < 768px, only one panel is visible at a time",
+    "Selecting a room transitions from list to message view with a slide-left animation",
+    "The back button in the message view header navigates back to the list with slide-right animation",
+    "Browser back button works the same as the header back button on mobile",
+    "Skeleton placeholders show while chat room list is loading",
+    "Skeleton placeholders show while messages are loading for a newly opened room",
+    "TypeScript compiles without errors"
+  ],
+  "verification": ["npx tsc --noEmit (zero errors)"],
+  "blocked_reason": null,
+  "findings": "All pre-commit hooks passed (eslint, stylelint, tsc, oxfmt, i18n:extract). Used useHistory from react-router-dom for navigation. The back button is rendered conditionally via the onBack prop and hidden on desktop via CSS media query (display:none by default, display:flex below 767px). The mobile panel transition uses transform+opacity with 0.25s ease-out instead of display:none for smooth animations."
+}

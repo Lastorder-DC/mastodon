@@ -30,6 +30,7 @@ import { clearHeight } from '../../actions/height_cache';
 import { fetchServer, fetchServerTranslationLanguages } from '../../actions/server';
 import { expandHomeTimeline } from '../../actions/timelines';
 import { initialState, me, owner, singleUserMode, trendsEnabled, landingPage, localLiveFeedAccess, disableHoverCards, domain } from '../../initial_state';
+import { useBackgroundImage } from './hooks/useBackgroundImage';
 
 import BundleColumnError from './components/bundle_column_error';
 import { NavigationBar } from './components/navigation_bar';
@@ -52,6 +53,7 @@ import {
   Reblogs,
   Favourites,
   DirectTimeline,
+  DirectMessages,
   HashtagTimeline,
   Notifications,
   NotificationRequests,
@@ -208,7 +210,9 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/public' exact component={Firehose} componentParams={{ feedType: 'public' }} content={children} />
             <WrappedRoute path='/public/local' exact component={Firehose} componentParams={{ feedType: 'community' }} content={children} />
             <WrappedRoute path='/public/remote' exact component={Firehose} componentParams={{ feedType: 'public:remote' }} content={children} />
-            <WrappedRoute path={['/conversations', '/timelines/direct']} component={DirectTimeline} content={children} />
+            <WrappedRoute path='/conversations/:roomId' component={DirectMessages} content={children} />
+            <WrappedRoute path='/timelines/direct' component={DirectTimeline} content={children} />
+            <WrappedRoute path='/conversations' component={DirectMessages} content={children} />
             <WrappedRoute path='/tags/:id' component={HashtagTimeline} content={children} />
             <WrappedRoute path='/links/:url' component={LinkTimeline} content={children} />
             <WrappedRoute path='/lists/new' component={ListEdit} content={children} />
@@ -271,6 +275,11 @@ class SwitchingColumnsArea extends PureComponent {
     );
   }
 
+}
+
+function BackgroundImageEffect() {
+  useBackgroundImage();
+  return null;
 }
 
 class UI extends PureComponent {
@@ -659,6 +668,7 @@ class UI extends PureComponent {
 
           {!minimalShell && <NavigationBar />}
           {layout !== 'mobile' && <PictureInPicture />}
+          <BackgroundImageEffect />
           <AlertsController />
           {!disableHoverCards && <HoverCardController />}
           <HashtagMenuController />

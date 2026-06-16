@@ -69,6 +69,9 @@ module Account::Associations
     # Account record where account has been migrated
     belongs_to :moved_to_account, class_name: 'Account', optional: true
 
+    # Account record providing forced custom branding
+    belongs_to :custom_branding_source_account, class_name: 'Account', optional: true
+
     # Tag records applied to account
     has_and_belongs_to_many :tags # rubocop:disable Rails/HasAndBelongsToMany
 
