@@ -210,7 +210,8 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/public' exact component={Firehose} componentParams={{ feedType: 'public' }} content={children} />
             <WrappedRoute path='/public/local' exact component={Firehose} componentParams={{ feedType: 'community' }} content={children} />
             <WrappedRoute path='/public/remote' exact component={Firehose} componentParams={{ feedType: 'public:remote' }} content={children} />
-            <WrappedRoute path={['/conversations', '/timelines/direct']} component={DirectTimeline} content={children} />
+            <Redirect from='/conversations/:roomId' to='/direct_message/:roomId' />
+            <WrappedRoute path={['/conversations', '/timelines/direct']} exact component={DirectTimeline} content={children} />
             <WrappedRoute path='/direct_message/:roomId' component={DirectMessages} content={children} />
             <WrappedRoute path='/direct_message' component={DirectMessages} content={children} />
             <WrappedRoute path='/tags/:id' component={HashtagTimeline} content={children} />
