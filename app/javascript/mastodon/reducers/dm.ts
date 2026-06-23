@@ -240,9 +240,13 @@ export default function dm(
         .map(normalizeMessage);
 
       const merged = [...existing.items, ...newMessages].sort((a, b) => {
-        // Snowflake IDs: compare numerically (they may differ in string length)
-        if (a.id.length !== b.id.length) return a.id.length - b.id.length;
-        return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+        // Sort by created_at to ensure correct chronological order even when
+        // migrated messages have IDs that don't match time order.
+        return a.created_at < b.created_at
+          ? -1
+          : a.created_at > b.created_at
+            ? 1
+            : 0;
       });
 
       const newAccounts: Record<string, DmChatRoomParticipant> = {

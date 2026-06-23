@@ -45,7 +45,6 @@ class Api::V1::Dm::ChatRoomMessagesController < Api::BaseController
     @chat_room.dm_messages
               .visible
               .includes(:account, dm_message_attachments: :media_attachment)
-              .reverse_ordered
               .to_a_paginated_by_id(limit_param(LIMIT), params_slice(:max_id, :since_id, :min_id))
   end
 
