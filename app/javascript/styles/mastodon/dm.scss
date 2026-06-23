@@ -514,7 +514,7 @@ body.app-body:has(.dm-page) {
 
 .dm-message-compose__input-row {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 0;
   padding: 8px 16px;
   min-height: 52px;
@@ -653,7 +653,7 @@ body.app-body:has(.dm-page) {
   align-items: center;
   justify-content: space-between;
   padding: 6px 12px;
-  background: rgba(223, 64, 64, 0.15);
+  background: rgba(223, 64, 64, 15%);
   color: #df4040;
   font-size: 13px;
   border-radius: 4px;
@@ -1262,7 +1262,7 @@ body.app-body:has(.dm-page) {
   padding: 10px 16px;
   border: none;
   border-radius: 8px;
-  background: rgba(255, 59, 48, 0.15);
+  background: rgba(255, 59, 48, 15%);
   color: #ff3b30;
   font-size: 14px;
   font-weight: 500;
@@ -1270,7 +1270,7 @@ body.app-body:has(.dm-page) {
   transition: background 0.2s;
 
   &:hover {
-    background: rgba(255, 59, 48, 0.25);
+    background: rgba(255, 59, 48, 25%);
   }
 }
 
@@ -1638,7 +1638,7 @@ html[data-color-scheme='light'] {
   margin-left: 8px;
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(99, 100, 255, 0.15);
+  background: rgba(99, 100, 255, 15%);
   color: #6364ff;
   font-size: 11px;
   font-weight: 500;
@@ -1688,10 +1688,12 @@ html[data-color-scheme='light'] {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 5%);
     border-color: var(--background-border-color);
   }
 }
