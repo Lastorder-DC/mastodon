@@ -240,13 +240,12 @@ export default function dm(
         .map(normalizeMessage);
 
       const merged = [...existing.items, ...newMessages].sort((a, b) => {
-        // Sort by created_at to ensure correct chronological order even when
-        // migrated messages have IDs that don't match time order.
-        return a.created_at < b.created_at
-          ? -1
-          : a.created_at > b.created_at
-            ? 1
-            : 0;
+        // Primary: created_at for correct chronological order
+        if (a.created_at < b.created_at) return -1;
+        if (a.created_at > b.created_at) return 1;
+        // Tie-breaker: id for consistent ordering within same second
+        if (a.id.length !== b.id.length) return a.id.length - b.id.length;
+        return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
       });
 
       const newAccounts: Record<string, DmChatRoomParticipant> = {
