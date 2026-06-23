@@ -67,6 +67,8 @@ class MigrateConversationsToDmWorker
 
   def migrate_single_conversation(conversation)
     participant_ids = conversation.participant_account_ids
+    return if participant_ids.empty?
+
     room_type = participant_ids.size == 1 ? :direct : :group
 
     existing_room = find_existing_room(participant_ids, room_type)
