@@ -203,7 +203,7 @@ const NewChatRoomModalContent: React.FC<{ onClose: () => void }> = ({
     )
       .then((data) => {
         onClose();
-        history.push(`/conversations/${data.uuid}`);
+        history.push(`/direct_message/${data.uuid}`);
       })
       .catch(() => {
         setIsSubmitting(false);

@@ -22,7 +22,7 @@ export const DirectMessages: React.FC = () => {
   }, [dispatch]);
 
   const handleBack = useCallback(() => {
-    history.push('/conversations');
+    history.push('/direct_message');
   }, [history]);
 
   return (

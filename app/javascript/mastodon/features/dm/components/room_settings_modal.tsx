@@ -185,7 +185,7 @@ const RoomSettingsModalContent: React.FC<{
           ) as unknown as Promise<{ id: string; uuid: string }>
         ).then((data) => {
           onClose();
-          history.push(`/conversations/${data.uuid}`);
+          history.push(`/direct_message/${data.uuid}`);
         });
       }
     },
@@ -196,7 +196,7 @@ const RoomSettingsModalContent: React.FC<{
     if (window.confirm(intl.formatMessage(messages.leaveConfirm))) {
       void (dispatch(leaveChatRoom(room.uuid)) as unknown as Promise<void>).then(() => {
         onClose();
-        history.push('/conversations');
+        history.push('/direct_message');
       });
     }
   }, [dispatch, room.uuid, onClose, history, intl]);

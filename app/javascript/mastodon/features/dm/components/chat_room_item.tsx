@@ -29,7 +29,7 @@ export const ChatRoomItem: React.FC<ChatRoomItemProps> = ({ room, active }) => {
 
   return (
     <Link
-      to={`/conversations/${room.uuid}`}
+      to={`/direct_message/${room.uuid}`}
       className={`dm-chat-room-item ${active ? 'dm-chat-room-item--active' : ''} ${room.unread ? 'dm-chat-room-item--unread' : ''} ${!room.accepted ? 'dm-chat-room-item--pending' : ''} ${isGroupChat ? 'dm-chat-room-item--group' : ''}`}
     >
       <div className='dm-chat-room-item__avatar'>

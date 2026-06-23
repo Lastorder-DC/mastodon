@@ -12,6 +12,10 @@ import { canManageReports, canViewAdminDashboard } from 'mastodon/permissions';
 import { useAppDispatch } from 'mastodon/store';
 
 const messages = defineMessages({
+  direct: {
+    id: 'navigation_bar.direct',
+    defaultMessage: 'Private mentions',
+  },
   blocks: { id: 'navigation_bar.blocks', defaultMessage: 'Blocked users' },
   domainBlocks: {
     id: 'navigation_bar.domain_blocks',
@@ -50,6 +54,11 @@ export const MoreLink: React.FC = () => {
 
   const menu = useMemo(() => {
     const arr: MenuItem[] = [
+      {
+        to: '/conversations',
+        text: intl.formatMessage(messages.direct),
+      },
+      null,
       {
         href: '/filters',
         text: intl.formatMessage(messages.filters),

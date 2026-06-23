@@ -305,7 +305,7 @@ function getMenuItems({
                 createChatRoom({ account_ids: [account.id] }),
               ) as unknown as Promise<{ id: string; uuid: string }>
             ).then((data) => {
-              history.push(`/conversations/${data.uuid}`);
+              history.push(`/direct_message/${data.uuid}`);
             }).catch(() => {
               dispatch(directCompose(account));
             });

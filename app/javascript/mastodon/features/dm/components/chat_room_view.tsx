@@ -58,7 +58,7 @@ export const ChatRoomView: React.FC<ChatRoomViewProps> = ({
 
   const handleReject = useCallback(() => {
     void (dispatch(rejectChatRoom(roomId)) as unknown as Promise<void>).then(() => {
-      history.push('/conversations');
+      history.push('/direct_message');
     });
   }, [dispatch, roomId, history]);
 

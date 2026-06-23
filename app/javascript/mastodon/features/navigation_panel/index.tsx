@@ -85,6 +85,7 @@ const messages = defineMessages({
       'Label for the main navigation; should not contain the word "navigation".',
   },
   direct: { id: 'navigation_bar.direct', defaultMessage: 'Private mentions' },
+  dm: { id: 'navigation_bar.dm', defaultMessage: 'DM' },
   favourites: { id: 'navigation_bar.favourites', defaultMessage: 'Favorites' },
   bookmarks: { id: 'navigation_bar.bookmarks', defaultMessage: 'Bookmarks' },
   collections: {
@@ -172,7 +173,7 @@ const DmLink = () => {
   return (
     <ColumnLink
       transparent
-      to='/conversations'
+      to='/direct_message'
       icon={
         <IconWithBadge
           id='at'
@@ -189,7 +190,7 @@ const DmLink = () => {
           className='column-link__icon'
         />
       }
-      text={intl.formatMessage(messages.direct)}
+      text={intl.formatMessage(messages.dm)}
     />
   );
 };
