@@ -1697,3 +1697,18 @@ html[data-color-scheme='light'] {
     border-color: var(--background-border-color);
   }
 }
+
+// Remote user notice bar (disabled compose replacement)
+.dm-remote-notice {
+  padding: 16px;
+  border-top: 1px solid var(--background-border-color);
+  text-align: center;
+  background: rgba(128, 128, 128, 10%);
+}
+
+.dm-remote-notice__message {
+  margin: 0;
+  color: var(--secondary-text-color, #8899a6);
+  font-size: 14px;
+  line-height: 1.4;
+}

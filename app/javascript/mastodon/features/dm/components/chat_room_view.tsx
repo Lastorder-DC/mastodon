@@ -17,6 +17,7 @@ const messages = defineMessages({
   accept: { id: 'dm.invite.accept', defaultMessage: 'Accept' },
   reject: { id: 'dm.invite.reject', defaultMessage: 'Decline' },
   description: { id: 'dm.invite.description', defaultMessage: '{name} wants to start a conversation' },
+  remoteUserNotice: { id: 'dm.remote_user_notice', defaultMessage: '다른 서버 사용자에게는 DM을 보낼 수 없습니다. 개인 멘션을 보내주세요' },
 });
 
 interface ChatRoomViewProps {
@@ -74,6 +75,9 @@ export const ChatRoomView: React.FC<ChatRoomViewProps> = ({
   const isFirstLoad =
     messagesState?.isLoading && messagesState.items.length === 0;
   const ownerName = room.participants.find(p => p.id === room.owner_id)?.display_name || 'Someone';
+  const hasRemoteParticipant = room.participants.some(
+    (p) => p.id !== me && p.acct.includes('@'),
+  );
 
   return (
     <div className='dm-chat-room-view'>
@@ -100,6 +104,12 @@ export const ChatRoomView: React.FC<ChatRoomViewProps> = ({
               {intl.formatMessage(messages.accept)}
             </button>
           </div>
+        </div>
+      ) : hasRemoteParticipant ? (
+        <div className='dm-remote-notice'>
+          <p className='dm-remote-notice__message'>
+            {intl.formatMessage(messages.remoteUserNotice)}
+          </p>
         </div>
       ) : (
         <MessageCompose roomId={roomId} />
