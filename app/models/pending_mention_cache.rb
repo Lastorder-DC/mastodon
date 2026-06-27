@@ -70,6 +70,9 @@ class PendingMentionCache
 
         status_ids = notification_status_map.values
 
+        # Batch query: find all notifications dismissed by this account
+        dismissed_notification_ids = PendingMentionDismissal.where(account_id: account_id, notification_id: notification_status_map.keys).pluck(:notification_id).to_set
+
         # Batch query: find all statuses already favourited by this account
         favourited_status_ids = Favourite.where(account: account, status_id: status_ids).pluck(:status_id).to_set
 
@@ -77,6 +80,7 @@ class PendingMentionCache
         replied_status_ids = Status.where(account: account, in_reply_to_id: status_ids).pluck(:in_reply_to_id).to_set
 
         notification_status_map.each do |notification_id, status_id|
+          next if dismissed_notification_ids.include?(notification_id)
           next if favourited_status_ids.include?(status_id)
           next if replied_status_ids.include?(status_id)
 
@@ -115,10 +119,14 @@ class PendingMentionCache
         if notification_status_map.any?
           status_ids = notification_status_map.values
 
+          # Batch query: find all notifications dismissed by this account
+          dismissed_notification_ids = PendingMentionDismissal.where(account_id: account_id, notification_id: notification_status_map.keys).pluck(:notification_id).to_set
+
           favourited_status_ids = Favourite.where(account: account, status_id: status_ids).pluck(:status_id).to_set
           replied_status_ids = Status.where(account: account, in_reply_to_id: status_ids).pluck(:in_reply_to_id).to_set
 
           notification_status_map.each do |notification_id, status_id|
+            next if dismissed_notification_ids.include?(notification_id)
             next if favourited_status_ids.include?(status_id)
             next if replied_status_ids.include?(status_id)
 

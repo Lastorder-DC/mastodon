@@ -15,7 +15,9 @@ class Api::V1::PendingMentionsController < Api::BaseController
   end
 
   def destroy
-    PendingMentionCache.remove(current_account.id, params[:id].to_i)
+    notification_id = params[:id].to_i
+    PendingMentionCache.remove(current_account.id, notification_id)
+    PendingMentionDismissal.create_or_find_by(account_id: current_account.id, notification_id: notification_id)
     render_empty
   end
 
