@@ -27,6 +27,7 @@ import { notificationGroupsReducer } from './notification_groups';
 import { notificationPolicyReducer } from './notification_policy';
 import { notificationRequestsReducer } from './notification_requests';
 import notifications from './notifications';
+import { pendingMentionsReducer } from './pending_mentions';
 import { pictureInPictureReducer } from './picture_in_picture';
 import { pollsReducer } from './polls';
 import push_notifications from './push_notifications';
@@ -68,6 +69,7 @@ const reducers = {
   media_attachments,
   notifications,
   notificationGroups: notificationGroupsReducer,
+  pendingMentions: pendingMentionsReducer,
   height_cache,
   lists: listsReducer,
   followedTags: followedTagsReducer,
