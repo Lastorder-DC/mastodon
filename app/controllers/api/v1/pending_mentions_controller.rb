@@ -32,6 +32,20 @@ class Api::V1::PendingMentionsController < Api::BaseController
       params[:min_id]
     )
 
+    # If results are fewer than requested limit and cache hasn't been extended,
+    # extend the scan range and retry
+    if notification_ids.length < limit_param(DEFAULT_PENDING_MENTIONS_LIMIT) && !PendingMentionCache.extended?(current_account.id)
+      PendingMentionCache.extend(current_account.id)
+
+      notification_ids = PendingMentionCache.get(
+        current_account.id,
+        limit_param(DEFAULT_PENDING_MENTIONS_LIMIT),
+        params[:max_id],
+        params[:since_id],
+        params[:min_id]
+      )
+    end
+
     return [] if notification_ids.empty?
 
     notifications = Notification.where(id: notification_ids, account_id: current_account.id)

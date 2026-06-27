@@ -1184,7 +1184,7 @@
   "onboarding.profile.upload_header": "프로필 헤더 업로드",
   "password_confirmation.exceeds_maxlength": "암호 확인 값이 최대 암호 길이를 초과하였습니다",
   "password_confirmation.mismatching": "암호 확인 값이 일치하지 않습니다",
-  "pending_mentions.dismiss": "해제",
+  "pending_mentions.dismiss": "무시",
   "pending_mentions.explanation": "답장하거나 좋아요하면 이 목록에서 제거됩니다.",
   "picture_in_picture.restore": "다시 넣기",
   "poll.closed": "마감",

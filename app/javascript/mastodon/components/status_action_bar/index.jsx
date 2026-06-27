@@ -64,6 +64,7 @@ const messages = defineMessages({
   openOriginalPage: { id: 'account.open_original_page', defaultMessage: 'Open original page' },
   revokeQuote: { id: 'status.revoke_quote', defaultMessage: 'Remove my post from @{name}’s post' },
   quotePolicyChange: { id: 'status.quote_policy_change', defaultMessage: 'Change who can quote' },
+  dismissPendingMention: { id: 'pending_mentions.dismiss', defaultMessage: 'Dismiss' },
 });
 
 const mapStateToProps = (state, { status }) => {
@@ -104,6 +105,7 @@ class StatusActionBar extends ImmutablePureComponent {
     onFilter: PropTypes.func,
     onAddFilter: PropTypes.func,
     onInteractionModal: PropTypes.func,
+    onDismissPendingMention: PropTypes.func,
     withDismiss: PropTypes.bool,
     withCounters: PropTypes.bool,
     scrollKey: PropTypes.string,
@@ -244,6 +246,12 @@ class StatusActionBar extends ImmutablePureComponent {
     this.props.onAddFilter(this.props.status);
   };
 
+  handleDismissPendingMention = () => {
+    if (this.props.onDismissPendingMention) {
+      this.props.onDismissPendingMention();
+    }
+  };
+
   handleCopy = () => {
     const url = this.props.status.get('url');
     navigator.clipboard.writeText(url);
@@ -262,6 +270,11 @@ class StatusActionBar extends ImmutablePureComponent {
     const isQuotingMe        = quotedAccountId === me;
 
     let menu = [];
+
+    if (contextType === 'pending-mentions' && this.props.onDismissPendingMention) {
+      menu.push({ text: intl.formatMessage(messages.dismissPendingMention), action: this.handleDismissPendingMention });
+      menu.push(null);
+    }
 
     menu.push({ text: intl.formatMessage(messages.open), action: this.handleOpen });
 

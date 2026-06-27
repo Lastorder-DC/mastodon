@@ -5,8 +5,10 @@ class PendingMentionCache
 
   CACHE_KEY_PREFIX = 'pending_mentions'
   LOCK_KEY_PREFIX = 'pending_mentions_lock'
+  EXTENDED_KEY_PREFIX = 'pending_mentions_extended'
   TTL = 14.days.to_i
   LOCK_TTL = 60 # seconds
+  SCAN_LIMIT = 800
 
   class << self
     include Redisable
@@ -53,7 +55,7 @@ class PendingMentionCache
           .where(filtered: false)
           .includes(mention: :status)
           .order(id: :desc)
-          .limit(800)
+          .limit(SCAN_LIMIT)
 
         # Collect all status IDs for batch queries
         notification_status_map = {}
@@ -85,6 +87,57 @@ class PendingMentionCache
       end
     end
 
+    def extend(account_id)
+      # Only extend once per cache lifetime
+      return false if extended?(account_id)
+
+      lock_key = "#{LOCK_KEY_PREFIX}:extend:#{account_id}"
+      return false unless redis.set(lock_key, 1, nx: true, ex: LOCK_TTL)
+
+      begin
+        account = Account.find(account_id)
+
+        notifications = Notification.where(account_id: account_id, type: :mention)
+          .where(filtered: false)
+          .includes(mention: :status)
+          .order(id: :desc)
+          .offset(SCAN_LIMIT)
+          .limit(SCAN_LIMIT)
+
+        notification_status_map = {}
+        notifications.each do |notification|
+          status = notification.target_status
+          next if status.nil?
+
+          notification_status_map[notification.id] = status.id
+        end
+
+        if notification_status_map.any?
+          status_ids = notification_status_map.values
+
+          favourited_status_ids = Favourite.where(account: account, status_id: status_ids).pluck(:status_id).to_set
+          replied_status_ids = Status.where(account: account, in_reply_to_id: status_ids).pluck(:in_reply_to_id).to_set
+
+          notification_status_map.each do |notification_id, status_id|
+            next if favourited_status_ids.include?(status_id)
+            next if replied_status_ids.include?(status_id)
+
+            add(account_id, notification_id)
+          end
+        end
+
+        # Mark as extended
+        redis.set(extended_key(account_id), 1, ex: TTL)
+        true
+      ensure
+        redis.del(lock_key)
+      end
+    end
+
+    def extended?(account_id)
+      redis.exists?(extended_key(account_id))
+    end
+
     private
 
     def refresh_ttl(account_id)
@@ -103,6 +156,10 @@ class PendingMentionCache
 
     def key(account_id)
       "#{CACHE_KEY_PREFIX}:#{account_id}"
+    end
+
+    def extended_key(account_id)
+      "#{EXTENDED_KEY_PREFIX}:#{account_id}"
     end
   end
 end

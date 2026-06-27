@@ -6,14 +6,12 @@ import { Helmet } from '@unhead/react/helmet';
 
 import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
 import ChatBubbleIcon from '@/material-icons/400-24px/chat_bubble.svg?react';
-import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import {
   fetchPendingMentions,
   fetchMorePendingMentions,
   dismissPendingMention,
 } from 'mastodon/actions/pending_mentions';
 import { Icon } from 'mastodon/components/icon';
-import { IconButton } from 'mastodon/components/icon_button';
 import { NotSignedInIndicator } from 'mastodon/components/not_signed_in_indicator';
 import { StatusQuoteManager } from 'mastodon/components/status_quoted';
 import { useIdentity } from 'mastodon/identity_context';
@@ -25,14 +23,12 @@ import ScrollableList from '../../components/scrollable_list';
 
 const messages = defineMessages({
   title: { id: 'column.pending_mentions', defaultMessage: 'Awaiting reply' },
-  dismiss: { id: 'pending_mentions.dismiss', defaultMessage: 'Dismiss' },
 });
 
 const PendingMentionItem: React.FC<{
   notificationId: string;
   statusId: string | null | undefined;
 }> = ({ notificationId, statusId }) => {
-  const intl = useIntl();
   const dispatch = useAppDispatch();
 
   const handleDismiss = useCallback(() => {
@@ -53,19 +49,12 @@ const PendingMentionItem: React.FC<{
             defaultMessage='Mention'
           />
         </span>
-        <div className='notification-group__actions'>
-          <IconButton
-            title={intl.formatMessage(messages.dismiss)}
-            icon='close'
-            iconComponent={CloseIcon}
-            onClick={handleDismiss}
-          />
-        </div>
       </h2>
 
       <StatusQuoteManager
         id={statusId}
-        contextType='notifications'
+        contextType='pending-mentions'
+        onDismissPendingMention={handleDismiss}
         withDismiss
         skipPrepend
         avatarSize={40}
