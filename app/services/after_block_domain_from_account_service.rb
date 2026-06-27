@@ -11,6 +11,7 @@ class AfterBlockDomainFromAccountService < BaseService
     @domain  = domain
     @domain_block_event = nil
 
+    clear_pending_mentions!
     clear_notifications!
     clear_notification_permissions!
     remove_follows!
@@ -30,6 +31,16 @@ class AfterBlockDomainFromAccountService < BaseService
 
   def clear_notifications!
     Notification.where(account: @account).where(from_account: Account.where(domain: @domain)).in_batches.delete_all
+  end
+
+  def clear_pending_mentions!
+    # Remove pending mention notifications from accounts on the blocked domain
+    notification_ids = Notification.where(account: @account, type: :mention)
+      .where(from_account: Account.where(domain: @domain))
+      .pluck(:id)
+    notification_ids.each do |notification_id|
+      PendingMentionCache.remove(@account.id, notification_id)
+    end
   end
 
   def clear_notification_permissions!

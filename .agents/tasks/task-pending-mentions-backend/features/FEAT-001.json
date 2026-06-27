@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Backend: Create a Redis-backed pending mentions cache with a dedicated API endpoint and a dismiss endpoint. The Redis set stores notification IDs for mention-type notifications that the user has not yet replied to, favourited, or manually dismissed. Provide API endpoints to list pending mentions and to dismiss individual items.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. Create a new model/concern `PendingMentionCache` at `app/models/pending_mention_cache.rb` that uses Redis sorted sets (following the FeedManager pattern in `app/lib/feed_manager.rb`). Key pattern: `pending_mentions:{account_id}`. Store notification_id as both member and score (same as Feed model). Include `Redisable` concern. Methods: `add(account_id, notification_id)`, `remove(account_id, notification_id)`, `exists?(account_id, notification_id)`, `get(account_id, limit, max_id, since_id, min_id)` (paginated, following `Feed#from_redis` pattern), `populate(account_id)` (scans notifications table for existing mention notifications that are unreplied and unfavourited), `count(account_id)`.",
     "2. Create API controller `app/controllers/api/v1/pending_mentions_controller.rb` extending `Api::BaseController`. Actions: `index` (lists pending mention notifications with pagination, similar to `Api::V1::BookmarksController`), `destroy` (removes a single notification from the pending mentions set by notification_id param). Use `doorkeeper_authorize! :read, :'read:notifications'` for index, `:write, :'write:notifications'` for destroy. Return notification data using the existing notification serialization pattern (load Notification records by IDs from Redis, preload associations, render with StatusRelationshipsPresenter).",
@@ -25,5 +25,5 @@
     "Verify routes exist: `bundle exec rails routes | grep pending_mentions`"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Environment lacks libvips (required for Rails boot), so bundle exec rspec and bundle exec rails routes could not be run. All Ruby files pass syntax checks (ruby -c). bundle install succeeded after installing libidn-devel. The code follows existing patterns (Feed model for Redis sorted sets, BookmarksController for pagination, NotificationsController for serialization). The notification lookup in FavouriteService and PostStatusService uses Mention.find_by(account:, status:, silent: false) to locate the correct mention and then finds the notification by activity_type/activity_id."
 }

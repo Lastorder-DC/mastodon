@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Address review issues: Fix stale cache on notification clear/dismiss/block, batch N+1 queries in populate, add TTL to Redis keys, add populate race condition lock.",
+  "status": "in_progress",
+  "steps": [
+    "1. Fix Issue #1 (stale cache): Add PendingMentionCache.remove calls in v1 NotificationsController#dismiss, add PendingMentionCache.clear_for_account in v1/v2 NotificationsController#clear, add cleanup in AfterBlockService and AfterBlockDomainFromAccountService.",
+    "2. Fix Issue #2 (N+1 queries): Batch the Favourite.exists? and Status.exists? calls in PendingMentionCache.populate into two bulk WHERE IN queries.",
+    "3. Fix Issue #3 (No TTL): Add a TTL (14 days) on the Redis key, refreshed on writes (add method).",
+    "4. Fix Issue #4 (Race condition): Add a simple Redis SETNX lock around populate to prevent concurrent population.",
+    "5. Add a clear_for_account class method to PendingMentionCache that deletes the entire key for an account."
+  ],
+  "acceptance_criteria": [
+    "When notifications are cleared via v1 or v2 clear action, the pending mentions cache for that account is also cleared",
+    "When a notification is dismissed via v1 dismiss action, it is removed from pending mentions cache if present",
+    "When a user blocks someone, pending mention notifications from that account are cleaned from the cache",
+    "The populate method uses batch queries (2 SQL queries total instead of N per notification)",
+    "The Redis key has a 14-day TTL that is refreshed on writes",
+    "Concurrent populate calls are guarded by a Redis lock"
+  ],
+  "verification": [
+    "Run ruby -c on all modified Ruby files to verify syntax",
+    "Review code logic for correctness"
+  ],
+  "blocked_reason": null,
+  "findings": null
+}

@@ -34,11 +34,14 @@ class Api::V1::NotificationsController < Api::BaseController
 
   def clear
     current_account.notifications.delete_all
+    PendingMentionCache.clear_for_account(current_account.id)
     render_empty
   end
 
   def dismiss
-    current_account.notifications.find(params[:id]).destroy!
+    notification = current_account.notifications.find(params[:id])
+    PendingMentionCache.remove(current_account.id, notification.id) if notification.type == :mention
+    notification.destroy!
     render_empty
   end
 

@@ -35,8 +35,8 @@ class Api::V1::PendingMentionsController < Api::BaseController
     return [] if notification_ids.empty?
 
     notifications = Notification.where(id: notification_ids, account_id: current_account.id)
-                                .includes(from_account: [:account_stat, :user])
-                                .order(id: :desc)
+      .includes(from_account: [:account_stat, :user])
+      .order(id: :desc)
 
     Notification.preload_cache_collection_target_statuses(notifications) do |target_statuses|
       preload_collection(target_statuses, Status)

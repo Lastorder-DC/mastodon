@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Frontend: Update the pending mentions feature to use the new backend API endpoint instead of client-side filtering, and add a dismiss (X) button to each item in the list.",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "1. Create a new API module `app/javascript/mastodon/api/pending_mentions.ts` with functions: `apiFetchPendingMentions(params?: { max_id?: string; since_id?: string; min_id?: string; limit?: number })` that calls `GET /api/v1/pending_mentions`, and `apiDismissPendingMention(id: string)` that calls `DELETE /api/v1/pending_mentions/:id`. Follow the pattern in `app/javascript/mastodon/api/notifications.ts`.",
     "2. Create Redux actions in `app/javascript/mastodon/actions/pending_mentions.ts` using `createDataLoadingThunk` (following the pattern in `app/javascript/mastodon/actions/notification_groups.ts`). Actions: `fetchPendingMentions` (fetches from API, imports accounts/statuses, returns notification data), `dismissPendingMention` (calls dismiss API and removes from local state).",
@@ -26,5 +26,5 @@
     "Manually verify the component renders correctly by reviewing the code structure"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All steps completed. The old selectPendingMentionGroups selector is kept as a fallback but the main page now uses the dedicated API. Pre-existing test failure in image_upload.test.tsx (aspect ratio mismatch). The i18n:extract pre-commit hook required including a pre-existing unextracted DM locale key (dm.remote_user_notice) in en.json."
 }
