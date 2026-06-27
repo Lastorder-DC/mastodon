@@ -1,0 +1,24 @@
+{
+  "id": "FEAT-004",
+  "type": "fix",
+  "description": "Persist pending mention dismissals in the database so they survive Redis cache expiry/restart. Create a pending_mention_dismissals table, model, and integrate with PendingMentionCache populate/extend and the destroy action.",
+  "status": "completed",
+  "steps": [
+    "1. Create migration for pending_mention_dismissals table with account_id (bigint, not null), notification_id (bigint, not null), created_at, and unique index on [account_id, notification_id].",
+    "2. Create PendingMentionDismissal model with belongs_to associations and validations.",
+    "3. Modify PendingMentionCache.populate and PendingMentionCache.extend to exclude dismissed notification_ids by querying the dismissals table.",
+    "4. Modify Api::V1::PendingMentionsController#destroy to persist a row to the dismissals table in addition to redis.zrem."
+  ],
+  "acceptance_criteria": [
+    "A new pending_mention_dismissals table exists with the correct schema",
+    "When a mention is dismissed, a row is written to the database",
+    "When populate or extend rebuilds the cache, dismissed notification_ids are excluded",
+    "All Ruby files pass syntax checks"
+  ],
+  "verification": [
+    "Run ruby -c on all modified/created Ruby files",
+    "Run rubocop on modified files if available"
+  ],
+  "blocked_reason": null,
+  "findings": "All steps completed. Migration creates pending_mention_dismissals table with unique index on [account_id, notification_id]. Model uses create_or_find_by for race-safe upserts. Both populate and extend methods now batch-query dismissals alongside favourites and replies. Pre-commit hooks (rubocop, lint-staged) pass after bundle install resolved missing gems."
+}
