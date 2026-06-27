@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Backend: Create a Redis-backed pending mentions cache with a dedicated API endpoint and a dismiss endpoint. The Redis set stores notification IDs for mention-type notifications that the user has not yet replied to, favourited, or manually dismissed. Provide API endpoints to list pending mentions and to dismiss individual items.",
+  "status": "in_progress",
+  "steps": [
+    "1. Create a new model/concern `PendingMentionCache` at `app/models/pending_mention_cache.rb` that uses Redis sorted sets (following the FeedManager pattern in `app/lib/feed_manager.rb`). Key pattern: `pending_mentions:{account_id}`. Store notification_id as both member and score (same as Feed model). Include `Redisable` concern. Methods: `add(account_id, notification_id)`, `remove(account_id, notification_id)`, `exists?(account_id, notification_id)`, `get(account_id, limit, max_id, since_id, min_id)` (paginated, following `Feed#from_redis` pattern), `populate(account_id)` (scans notifications table for existing mention notifications that are unreplied and unfavourited), `count(account_id)`.",
+    "2. Create API controller `app/controllers/api/v1/pending_mentions_controller.rb` extending `Api::BaseController`. Actions: `index` (lists pending mention notifications with pagination, similar to `Api::V1::BookmarksController`), `destroy` (removes a single notification from the pending mentions set by notification_id param). Use `doorkeeper_authorize! :read, :'read:notifications'` for index, `:write, :'write:notifications'` for destroy. Return notification data using the existing notification serialization pattern (load Notification records by IDs from Redis, preload associations, render with StatusRelationshipsPresenter).",
+    "3. Add routes in `config/routes/api.rb` under the v1 namespace: `resources :pending_mentions, only: [:index, :destroy]`.",
+    "4. Hook into `NotifyService#call` (in `app/services/notify_service.rb`): after a mention notification is successfully saved and is not filtered, call `PendingMentionCache.add(recipient.id, notification.id)` to add it to the Redis set.",
+    "5. Hook into `FavouriteService#call` (in `app/services/favourite_service.rb`): after a favourite is created, check if there are any mention notifications for that status targeting the current account, and if so, remove them from the pending mentions cache via `PendingMentionCache.remove(account.id, notification_id)`.",
+    "6. Hook status reply creation: In the service that creates statuses (likely `PostStatusService` or where replies are processed), when a user creates a reply to a status, check if there is a mention notification for the in_reply_to status and remove it from pending mentions. A simpler approach: create a concern or callback that checks after status creation if it is a reply, finds the matching mention notification, and removes from cache.",
+    "7. Add a `populate` method that scans the notifications table: `Notification.where(account_id: account_id, type: :mention).where.not(filtered: true).includes(mention: :status)` and for each, checks if the status has NOT been favourited by the account AND has NOT been replied to by the account, then adds to Redis. This is called lazily when the Redis set is empty (first access) or could be triggered manually."
+  ],
+  "acceptance_criteria": [
+    "GET /api/v1/pending_mentions returns a paginated list of notifications (mention type) that have not been replied to, favourited, or dismissed",
+    "DELETE /api/v1/pending_mentions/:id removes the notification from the pending mentions list without deleting the notification itself",
+    "When a new mention notification is created via NotifyService, it is automatically added to the pending mentions cache",
+    "When a user favourites a status that has a pending mention notification, the notification is removed from the pending mentions cache",
+    "When a user replies to a status that has a pending mention notification, the notification is removed from the pending mentions cache"
+  ],
+  "verification": [
+    "Run `bundle exec rspec spec/controllers/api/v1/pending_mentions_controller_spec.rb` (if spec is created)",
+    "Run `bundle exec rspec spec/models/pending_mention_cache_spec.rb` (if spec is created)",
+    "Verify routes exist: `bundle exec rails routes | grep pending_mentions`"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

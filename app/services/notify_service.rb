@@ -237,6 +237,7 @@ class NotifyService < BaseService
       push_notification!
       push_to_conversation! if direct_message?
       send_email! if email_needed?
+      add_to_pending_mentions! if @notification.type == :mention
     end
   rescue ActiveRecord::RecordInvalid
     nil
@@ -316,5 +317,9 @@ class NotifyService < BaseService
 
   def send_email_for_notification_type?
     NON_EMAIL_TYPES.exclude?(@notification.type) && @recipient.user.settings["notification_emails.#{@notification.type}"]
+  end
+
+  def add_to_pending_mentions!
+    PendingMentionCache.add(@recipient.id, @notification.id)
   end
 end

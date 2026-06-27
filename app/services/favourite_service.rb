@@ -21,6 +21,7 @@ class FavouriteService < BaseService
 
     create_notification(favourite)
     increment_statistics
+    remove_from_pending_mentions!(account, status)
 
     favourite
   end
@@ -43,5 +44,15 @@ class FavouriteService < BaseService
 
   def build_json(favourite)
     serialize_payload(favourite, ActivityPub::LikeSerializer).to_json
+  end
+
+  def remove_from_pending_mentions!(account, status)
+    mention = Mention.find_by(account: account, status: status, silent: false)
+    return unless mention
+
+    notification = Notification.find_by(account: account, activity_type: 'Mention', activity_id: mention.id, type: :mention)
+    return unless notification
+
+    PendingMentionCache.remove(account.id, notification.id)
   end
 end

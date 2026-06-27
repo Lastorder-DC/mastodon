@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Frontend: Update the pending mentions feature to use the new backend API endpoint instead of client-side filtering, and add a dismiss (X) button to each item in the list.",
+  "status": "pending",
+  "steps": [
+    "1. Create a new API module `app/javascript/mastodon/api/pending_mentions.ts` with functions: `apiFetchPendingMentions(params?: { max_id?: string; since_id?: string; min_id?: string; limit?: number })` that calls `GET /api/v1/pending_mentions`, and `apiDismissPendingMention(id: string)` that calls `DELETE /api/v1/pending_mentions/:id`. Follow the pattern in `app/javascript/mastodon/api/notifications.ts`.",
+    "2. Create Redux actions in `app/javascript/mastodon/actions/pending_mentions.ts` using `createDataLoadingThunk` (following the pattern in `app/javascript/mastodon/actions/notification_groups.ts`). Actions: `fetchPendingMentions` (fetches from API, imports accounts/statuses, returns notification data), `dismissPendingMention` (calls dismiss API and removes from local state).",
+    "3. Create a Redux slice/reducer `app/javascript/mastodon/reducers/pending_mentions.ts` to store the pending mentions state: `{ items: NotificationGroup[], isLoading: boolean, hasMore: boolean, next: string | null }`. Handle the fetch fulfilled/pending/rejected actions and the dismiss action (remove item from list on success).",
+    "4. Register the new reducer in the root store (`app/javascript/mastodon/store/index.ts` or equivalent store configuration file).",
+    "5. Update `app/javascript/mastodon/features/pending_mentions/index.tsx` to: (a) dispatch `fetchPendingMentions` on mount instead of relying on the notifications selector, (b) read from the new pending_mentions reducer state, (c) support pagination (load more on scroll), (d) render each notification item with a dismiss button (X icon in top-right corner). For the dismiss button, follow the pattern from `notification_follow_request.tsx` using `IconButton` with `CloseIcon` from `@/material-icons/400-24px/close.svg?react`.",
+    "6. The dismiss button should be positioned at the top-right of each notification item. Create a wrapper component or modify the rendering of each notification group item to include the dismiss button. The button calls `dismissPendingMention(notificationId)` on click.",
+    "7. Update localization strings in `app/javascript/mastodon/locales/en.json` and `app/javascript/mastodon/locales/ko.json`: add `pending_mentions.dismiss` key (en: 'Dismiss', ko: '해제').",
+    "8. Remove or deprecate the old `selectPendingMentionGroups` selector in `app/javascript/mastodon/selectors/notifications.ts` since it is no longer needed (or keep it as a fallback but the main feature should use the API)."
+  ],
+  "acceptance_criteria": [
+    "The /pending-mentions page loads data from the dedicated backend API endpoint GET /api/v1/pending_mentions",
+    "Each mention item in the list has a visible X (dismiss) button in the top-right area",
+    "Clicking the dismiss button removes the item from the list and calls DELETE /api/v1/pending_mentions/:id",
+    "Pagination works: scrolling to the bottom loads more items if available",
+    "The page still shows the explanation text and empty state message as before"
+  ],
+  "verification": [
+    "Run `yarn lint` to ensure no linting errors",
+    "Run `yarn test` to verify no test regressions",
+    "Manually verify the component renders correctly by reviewing the code structure"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

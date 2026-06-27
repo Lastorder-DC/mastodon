@@ -111,6 +111,7 @@ namespace :api, format: false do
     resources :mutes, only: [:index]
     resources :favourites, only: [:index]
     resources :bookmarks, only: [:index]
+    resources :pending_mentions, only: [:index, :destroy]
     resources :reports, only: [:create]
     resources :trends, only: [:index], controller: 'trends/tags'
     resources :filters, only: [:index, :create, :show, :update, :destroy]

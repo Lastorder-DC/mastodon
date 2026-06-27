@@ -1,0 +1,7 @@
+{
+  "task_id": "task-pending-mentions-backend",
+  "task_description": "Implement a Redis-backed pending mentions cache with a dedicated API and a dismiss button on the frontend. This solves: (1) mentions being lost when pushed beyond loaded notification pages, and (2) lack of a way to dismiss mentions without favouriting/replying.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}

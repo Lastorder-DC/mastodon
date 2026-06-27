@@ -168,6 +168,7 @@ class PostStatusService < BaseService
     ActivityPub::DistributionWorker.perform_async(@status.id)
     PollExpirationNotifyWorker.perform_at(@status.poll.expires_at, @status.poll.id) if @status.poll
     ActivityPub::QuoteRequestWorker.perform_async(@status.quote.id) if @status.quote&.quoted_status.present? && !@status.quote&.quoted_status&.local?
+    remove_from_pending_mentions_on_reply!
   end
 
   def process_email_subscriptions!
@@ -247,6 +248,21 @@ class PostStatusService < BaseService
 
   def scheduled_in_the_past?
     @scheduled_at.present? && @scheduled_at <= Time.now.utc
+  end
+
+  def remove_from_pending_mentions_on_reply!
+    return unless @status.reply? && @status.in_reply_to_id.present?
+
+    replied_to_status = Status.find_by(id: @status.in_reply_to_id)
+    return unless replied_to_status
+
+    mention = Mention.find_by(account: @account, status: replied_to_status, silent: false)
+    return unless mention
+
+    notification = Notification.find_by(account: @account, activity_type: 'Mention', activity_id: mention.id, type: :mention)
+    return unless notification
+
+    PendingMentionCache.remove(@account.id, notification.id)
   end
 
   def bump_potential_friendship!
