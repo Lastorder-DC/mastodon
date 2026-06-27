@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "fix",
   "description": "Address review issues: Fix stale cache on notification clear/dismiss/block, batch N+1 queries in populate, add TTL to Redis keys, add populate race condition lock.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. Fix Issue #1 (stale cache): Add PendingMentionCache.remove calls in v1 NotificationsController#dismiss, add PendingMentionCache.clear_for_account in v1/v2 NotificationsController#clear, add cleanup in AfterBlockService and AfterBlockDomainFromAccountService.",
     "2. Fix Issue #2 (N+1 queries): Batch the Favourite.exists? and Status.exists? calls in PendingMentionCache.populate into two bulk WHERE IN queries.",
@@ -23,5 +23,5 @@
     "Review code logic for correctness"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "All review issues (#1-#4) addressed. Issue #5 (frontend stores full JSON) skipped as it is a lesser concern for a custom fork and would require significant frontend refactoring. Environment lacks libvips so bundle exec rspec could not run, but all files pass rubocop and ruby -c syntax checks. Pre-commit hooks (rubocop, lint-staged) pass cleanly."
 }
