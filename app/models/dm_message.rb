@@ -22,7 +22,7 @@ class DmMessage < ApplicationRecord
 
   after_create :update_room_timestamp, unless: :skip_side_effects
   after_create :mark_others_unread, unless: :skip_side_effects
-  after_create :push_to_streaming, unless: :skip_side_effects
+  after_create_commit :push_to_streaming, unless: :skip_side_effects
 
   private
 

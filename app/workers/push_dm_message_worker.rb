@@ -12,11 +12,13 @@ class PushDmMessageWorker
 
     blocked_ids = blocked_account_ids(sender_id, chat_room)
 
-    chat_room.dm_chat_room_accounts.active.find_each do |membership|
+    chat_room.dm_chat_room_accounts.active.includes(:account).find_each do |membership|
       next if blocked_ids.include?(membership.account_id)
 
       timeline_id = "timeline:dm:#{membership.account_id}"
       redis.publish(timeline_id, { event: :dm_message, payload: payload }.to_json)
+
+      NotifyDmService.new.call(membership.account, message) unless membership.account_id == sender_id
     end
   rescue ActiveRecord::RecordNotFound
     true

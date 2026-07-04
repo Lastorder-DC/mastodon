@@ -46,14 +46,18 @@ export const connectDmStream = () =>
               state as { dm?: { activeRoomId?: string | null } }
             ).dm?.activeRoomId;
             const isActiveRoom = activeRoomId === payload.dm_chat_room_uuid;
+            const me = (
+              state as { meta: { get: (key: string) => unknown } }
+            ).meta.get('me');
+            const isOwnMessage = payload.account?.id === me;
 
             dispatch({
               type: DM_MESSAGE_RECEIVED,
               payload,
-              meta: { sound: 'boop' },
+              meta: { sound: isOwnMessage ? undefined : 'boop' },
             });
 
-            if (!isActiveRoom) {
+            if (!isActiveRoom && !isOwnMessage) {
               dispatch({ type: DM_UNREAD_COUNT_INCREMENT });
 
               // Browser notification

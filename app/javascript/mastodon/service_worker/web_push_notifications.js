@@ -79,7 +79,22 @@ const htmlToPlainText = html =>
   unescape(html.replace(/<br\s*\/?>/g, '\n').replace(/<\/p><p>/g, '\n\n').replace(/<[^>]*>/g, ''));
 
 export const handlePush = (event) => {
-  const { access_token, notification_id, preferred_locale, title, body, icon } = event.data.json();
+  const data = event.data.json();
+  const { access_token, notification_id, preferred_locale, title, body, icon } = data;
+
+  if (data.is_dm) {
+    event.waitUntil(notify({
+      title,
+      body,
+      icon,
+      tag: data.tag,
+      timestamp: new Date(),
+      badge: '/badge.png',
+      data: { access_token, preferred_locale, url: data.data && data.data.url },
+    }));
+
+    return;
+  }
 
   // Placeholder until more information can be loaded
   event.waitUntil(
