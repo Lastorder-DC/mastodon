@@ -289,9 +289,13 @@ export default function dm(
       const message = normalizeMessage(action.message as ApiDmMessageJSON);
       const tempId = action.tempId as string | undefined;
       const existing = getMessagesState(state.messages, roomId);
-      const filteredItems = tempId
-        ? existing.items.filter((m) => m.tempId !== tempId)
-        : existing.items;
+      // Filter out both the optimistic placeholder (by tempId) AND any copy of
+      // this same real message that the 3s poll (in chat_room_view.tsx) may
+      // have already inserted while we were waiting for this send to resolve -
+      // without the id check, that race produced a permanent duplicate.
+      const filteredItems = existing.items.filter(
+        (m) => m.tempId !== tempId && m.id !== message.id,
+      );
 
       return {
         ...state,

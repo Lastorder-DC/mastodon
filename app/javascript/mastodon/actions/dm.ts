@@ -138,9 +138,20 @@ export const deleteMessage =
 
 export const markAsRead = (roomId: string) => (dispatch: AppDispatch) => {
   dispatch({ type: DM_CHAT_ROOM_READ, roomId });
-  apiMarkDmChatRoomRead(roomId).catch(() => {
-    // Error handling can be expanded later
-  });
+  apiMarkDmChatRoomRead(roomId)
+    .then(() => {
+      // The local DM_CHAT_ROOM_READ decrement above only fires if the room was
+      // already loaded into state.chatRooms.items with unread: true (e.g. via
+      // the room list fetch). Landing on a room directly - straight from a
+      // notification, or before the list has loaded - skips that decrement
+      // silently, leaving the sidebar badge stuck. Re-fetching the count from
+      // the server (its cache is invalidated by the read endpoint) is
+      // authoritative and fixes the badge regardless of what was loaded locally.
+      dispatch(fetchUnreadCount());
+    })
+    .catch(() => {
+      // Error handling can be expanded later
+    });
 };
 
 export const fetchUnreadCount = () => (dispatch: AppDispatch) => {
@@ -185,24 +196,21 @@ export const addChatRoomMembers =
     });
   };
 
-export const leaveChatRoom =
-  (roomUuid: string) => (dispatch: AppDispatch) => {
-    return apiDeleteDmChatRoom(roomUuid).then(() => {
-      dispatch({ type: DM_CHAT_ROOM_LEFT, roomUuid });
-    });
-  };
+export const leaveChatRoom = (roomUuid: string) => (dispatch: AppDispatch) => {
+  return apiDeleteDmChatRoom(roomUuid).then(() => {
+    dispatch({ type: DM_CHAT_ROOM_LEFT, roomUuid });
+  });
+};
 
-export const acceptChatRoom =
-  (roomUuid: string) => (dispatch: AppDispatch) => {
-    return apiAcceptDmChatRoom(roomUuid).then((data) => {
-      dispatch({ type: DM_CHAT_ROOM_UPDATED, chatRoom: data });
-      return data;
-    });
-  };
+export const acceptChatRoom = (roomUuid: string) => (dispatch: AppDispatch) => {
+  return apiAcceptDmChatRoom(roomUuid).then((data) => {
+    dispatch({ type: DM_CHAT_ROOM_UPDATED, chatRoom: data });
+    return data;
+  });
+};
 
-export const rejectChatRoom =
-  (roomUuid: string) => (dispatch: AppDispatch) => {
-    return apiDeleteDmChatRoom(roomUuid).then(() => {
-      dispatch({ type: DM_CHAT_ROOM_LEFT, roomUuid });
-    });
-  };
+export const rejectChatRoom = (roomUuid: string) => (dispatch: AppDispatch) => {
+  return apiDeleteDmChatRoom(roomUuid).then(() => {
+    dispatch({ type: DM_CHAT_ROOM_LEFT, roomUuid });
+  });
+};
