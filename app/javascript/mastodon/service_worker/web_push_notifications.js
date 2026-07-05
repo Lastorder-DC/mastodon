@@ -90,7 +90,7 @@ export const handlePush = (event) => {
       tag: data.tag,
       timestamp: new Date(),
       badge: '/badge.png',
-      data: { access_token, preferred_locale, url: data.data && data.data.url },
+      data: { access_token, preferred_locale, url: `/direct_message/${data.dm_room_uuid}` },
     }));
 
     return;

@@ -103,15 +103,15 @@ class Web::PushDmNotificationWorker
         # the closest fit and unknown apps just ignore the extra `is_dm` marker below.
         notification_type: 'mention',
         is_dm: true,
+        # Top-level so native clients (which only know PushNotification's flat field set) can
+        # read it directly; the web service worker builds its own /direct_message/:uuid path from it.
+        dm_room_uuid: @message.dm_chat_room.uuid,
         access_token: @subscription.associated_access_token,
         preferred_locale: I18n.locale.to_s,
         title: @message.account.display_name.presence || @message.account.username,
         body: @message.content_plain.to_s.truncate(140),
         icon: @message.account.avatar.url(:original),
         tag: "dm-#{@message.dm_chat_room.uuid}",
-        data: {
-          url: "/direct_message/#{@message.dm_chat_room.uuid}",
-        },
       }.to_json
     end
   end
