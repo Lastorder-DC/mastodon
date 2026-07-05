@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import { EmojiHTML } from 'mastodon/components/emoji/html';
 import type { DmChatRoomParticipant, DmMessage } from 'mastodon/reducers/dm';
 
 const messages = defineMessages({
@@ -76,7 +77,10 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             SendDmMessageService#process_content via ERB::Util.html_escape
             before being wrapped in a <p> tag. Only safe HTML is stored.
             Optimistic messages are also HTML-escaped client-side in the
-            reducer before being set as content. */}
+            reducer before being set as content. EmojiHTML parses this into
+            React elements (rather than dangerouslySetInnerHTML) and expands
+            any :shortcode: text nodes into custom emoji images using
+            message.emojis, matching how status content is rendered. */}
         <div
           className={`dm-message-bubble ${isOwn ? 'dm-message-bubble--own' : 'dm-message-bubble--other'}`}
         >
@@ -93,7 +97,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             </div>
           )}
           {message.content && (
-            <div dangerouslySetInnerHTML={{ __html: message.content }} />
+            <EmojiHTML htmlString={message.content} extraEmojis={message.emojis} />
           )}
         </div>
         <span className='dm-message-item__time'>{time}</span>

@@ -6,6 +6,7 @@ class REST::DmMessageSerializer < ActiveModel::Serializer
 
   has_one :account, serializer: REST::AccountSerializer
   has_many :media_attachments, serializer: REST::MediaAttachmentSerializer, key: :attachments
+  has_many :emojis, serializer: REST::CustomEmojiSerializer
 
   def id
     object.id.to_s

@@ -24,6 +24,12 @@ class DmMessage < ApplicationRecord
   after_create :mark_others_unread, unless: :skip_side_effects
   after_create_commit :push_to_streaming, unless: :skip_side_effects
 
+  def emojis
+    return @emojis if defined?(@emojis)
+
+    @emojis = CustomEmoji.from_text(content_plain, account.domain)
+  end
+
   private
 
   def update_room_timestamp

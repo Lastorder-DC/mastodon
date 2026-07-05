@@ -1,4 +1,5 @@
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import type { ApiCustomEmojiJSON } from 'mastodon/api_types/custom_emoji';
 import type {
   ApiDmChatRoomJSON,
   ApiDmMessageJSON,
@@ -61,6 +62,7 @@ export interface DmMessage {
   content_plain: string;
   in_reply_to_id: string | null;
   attachments: unknown[];
+  emojis: ApiCustomEmojiJSON[];
   created_at: string;
   language: string | null;
   pending?: boolean;
@@ -147,6 +149,7 @@ const normalizeMessage = (msg: ApiDmMessageJSON): DmMessage => ({
   content_plain: msg.content_plain,
   in_reply_to_id: msg.in_reply_to_id,
   attachments: msg.attachments,
+  emojis: msg.emojis,
   created_at: msg.created_at,
   language: msg.language,
 });
@@ -443,6 +446,7 @@ export default function dm(
         content_plain: content,
         in_reply_to_id: null,
         attachments: [],
+        emojis: [],
         created_at: new Date().toISOString(),
         language: null,
         pending: true,

@@ -1,4 +1,5 @@
 import type { ApiAccountJSON } from './accounts';
+import type { ApiCustomEmojiJSON } from './custom_emoji';
 import type { ApiMediaAttachmentJSON } from './media_attachments';
 
 export interface ApiDmMessageJSON {
@@ -9,6 +10,7 @@ export interface ApiDmMessageJSON {
   content_plain: string;
   in_reply_to_id: string | null;
   attachments: ApiMediaAttachmentJSON[];
+  emojis: ApiCustomEmojiJSON[];
   created_at: string;
   language: string | null;
 }
