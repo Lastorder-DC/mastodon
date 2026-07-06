@@ -10,7 +10,12 @@ module Fcm
   # signed with our own VAPID key gets rejected by FCM. The v1 API sidesteps that
   # by authenticating as our own Firebase project (a service account) instead.
   class MessageSender
-    ENDPOINT_PREFIX = 'https://fcm.googleapis.com/fcm/send/'
+    # A made-up host under our own domain, not a real reachable endpoint - the app registers
+    # its FCM token with this prefix instead of the literal fcm.googleapis.com Web Push URL,
+    # because that URL format is also exactly what Chrome uses for browser Web Push
+    # subscriptions via FCM. Using our own prefix keeps native app tokens unambiguous from
+    # real browser subscriptions, which must keep going through standard Web Push.
+    ENDPOINT_PREFIX = 'https://native-fcm.occm.cc/'
     TOKEN_URI = 'https://oauth2.googleapis.com/token'
     SCOPE = 'https://www.googleapis.com/auth/firebase.messaging'
     ACCESS_TOKEN_CACHE_KEY = 'fcm_v1_access_token'
