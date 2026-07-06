@@ -24,7 +24,9 @@ class Web::PushDmNotificationWorker
       return
     end
 
-    if web_push_request.legacy
+    if web_push_request.fcm_native?
+      perform_fcm_native_request
+    elsif web_push_request.legacy
       perform_legacy_request
     else
       perform_standard_request
@@ -34,6 +36,20 @@ class Web::PushDmNotificationWorker
   end
 
   private
+
+  def perform_fcm_native_request
+    # Native apps use their own locally-stored session, not the access_token
+    # embedded for the web push service worker's benefit - drop it so it isn't
+    # sent through Google's servers unnecessarily.
+    data = {
+      payload: notification_payload_hash.except(:access_token).to_json,
+      account_id: "#{Rails.configuration.x.local_domain}_#{@subscription.user.account_id}",
+    }
+
+    Fcm::MessageSender.new.send_data_message(web_push_request.fcm_device_token, data)
+  rescue Fcm::MessageSender::UnregisteredError
+    @subscription.destroy!
+  end
 
   def perform_legacy_request
     payload = web_push_request.legacy_encrypt(push_notification_json)
@@ -96,6 +112,10 @@ class Web::PushDmNotificationWorker
   end
 
   def push_notification_json
+    notification_payload_hash.to_json
+  end
+
+  def notification_payload_hash
     I18n.with_locale(@subscription.locale.presence || I18n.default_locale) do
       {
         # Native apps validate this against Mastodon's fixed notification type enum and
@@ -112,7 +132,7 @@ class Web::PushDmNotificationWorker
         body: @message.content_plain.to_s.truncate(140),
         icon: @message.account.avatar.url(:original),
         tag: "dm-#{@message.dm_chat_room.uuid}",
-      }.to_json
+      }
     end
   end
 
