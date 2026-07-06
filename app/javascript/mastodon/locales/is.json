@@ -1231,6 +1231,7 @@
   "status.block": "Útiloka @{name}",
   "status.bookmark": "Bókamerki",
   "status.cancel_reblog_private": "Taka úr endurbirtingu",
+  "status.cannot_edit": "Þú hefur ekki heimild til að breyta þessari færslu",
   "status.cannot_quote": "Þú hefur ekki heimild til að vitna í þessa færslu",
   "status.cannot_reblog": "Þessa færslu er ekki hægt að endurbirta",
   "status.contains_quote": "Inniheldur tilvitnun",
