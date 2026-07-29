@@ -10,6 +10,7 @@ class UpdateAccountService < BaseService
     account.send(update_method, params).tap do |ret|
       next unless ret
 
+      enforce_protected_account_settings(account)
       authorize_all_follow_requests(account) if was_locked && !account.locked
       check_links(account)
       process_hashtags(account)
@@ -21,6 +22,10 @@ class UpdateAccountService < BaseService
   end
 
   private
+
+  def enforce_protected_account_settings(account)
+    account.user&.save! if account.local? && account.protected_account?
+  end
 
   def authorize_all_follow_requests(account)
     follow_requests = FollowRequest.where(target_account: account)

@@ -47,4 +47,47 @@ RSpec.describe UpdateAccountService do
         .and(not_change { unrelated_preview_card.reload.author_account })
     end
   end
+
+  describe 'enabling account protection' do
+    let(:user) { Fabricate(:user) }
+    let(:account) { user.account }
+
+    before do
+      account.update!(discoverable: true, indexable: true, locked: false)
+      user.settings['default_privacy'] = 'public'
+      user.settings['indexable'] = true
+      user.save!
+    end
+
+    it 'forces privacy settings and schedules existing-status cleanup' do
+      subject.call(account, { protected_account: true, discoverable: true, indexable: true, locked: false })
+
+      expect(account.reload).to have_attributes(
+        protected_account: true,
+        locked: true,
+        discoverable: false,
+        indexable: false
+      )
+      expect(user.reload.setting_default_privacy).to eq('private')
+      expect(user.settings['indexable']).to be false
+      expect(AccountProtectionWorker).to have_enqueued_sidekiq_job(account.id)
+    end
+
+    it 'does not allow privacy fields to be enabled while protection remains active' do
+      subject.call(account, { protected_account: true })
+      subject.call(account, { discoverable: true, indexable: true, locked: false })
+
+      expect(account.reload).to have_attributes(locked: true, discoverable: false, indexable: false)
+    end
+
+    it 'schedules visibility restoration when protection is disabled' do
+      subject.call(account, { protected_account: true })
+      AccountProtectionWorker.jobs.clear
+
+      subject.call(account, { protected_account: false })
+
+      expect(account.reload.protected_account).to be false
+      expect(AccountProtectionWorker).to have_enqueued_sidekiq_job(account.id)
+    end
+  end
 end

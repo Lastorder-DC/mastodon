@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef, FC } from 'react';
 import { EmojiHTML } from '../emoji/html';
 
 import type { DisplayNameProps } from './index';
+import { AccountProtectionIcon } from './protection_icon';
 
 export const DisplayNameSimple: FC<
   Omit<DisplayNameProps, 'variant'> & ComponentPropsWithoutRef<'span'>
@@ -19,6 +20,7 @@ export const DisplayNameSimple: FC<
         htmlString={account.display_name_html}
         extraEmojis={account.emojis}
       />
+      <AccountProtectionIcon account={account} />
     </bdi>
   );
 };

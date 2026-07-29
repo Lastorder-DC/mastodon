@@ -16,6 +16,16 @@ RSpec.describe REST::AccountSerializer do
   let(:account) { user.account }
   let(:current_user) { Fabricate(:user) }
 
+  context 'when the account is protected' do
+    before do
+      account.update!(protected_account: true)
+    end
+
+    it 'exposes the protection flag for display-name lock icons' do
+      expect(subject['protected_account']).to be true
+    end
+  end
+
   context 'when the account is suspended' do
     before do
       account.suspend!

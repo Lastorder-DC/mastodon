@@ -20,6 +20,7 @@
 #  uri                          :string
 #  url                          :string
 #  visibility                   :integer          default("public"), not null
+#  visibility_before_protection :integer
 #  created_at                   :datetime         not null
 #  updated_at                   :datetime         not null
 #  account_id                   :bigint(8)        not null

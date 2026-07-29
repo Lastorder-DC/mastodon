@@ -7,6 +7,7 @@ import { EmojiHTML } from '../emoji/html';
 import { Skeleton } from '../skeleton';
 
 import type { DisplayNameProps } from './index';
+import { AccountProtectionIcon } from './protection_icon';
 
 export const DisplayNameWithoutDomain: FC<
   Omit<DisplayNameProps, 'variant'> & ComponentPropsWithoutRef<'span'>
@@ -31,6 +32,7 @@ export const DisplayNameWithoutDomain: FC<
           </strong>
         )}
       </bdi>
+      <AccountProtectionIcon account={account} />
       {children}
     </AnimateEmojiProvider>
   );

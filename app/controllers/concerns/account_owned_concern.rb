@@ -9,6 +9,7 @@ module AccountOwnedConcern
     before_action :check_account_approval, if: :account_required?
     before_action :check_account_suspension, if: :account_required?
     before_action :check_account_confirmation, if: :account_required?
+    before_action :check_account_federation, if: :account_required?
   end
 
   private
@@ -35,6 +36,14 @@ module AccountOwnedConcern
 
   def check_account_confirmation
     not_found if @account.local? && !@account.user_confirmed?
+  end
+
+  def check_account_federation
+    not_found if @account.local? && @account.protected_account? && federation_request?
+  end
+
+  def federation_request?
+    request.format.json? || controller_path.start_with?('activitypub/')
   end
 
   def check_account_suspension

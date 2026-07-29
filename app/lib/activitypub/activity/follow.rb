@@ -6,7 +6,7 @@ class ActivityPub::Activity::Follow < ActivityPub::Activity
   def perform
     target_account = account_from_uri(object_uri)
 
-    return if target_account.nil? || !target_account.local? || delete_arrived_first?(@json['id'])
+    return if target_account.nil? || !target_account.local? || target_account.protected_account? || delete_arrived_first?(@json['id'])
 
     # Update id of already-existing follow requests
     existing_follow_request = ::FollowRequest.find_by(account: @account, target_account: target_account)

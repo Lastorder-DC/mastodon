@@ -10,6 +10,7 @@ class UnfollowService < BaseService
   # @param [Account] followee Which to unfollow
   # @param [Hash] options
   # @option [Boolean] :skip_unmerge
+  # @option [Boolean] :skip_federation
   def call(follower, followee, options = {})
     @follower = follower
     @followee = followee
@@ -32,7 +33,9 @@ class UnfollowService < BaseService
 
     follow.destroy!
 
-    if @followee.local? && @follower.remote? && @follower.activitypub?
+    if @options[:skip_federation]
+      nil
+    elsif @followee.local? && @follower.remote? && @follower.activitypub?
       send_reject_follow(follow)
     elsif @followee.remote? && @followee.activitypub?
       send_undo_follow(follow)
@@ -54,7 +57,7 @@ class UnfollowService < BaseService
 
     follow_request.destroy!
 
-    send_undo_follow(follow_request) unless @followee.local?
+    send_undo_follow(follow_request) unless @followee.local? || @options[:skip_federation]
 
     follow_request
   end

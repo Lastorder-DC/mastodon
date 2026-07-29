@@ -55,6 +55,7 @@ export interface BaseApiAccountJSON {
   id: string;
   last_status_at: string | null;
   locked: boolean;
+  protected_account: boolean;
   show_media: boolean;
   show_media_replies: boolean;
   show_featured: boolean;

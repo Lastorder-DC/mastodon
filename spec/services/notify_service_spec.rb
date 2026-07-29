@@ -96,6 +96,35 @@ RSpec.describe NotifyService do
     end
   end
 
+  context 'with a protected local sender' do
+    let(:sender) { Fabricate(:user).account }
+    let(:activity) { Fabricate(:mention, account: recipient, status: Fabricate(:status, account: sender, visibility: :private)) }
+    let(:type) { :mention }
+
+    before do
+      sender.update!(protected_account: true)
+    end
+
+    it 'does not notify a local non-follower about a mention or reply' do
+      expect { subject }.to_not change(Notification, :count)
+    end
+
+    it 'notifies an approved local follower' do
+      recipient.follow!(sender)
+
+      expect { subject }.to change(Notification, :count).by(1)
+    end
+
+    it 'drops a quote notification for a local non-follower' do
+      quoted_status = Fabricate(:status, account: recipient)
+      quoting_status = Fabricate(:status, account: sender, visibility: :private)
+      quote = Fabricate(:quote, status: quoting_status, quoted_status: quoted_status, state: :accepted)
+
+      expect { described_class.new.call(recipient, :quote, quote) }
+        .to_not change(Notification, :count)
+    end
+  end
+
   describe 'email' do
     before do
       user.settings.update('notification_emails.follow': enabled)

@@ -3,6 +3,7 @@
 class StatusPolicy < ApplicationPolicy
   def show?
     return false if author.unavailable?
+    return false if protected_account_access_denied?
 
     if requires_mention?
       owned? || mention_exists?
@@ -47,6 +48,10 @@ class StatusPolicy < ApplicationPolicy
 
   def private?
     record.private_visibility?
+  end
+
+  def protected_account_access_denied?
+    author.local? && author.protected_account? && !owned? && (!current_account&.local? || !following_author?)
   end
 
   def mention_exists?

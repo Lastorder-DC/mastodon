@@ -136,6 +136,22 @@ RSpec.describe FollowService do
         expect(Follow.find_by(account: sender, target_account: bob)&.languages).to match_array %w(en es)
       end
     end
+
+    describe 'protected account, from a remote account' do
+      let(:bob) { Fabricate(:user).account }
+      let(:remote_sender) { Fabricate(:account, domain: 'remote.example', uri: 'https://remote.example/users/alice') }
+
+      before do
+        bob.update!(protected_account: true)
+      end
+
+      it 'rejects the cross-server follow' do
+        expect { subject.call(remote_sender, bob) }
+          .to raise_error(Mastodon::NotPermittedError)
+
+        expect(remote_sender).to_not be_following(bob)
+      end
+    end
   end
 
   context 'when remote ActivityPub account' do
@@ -153,6 +169,20 @@ RSpec.describe FollowService do
 
       expect(a_request(:post, 'http://example.com/inbox'))
         .to have_been_made.once
+    end
+
+    context 'when the local sender is protected' do
+      before do
+        sender.update!(protected_account: true)
+      end
+
+      it 'rejects the cross-server follow without sending an activity' do
+        expect { subject.call(sender, bob) }
+          .to raise_error(Mastodon::NotPermittedError)
+
+        expect(a_request(:post, 'http://example.com/inbox'))
+          .to_not have_been_made
+      end
     end
   end
 end

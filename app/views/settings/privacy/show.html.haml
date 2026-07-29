@@ -9,26 +9,33 @@
 
   %p.lead= t('privacy.hint_html')
 
+  - if @account.protected_account?
+    %aside.callout
+      = material_symbol 'lock'
+      .content
+        %p.title= t('privacy.protected_account.title')
+        %p= t('privacy.protected_account.body')
+
   %h2= t('privacy.reach')
 
   %p.lead= t('privacy.reach_hint_html')
 
   .fields-group
-    = f.input :discoverable, as: :boolean, wrapper: :with_label, recommended: true
+    = f.input :discoverable, as: :boolean, wrapper: :with_label, recommended: true, disabled: @account.protected_account?
 
   .fields-group
-    = f.input :unlocked, as: :boolean, wrapper: :with_label
+    = f.input :unlocked, as: :boolean, wrapper: :with_label, disabled: @account.protected_account?
 
   %h2= t('privacy.search')
 
   %p.lead= t('privacy.search_hint_html')
 
   .fields-group
-    = f.input :indexable, as: :boolean, wrapper: :with_label
+    = f.input :indexable, as: :boolean, wrapper: :with_label, disabled: @account.protected_account?
 
   = f.simple_fields_for :settings, current_user.settings do |ff|
     .fields-group
-      = ff.input :indexable, wrapper: :with_label
+      = ff.input :indexable, wrapper: :with_label, disabled: @account.protected_account?
 
   %h2= t('privacy.privacy')
 

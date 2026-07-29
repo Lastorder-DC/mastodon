@@ -6,6 +6,7 @@ module WellKnown
 
     before_action :set_account
     before_action :check_account_suspension
+    before_action :check_account_protection
 
     rescue_from ActiveRecord::RecordNotFound, with: :not_found
     rescue_from ActionController::ParameterMissing, WebfingerResource::InvalidRequest, with: :bad_request
@@ -27,6 +28,10 @@ module WellKnown
 
     def check_account_suspension
       gone if @account.permanently_unavailable?
+    end
+
+    def check_account_protection
+      not_found if @account.local? && @account.protected_account?
     end
 
     def gone

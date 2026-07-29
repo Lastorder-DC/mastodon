@@ -7,5 +7,5 @@ class REST::PartialAccountSerializer < REST::AccountSerializer
   self._reflections = []
   self._links = []
 
-  attributes :id, :acct, :locked, :bot, :url, :avatar, :avatar_static, :avatar_description
+  attributes :id, :acct, :locked, :protected_account, :bot, :url, :avatar, :avatar_static, :avatar_description
 end

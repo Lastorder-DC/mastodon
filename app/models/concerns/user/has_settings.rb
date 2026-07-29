@@ -5,6 +5,7 @@ module User::HasSettings
 
   included do
     serialize :settings, coder: UserSettingsSerializer
+    before_validation :enforce_protected_account_settings
   end
 
   def settings_attributes=(attributes)
@@ -161,5 +162,14 @@ module User::HasSettings
 
   def hide_all_media?
     settings['web.display_media'] == 'hide_all'
+  end
+
+  private
+
+  def enforce_protected_account_settings
+    return unless account&.protected_account?
+
+    settings['default_privacy'] = 'private'
+    settings['indexable'] = false
   end
 end

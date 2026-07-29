@@ -42,6 +42,20 @@ RSpec.describe 'The /.well-known/webfinger endpoint' do
     it_behaves_like 'a successful response'
   end
 
+  context 'when a local account is protected' do
+    let(:resource) { alice.to_webfinger_s }
+
+    before do
+      alice.update!(protected_account: true)
+      perform_request!
+    end
+
+    it 'does not expose a federation address' do
+      expect(response)
+        .to have_http_status(404)
+    end
+  end
+
   context 'when an account is temporarily suspended' do
     let(:resource) { alice.to_webfinger_s }
 

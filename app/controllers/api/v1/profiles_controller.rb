@@ -23,24 +23,21 @@ class Api::V1::ProfilesController < Api::BaseController
       merged_params.delete('background_image_enabled')
     end
 
-    if params.key?(:protected_account)
-      if ActiveModel::Type::Boolean.new.cast(params[:protected_account])
-        merged_params[:locked] = true
-        merged_params[:protected_account] = true
-        current_user.settings['default_privacy'] = 'private'
-      else
-        merged_params[:locked] = false
-        merged_params[:protected_account] = false
-        current_user.settings['default_privacy'] = 'unlisted'
-      end
+    protected_account_changed = merged_params.key?('protected_account')
+    protected_account_enabled = ActiveModel::Type::Boolean.new.cast(merged_params['protected_account']) if protected_account_changed
+
+    if protected_account_changed
+      merged_params['protected_account'] = protected_account_enabled
+      merged_params['locked'] = protected_account_enabled
 
       ActiveRecord::Base.transaction do
-        current_user.save!
         UpdateAccountService.new.call(@account, merged_params, raise_error: true)
+
+        unless protected_account_enabled
+          current_user.settings['default_privacy'] = 'unlisted'
+          current_user.save!
+        end
       end
-    elsif @account.protected_account
-      merged_params.delete(:locked)
-      UpdateAccountService.new.call(@account, merged_params, raise_error: true)
     else
       UpdateAccountService.new.call(@account, merged_params, raise_error: true)
     end

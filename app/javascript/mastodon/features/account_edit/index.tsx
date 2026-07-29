@@ -450,7 +450,7 @@ export const AccountEdit: FC = () => {
             hint={
               <FormattedMessage
                 id='account_edit.advanced_settings.protected_account_hint'
-                defaultMessage='When enabled, follow requests require approval and default post visibility is set to followers-only.'
+                defaultMessage='Only approved local followers can see your posts. Discovery and search indexing are disabled, your existing and future posts become followers-only, interactions with non-followers stay hidden without notifications, and the account does not federate with other servers. When protection is disabled, affected posts return to their previous public or quiet public visibility.'
               />
             }
           />

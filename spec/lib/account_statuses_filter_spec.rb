@@ -103,6 +103,52 @@ RSpec.describe AccountStatusesFilter do
       it_behaves_like 'filter params'
     end
 
+    context 'when the profile belongs to a protected local account' do
+      before do
+        account.update!(protected_account: true)
+      end
+
+      context 'when accessed anonymously' do
+        let(:current_account) { nil }
+
+        it 'returns nothing' do
+          expect(subject).to be_empty
+        end
+      end
+
+      context 'when accessed by a local non-follower' do
+        let(:current_account) { Fabricate(:account) }
+
+        it 'returns nothing' do
+          expect(subject).to be_empty
+        end
+      end
+
+      context 'when accessed by an approved local follower' do
+        let(:current_account) { Fabricate(:account) }
+
+        before do
+          current_account.follow!(account)
+        end
+
+        it 'returns follower-visible statuses' do
+          expect(subject).to_not be_empty
+        end
+      end
+
+      context 'when accessed by a remote follower' do
+        let(:current_account) { Fabricate(:account, domain: 'remote.example', uri: 'https://remote.example/users/viewer') }
+
+        before do
+          Fabricate(:follow, account: current_account, target_account: account)
+        end
+
+        it 'returns nothing' do
+          expect(subject).to be_empty
+        end
+      end
+    end
+
     context 'when accessed with a blocked account' do
       let(:current_account) { Fabricate(:account) }
 

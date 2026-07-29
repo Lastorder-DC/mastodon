@@ -54,7 +54,18 @@ class FollowService < BaseService
   end
 
   def following_not_allowed?
-    domain_not_allowed?(@target_account.domain) || @target_account.blocking?(@source_account) || @source_account.blocking?(@target_account) || @target_account.moved? || (!@target_account.local? && @target_account.ostatus?) || @source_account.domain_blocking?(@target_account.domain)
+    protected_account_federation? ||
+      domain_not_allowed?(@target_account.domain) ||
+      @target_account.blocking?(@source_account) ||
+      @source_account.blocking?(@target_account) ||
+      @target_account.moved? ||
+      (!@target_account.local? && @target_account.ostatus?) ||
+      @source_account.domain_blocking?(@target_account.domain)
+  end
+
+  def protected_account_federation?
+    (@source_account.local? && @source_account.protected_account? && @target_account.remote?) ||
+      (@target_account.local? && @target_account.protected_account? && @source_account.remote?)
   end
 
   def change_follow_options!

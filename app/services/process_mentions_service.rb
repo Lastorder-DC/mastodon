@@ -32,6 +32,8 @@ class ProcessMentionsService < BaseService
                  TagManager.instance.normalize_domain(domain)
                end
 
+      next match if @status.account.protected_account? && domain.present?
+
       mentioned_account = Account.find_remote(username, domain)
 
       # Unapproved and unconfirmed accounts should not be mentionable

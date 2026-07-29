@@ -126,6 +126,19 @@ RSpec.describe PostStatusService do
     expect(status.visibility).to eq 'private'
   end
 
+  it 'forces public and unlisted statuses from protected accounts to followers-only' do
+    account = Fabricate(:user).account
+    account.update!(protected_account: true)
+
+    public_status = subject.call(account, text: 'public', visibility: :public)
+    unlisted_status = subject.call(account, text: 'unlisted', visibility: :unlisted)
+
+    expect(public_status.visibility).to eq 'private'
+    expect(public_status.visibility_before_protection).to eq Status.visibilities.fetch('public')
+    expect(unlisted_status.visibility).to eq 'private'
+    expect(unlisted_status.visibility_before_protection).to eq Status.visibilities.fetch('unlisted')
+  end
+
   it 'raises on an invalid visibility' do
     expect do
       create_status_with_options(visibility: :xxx)

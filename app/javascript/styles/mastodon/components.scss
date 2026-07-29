@@ -2673,6 +2673,15 @@ a.account__display-name {
     text-overflow: ellipsis;
     overflow: hidden;
   }
+
+  &__protected-icon {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    margin-inline-start: 4px;
+    color: var(--color-text-secondary);
+    vertical-align: -0.125em;
+  }
 }
 
 .display-name__html {

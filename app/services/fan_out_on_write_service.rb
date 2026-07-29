@@ -61,12 +61,16 @@ class FanOutOnWriteService < BaseService
 
   def notify_quoted_account!
     return unless @status.quote&.quoted_account&.local? && @status.quote&.accepted?
+    return if @account.protected_account? && !@status.quote.quoted_account.following?(@account)
 
     LocalNotificationWorker.perform_async(@status.quote.quoted_account_id, @status.quote.id, 'Quote', 'quote')
   end
 
   def notify_mentioned_accounts!
-    @status.active_mentions.joins(:account).merge(Account.local).select(:id, :account_id).reorder(nil).find_in_batches do |mentions|
+    mentions_scope = @status.active_mentions.joins(:account).merge(Account.local)
+    mentions_scope = mentions_scope.where(account_id: @account.followers.select(:id)) if @account.protected_account?
+
+    mentions_scope.select(:id, :account_id).reorder(nil).find_in_batches do |mentions|
       LocalNotificationWorker.push_bulk(mentions) do |mention|
         options = { 'silenced' => true } if @options[:silenced_account_ids]&.include?(mention.account_id)
 

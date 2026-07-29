@@ -172,6 +172,7 @@ class Account < ApplicationRecord
   scope :duplicate_uris, -> { select(:uri, Arel.star.count).group(:uri).having(Arel.star.count.gt(1)) }
 
   after_update_commit :trigger_update_webhooks
+  after_update_commit :enqueue_account_protection, if: -> { local? && saved_change_to_protected_account? }
 
   delegate :email,
            :email_domain,
@@ -489,6 +490,7 @@ class Account < ApplicationRecord
   end
 
   before_validation :prepare_contents, if: :local?
+  before_validation :enforce_protected_account_privacy, if: -> { local? && protected_account? }
   before_create :generate_keys
   before_destroy :clean_feed_manager
 
@@ -510,6 +512,16 @@ class Account < ApplicationRecord
   def prepare_contents
     display_name&.strip!
     note&.strip!
+  end
+
+  def enforce_protected_account_privacy
+    self.locked = true
+    self.discoverable = false
+    self.indexable = false
+  end
+
+  def enqueue_account_protection
+    AccountProtectionWorker.perform_async(id)
   end
 
   def generate_keys

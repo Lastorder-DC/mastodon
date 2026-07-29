@@ -91,6 +91,7 @@ export const accountDefaultValues: AccountShape = {
   id: '',
   last_status_at: '',
   locked: false,
+  protected_account: false,
   noindex: false,
   show_featured: true,
   show_media: true,

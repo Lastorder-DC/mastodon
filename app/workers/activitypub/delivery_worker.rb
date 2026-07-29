@@ -24,11 +24,12 @@ class ActivityPub::DeliveryWorker
 
   def perform(json, source_account_id, inbox_url, options = {})
     @options        = options.with_indifferent_access
+    @source_account = Account.find(source_account_id)
 
+    return if @source_account.local? && @source_account.protected_account?
     return unless @options[:bypass_availability] || DeliveryFailureTracker.available?(inbox_url)
 
     @json           = json
-    @source_account = Account.find(source_account_id)
     @inbox_url      = inbox_url
     @host           = Addressable::URI.parse(inbox_url).normalized_site
     @performed      = false

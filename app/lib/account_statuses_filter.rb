@@ -35,10 +35,10 @@ class AccountStatusesFilter
     return Status.none if account.unavailable?
 
     if anonymous?
-      account.statuses.distributable_visibility
+      account.protected_account? ? Status.none : account.statuses.distributable_visibility
     elsif author?
       exclude_direct? ? account.statuses.where(visibility: %i(public unlisted private)) : account.statuses.all # NOTE: #merge! does not work without the #all
-    elsif blocked?
+    elsif blocked? || protected_account_access_denied?
       Status.none
     else
       filtered_scope
@@ -115,6 +115,10 @@ class AccountStatusesFilter
 
   def follower?
     current_account.following?(account)
+  end
+
+  def protected_account_access_denied?
+    account.local? && account.protected_account? && (!current_account.local? || !follower?)
   end
 
   def reblogs_may_occur?

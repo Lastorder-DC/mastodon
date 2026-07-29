@@ -174,6 +174,32 @@ RSpec.describe 'Profile API' do
       expect(ActivityPub::UpdateDistributionWorker)
         .to have_enqueued_sidekiq_job(user.account_id)
     end
+
+    context 'when enabling account protection' do
+      let(:params) do
+        {
+          protected_account: true,
+          locked: false,
+          discoverable: true,
+          indexable: true,
+        }
+      end
+
+      it 'forces protected privacy and returns it in the response' do
+        subject
+
+        expect(response).to have_http_status(200)
+        expect(response.parsed_body).to include(
+          'protected_account' => true,
+          'locked' => true,
+          'discoverable' => false,
+          'indexable' => false
+        )
+        expect(user.reload.setting_default_privacy).to eq('private')
+        expect(user.settings['indexable']).to be false
+        expect(AccountProtectionWorker).to have_enqueued_sidekiq_job(account.id)
+      end
+    end
   end
 
   describe 'DELETE /api/v1/profile/avatar' do

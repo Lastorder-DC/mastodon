@@ -83,6 +83,44 @@ RSpec.describe StatusPolicy, type: :model do
 
         expect(subject).to_not permit(viewer, status)
       end
+
+      context 'when the author is a protected local account' do
+        before do
+          alice.update!(protected_account: true)
+          status.visibility = :private
+        end
+
+        it 'grants access to the author' do
+          expect(subject).to permit(alice, status)
+        end
+
+        it 'denies an anonymous viewer' do
+          expect(subject).to_not permit(nil, status)
+        end
+
+        it 'denies a mentioned local non-follower' do
+          status.mentions = [Fabricate(:mention, account: bob)]
+
+          expect(subject).to_not permit(bob, status)
+        end
+
+        it 'grants access to an approved local follower' do
+          bob.follow!(alice)
+
+          expect(subject).to permit(bob, status)
+        end
+
+        it 'denies a remote follower' do
+          remote_follower = Fabricate(
+            :account,
+            domain: 'remote.example',
+            uri: 'https://remote.example/users/follower'
+          )
+          Fabricate(:follow, account: remote_follower, target_account: alice)
+
+          expect(subject).to_not permit(remote_follower, status)
+        end
+      end
     end
   end
 

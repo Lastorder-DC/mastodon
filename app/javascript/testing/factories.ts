@@ -77,6 +77,7 @@ export const accountFactoryAPI: FactoryFunction<ApiAccountJSON> = ({
   indexable: true,
   last_status_at: '2023-01-01',
   locked: false,
+  protected_account: false,
   show_featured: true,
   show_media: true,
   show_media_replies: true,

@@ -115,6 +115,7 @@ class NotifyService < BaseService
       blocked ||= @recipient.muting_notifications?(@sender)
       blocked ||= conversation_muted?
       blocked ||= blocked_mention? if message?
+      blocked ||= protected_interaction_without_follow?
 
       return true if blocked
       return false unless filterable_type?
@@ -132,6 +133,14 @@ class NotifyService < BaseService
 
     def blocked_mention?
       FeedManager.instance.filter?(:mentions, @notification.target_status, @recipient)
+    end
+
+    def protected_interaction_without_follow?
+      %i(mention quote).include?(@notification.type) &&
+        @sender.local? &&
+        @sender.protected_account? &&
+        @recipient.local? &&
+        not_following?
     end
 
     def from_self?

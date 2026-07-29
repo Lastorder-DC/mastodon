@@ -5,6 +5,24 @@ require 'rails_helper'
 RSpec.describe 'Accounts show response' do
   let(:account) { Fabricate(:account) }
 
+  context 'with a protected local account' do
+    before do
+      account.update!(protected_account: true)
+    end
+
+    it 'does not expose the ActivityPub actor by username' do
+      get short_account_path(username: account.username), headers: { 'ACCEPT' => 'application/activity+json' }
+
+      expect(response).to have_http_status(404)
+    end
+
+    it 'does not expose the ActivityPub actor by numeric ID' do
+      get "/ap/users/#{account.id}", headers: { 'ACCEPT' => 'application/activity+json' }
+
+      expect(response).to have_http_status(404)
+    end
+  end
+
   context 'with numeric-based identifiers' do
     context 'with JSON format' do
       it 'returns http success' do

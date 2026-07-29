@@ -48,6 +48,20 @@ RSpec.describe ActivityPub::DeliveryWorker do
       end
     end
 
+    context 'with a protected local sender' do
+      before do
+        sender.update!(protected_account: true)
+        stub_request(:post, url).to_return(status: 200)
+      end
+
+      it 'does not make an outbound federation request' do
+        subject.perform(payload, sender.id, url)
+
+        expect(a_request(:post, url))
+          .to_not have_been_made
+      end
+    end
+
     context 'with failing request' do
       before { stub_request(:post, url).to_return(status: 500) }
 

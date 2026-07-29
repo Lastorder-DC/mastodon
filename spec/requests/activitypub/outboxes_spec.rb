@@ -19,6 +19,20 @@ RSpec.describe 'ActivityPub Outboxes' do
 
       let(:remote_account) { nil }
 
+      context 'when the local account is protected' do
+        let(:page) { nil }
+
+        before do
+          account.update!(protected_account: true)
+        end
+
+        it 'does not expose an ActivityPub outbox' do
+          subject
+
+          expect(response).to have_http_status(404)
+        end
+      end
+
       context 'with page not requested' do
         let(:page) { nil }
 
