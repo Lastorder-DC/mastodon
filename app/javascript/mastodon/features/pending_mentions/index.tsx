@@ -18,7 +18,7 @@ import { useIdentity } from 'mastodon/identity_context';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { Column } from '../../components/column';
-import { ColumnHeader } from '../../components/column_header';
+import { ColumnHeader } from '@/mastodon/components/column/header';
 import ScrollableList from '../../components/scrollable_list';
 
 const messages = defineMessages({
