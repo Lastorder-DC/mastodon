@@ -79,6 +79,7 @@ export interface BaseApiAccountJSON {
   background_image?: string | null;
   background_image_static?: string | null;
   background_image_enabled?: boolean;
+  invalid_handle?: boolean;
 }
 
 // See app/serializers/rest/muted_account_serializer.rb

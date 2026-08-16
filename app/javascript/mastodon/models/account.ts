@@ -121,6 +121,7 @@ export const accountDefaultValues: AccountShape = {
   background_image: '',
   background_image_static: '',
   background_image_enabled: false,
+  invalid_handle: false,
   // This comes from `ApiMutedAccountJSON`, but we should eventually
   // store that in a different object.
   mute_expires_at: null,
