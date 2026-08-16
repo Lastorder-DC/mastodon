@@ -17,6 +17,7 @@ export type StatusContextType =
   | 'home'
   | `list:${string}`
   | 'notifications'
+  | 'pending-mentions'
   | 'public'
   | 'search'
   | 'thread';
@@ -49,6 +50,7 @@ export interface StatusContainerProps {
   skipPrepend?: boolean;
   avatarSize?: number;
   withDismiss?: boolean;
+  onDismissPendingMention?: () => void;
 }
 
 export const TypedStatusContainer =
