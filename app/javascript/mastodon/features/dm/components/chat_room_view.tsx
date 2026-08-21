@@ -2,9 +2,16 @@ import type React from 'react';
 import { useCallback, useEffect } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
+
 import { useHistory } from 'react-router-dom';
 
-import { acceptChatRoom, fetchMessages, markAsRead, rejectChatRoom, setActiveRoom } from 'mastodon/actions/dm';
+import {
+  acceptChatRoom,
+  fetchMessages,
+  markAsRead,
+  rejectChatRoom,
+  setActiveRoom,
+} from 'mastodon/actions/dm';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
@@ -16,8 +23,15 @@ import { MessageListSkeleton } from './skeleton_loading';
 const messages = defineMessages({
   accept: { id: 'dm.invite.accept', defaultMessage: 'Accept' },
   reject: { id: 'dm.invite.reject', defaultMessage: 'Decline' },
-  description: { id: 'dm.invite.description', defaultMessage: '{name} wants to start a conversation' },
-  remoteUserNotice: { id: 'dm.remote_user_notice', defaultMessage: '다른 서버 사용자에게는 DM을 보낼 수 없습니다. 개인 멘션을 보내주세요' },
+  description: {
+    id: 'dm.invite.description',
+    defaultMessage: '{name} wants to start a conversation',
+  },
+  remoteUserNotice: {
+    id: 'dm.remote_user_notice',
+    defaultMessage:
+      '다른 서버 사용자에게는 DM을 보낼 수 없습니다. 개인 멘션을 보내주세요',
+  },
 });
 
 interface ChatRoomViewProps {
@@ -54,11 +68,11 @@ export const ChatRoomView: React.FC<ChatRoomViewProps> = ({
   }, [dispatch, roomId]);
 
   const handleAccept = useCallback(() => {
-    dispatch(acceptChatRoom(roomId));
+    void dispatch(acceptChatRoom(roomId));
   }, [dispatch, roomId]);
 
   const handleReject = useCallback(() => {
-    void (dispatch(rejectChatRoom(roomId)) as unknown as Promise<void>).then(() => {
+    void dispatch(rejectChatRoom(roomId)).then(() => {
       history.push('/direct_message');
     });
   }, [dispatch, roomId, history]);
@@ -74,7 +88,10 @@ export const ChatRoomView: React.FC<ChatRoomViewProps> = ({
   const isGroupChat = room.room_type === 'group_chat';
   const isFirstLoad =
     messagesState?.isLoading && messagesState.items.length === 0;
-  const ownerName = room.participants.find(p => p.id === room.owner_id)?.display_name || 'Someone';
+  const ownerDisplayName = room.participants.find(
+    (p) => p.id === room.owner_id,
+  )?.display_name;
+  const ownerName = ownerDisplayName?.trim() ? ownerDisplayName : 'Someone';
   const hasRemoteParticipant = room.participants.some(
     (p) => p.id !== me && p.acct.includes('@'),
   );
@@ -91,16 +108,24 @@ export const ChatRoomView: React.FC<ChatRoomViewProps> = ({
           isGroupChat={isGroupChat}
         />
       )}
-      {room.accepted === false ? (
+      {!room.accepted ? (
         <div className='dm-invite-bar'>
           <p className='dm-invite-bar__description'>
             {intl.formatMessage(messages.description, { name: ownerName })}
           </p>
           <div className='dm-invite-bar__actions'>
-            <button className='dm-invite-bar__reject-btn' type='button' onClick={handleReject}>
+            <button
+              className='dm-invite-bar__reject-btn'
+              type='button'
+              onClick={handleReject}
+            >
               {intl.formatMessage(messages.reject)}
             </button>
-            <button className='dm-invite-bar__accept-btn' type='button' onClick={handleAccept}>
+            <button
+              className='dm-invite-bar__accept-btn'
+              type='button'
+              onClick={handleAccept}
+            >
               {intl.formatMessage(messages.accept)}
             </button>
           </div>

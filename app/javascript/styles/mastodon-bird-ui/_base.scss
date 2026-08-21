@@ -5,8 +5,8 @@
 
 // Force dark theme regardless of system preference or data-color-scheme attribute
 :root,
-[data-color-scheme="light"],
-[data-color-scheme="dark"],
+[data-color-scheme='light'],
+[data-color-scheme='dark'],
 html:not([data-color-scheme]) {
   // Brand colors
   --color-brand-mastodon: #6364ff;
@@ -34,7 +34,6 @@ html:not([data-color-scheme]) {
   --color-red: #f91880;
 
   // Comes from Mastodon core
-  // stylelint-disable-next-line
   --color-red-75: #f91880bf;
   --color-yellow: #ffac33;
   --color-light-shade: #ffffff05;
@@ -88,15 +87,12 @@ html:not([data-color-scheme]) {
   --size-avatar-small: 32px;
 
   // Comes from Mastodon core
-  // stylelint-disable-next-line
   --width-main-panel: 600px;
 
   // Comes from Mastodon core
-  // stylelint-disable-next-line
   --width-side-panel: 260px;
 
   // Comes from Mastodon core
-  // stylelint-disable-next-line
   --width-compose-panel: 350px;
   --border-radius: 16px;
   --border-radius-badges: 4px;
@@ -205,7 +201,7 @@ html:not([data-color-scheme]) {
 }
 
 // High Contrast theme - v4.6.0-alpha.3-2026-01-24 uses html[data-contrast="high"]
-html[data-contrast="high"] {
+html[data-contrast='high'] {
   --color-dim: #b8b3c0;
 
   // Icons
@@ -251,9 +247,7 @@ html[data-contrast="high"] {
 @media (width >= 1175px) and (width <= 1260px) {
   :root {
     --width-main-panel: 500px;
-    // stylelint-disable-next-line
     --width-side-panel: 265px;
-    // stylelint-disable-next-line
     --width-compose-panel: 265px;
   }
 }
@@ -325,7 +319,7 @@ html[data-contrast="high"] {
     color: var(--color-mention);
   }
 
-  .status-link.mention:not(.hashtag):not(.mention) {
+  .status-link.mention:not(.hashtag, .mention) {
     color: var(--color-link);
   }
 
@@ -573,13 +567,11 @@ html[data-contrast="high"] {
 
   // New Quote Posts feature after v4.5.0.alpha.2-2025-08-24
   .status__quote {
-    // stylelint-disable-next-line
     --status-gutter-width: calc(var(--size-avatar) + var(--gap-default));
   }
 
   // This is Mastodon core variable
   .detailed-status.status--has-quote .status__quote {
-    // stylelint-disable-next-line
     --status-gutter-width: 0;
   }
 
@@ -589,6 +581,7 @@ html[data-contrast="high"] {
 
   .status__quote.status__quote--error {
     --surface-border-color: var(--color-border);
+
     background-color: var(--surface-border-color);
     border-color: var(--surface-border-color);
     color: var(--color-light-text);
@@ -606,7 +599,7 @@ html[data-contrast="high"] {
   }
 
   // Disabled quote post selection
-  .dropdown-menu__item [aria-disabled="true"],
+  .dropdown-menu__item [aria-disabled='true'],
   .dropdown-menu__item :disabled,
   .dropdown-menu__item button:disabled {
     color: var(--color-dim);
@@ -826,7 +819,7 @@ html[data-contrast="high"] {
   .compose-form__autosuggest-wrapper,
   .compose-form__poll-wrapper,
   .compose-form__poll-wrapper select,
-  .poll__option input[type="text"],
+  .poll__option input[type='text'],
   .report-dialog-modal__textarea,
   .search__input,
   .setting-text,
@@ -1083,7 +1076,7 @@ html[data-contrast="high"] {
   }
 
   // Things like notification status update text that should be dim
-  .notification .status-link.mention:not(.hashtag):not(.mention),
+  .notification .status-link.mention:not(.hashtag, .mention),
   .notification .status-link.hashtag,
   .notification .status-link.mention:not(.hashtag),
   .compose-form .autosuggest-textarea__textarea::placeholder,
@@ -1320,7 +1313,7 @@ html[data-contrast="high"] {
   .focusable:focus .detailed-status,
   .focusable:focus .detailed-status__action-bar,
   .compose-form__poll-wrapper select,
-  .poll__option input[type="text"],
+  .poll__option input[type='text'],
   .language-dropdown__dropdown,
   .report-dialog-modal__textarea,
   .drawer__inner,
@@ -1358,8 +1351,8 @@ html[data-contrast="high"] {
   }
 
   // Avatar
-  .status__avatar[style="width: 46px; height: 46px;"],
-  .account__avatar[style="width: 46px; height: 46px;"],
+  .status__avatar[style='width: 46px; height: 46px;'],
+  .account__avatar[style='width: 46px; height: 46px;'],
   .status__avatar {
     // Need to override inline styles
     height: var(--size-avatar) !important;
@@ -1508,10 +1501,10 @@ html[data-contrast="high"] {
   }
 
   // Rtl version
-  [dir="rtl"] .status__action-bar,
-  [dir="rtl"] .attachment-list,
-  [dir="rtl"] .status__content__read-more-button,
-  [dir="rtl"] .status .status__content {
+  [dir='rtl'] .status__action-bar,
+  [dir='rtl'] .attachment-list,
+  [dir='rtl'] .status__content__read-more-button,
+  [dir='rtl'] .status .status__content {
     padding-left: 0;
     padding-right: calc(var(--size-avatar) + var(--gap-default));
   }
@@ -1556,7 +1549,7 @@ html[data-contrast="high"] {
   }
 
   // Fix aspect-ratio for some videos in mastodon v4.1.5-nightly-2023-07-26
-  div[style*="aspect-ratio"]:not([class]) {
+  div[style*='aspect-ratio']:not([class]) {
     // It's inlined so we have to use !important
     aspect-ratio: unset !important;
   }
@@ -1640,7 +1633,7 @@ html[data-contrast="high"] {
   // When image is still loading up, reset width to 100%, Fixes #150
   // When images are still loading the placeholder only shows up partly #150
   // @link https://github.com/ronilaukkarinen/mastodon-bird-ui/issues/150
-  canvas[class="media-gallery__preview"] {
+  canvas[class='media-gallery__preview'] {
     width: 100% !important;
   }
 
@@ -1690,19 +1683,19 @@ html[data-contrast="high"] {
   // Textual labels for detailed metrics
   .detailed-status__link > .icon-reply + span::after {
     color: var(--color-dim);
-    content: "Replies";
+    content: 'Replies';
     font-weight: var(--font-weight-semibold);
   }
 
   .detailed-status__link > .icon-retweet + span::after {
     color: var(--color-dim);
-    content: "Boosts";
+    content: 'Boosts';
     font-weight: var(--font-weight-semibold);
   }
 
   .detailed-status__link > .icon-star + span::after {
     color: var(--color-dim);
-    content: "Favourites";
+    content: 'Favourites';
     font-weight: var(--font-weight-semibold);
   }
 
@@ -1772,13 +1765,12 @@ html[data-contrast="high"] {
   }
 
   // Fix Create account button not clickable on mobile
-  .ui__header:has(.button[href="/auth/sign_up"]) {
+  .ui__header:has(.button[href='/auth/sign_up']) {
     z-index: 4;
   }
 
   // Hidden things
-  .column-header
-    .column-header__icon:not(.icon-user-plus):not(.icon-user-times) {
+  .column-header .column-header__icon:not(.icon-user-plus, .icon-user-times) {
     display: none;
   }
 
@@ -2065,7 +2057,7 @@ html[data-contrast="high"] {
     width: 100%;
   }
 
-  [dir="rtl"] .column-link {
+  [dir='rtl'] .column-link {
     margin-left: auto;
     margin-right: 0;
   }
@@ -2082,7 +2074,7 @@ html[data-contrast="high"] {
     background-color: var(--color-column-link-hover);
     border-radius: 32px;
     bottom: calc(2px - var(--gap-column-link) * 1.5);
-    content: "";
+    content: '';
     inset-inline-end: calc(0px - (var(--gap-column-link) * 2));
     inset-inline-start: calc(-1.28571429em - var(--gap-column-link) - 7px * 2);
     opacity: 0;
@@ -2165,7 +2157,7 @@ html[data-contrast="high"] {
     border-top-left-radius: 9999px;
     border-top-right-radius: 9999px;
     bottom: -1px;
-    content: "";
+    content: '';
     display: block;
     height: 4px;
     left: 50%;
@@ -2349,24 +2341,24 @@ html[data-contrast="high"] {
 
   // Input texts
   .search.active .search__input,
-  .poll__option input[type="text"],
+  .poll__option input[type='text'],
   input.setting-text:focus,
   .search__input:focus {
     color: var(--color-light-text);
   }
 
   // Poll input
-  .poll__option input[type="text"] {
+  .poll__option input[type='text'] {
     background-color: transparent;
     border-color: var(--color-border);
   }
 
-  .poll__option input[type="text"]:focus {
+  .poll__option input[type='text']:focus {
     border-color: var(--color-accent);
   }
 
   // Placeholders
-  .poll__option input[type="text"]::placeholder,
+  .poll__option input[type='text']::placeholder,
   .search__input::placeholder,
   input::placeholder,
   input.setting-text::placeholder {
@@ -2451,28 +2443,28 @@ html[data-contrast="high"] {
   .account__header__bio
     .account__header__fields
     dl:has(
-      dd[title*="github.com" i],
-      dd[title*="youtube.com" i],
-      dd[title*="youtu.be" i],
-      dd[title*="twitch.tv" i],
-      dd[title*="twitter.com" i],
-      dd[title*="x.com" i],
-      dd[title*="discord" i],
-      dd[title*="linkedin.com" i],
-      dd[title*="instagram.com" i],
-      dd[title*="ko-fi.com" i],
-      dd[title*="kofi.com" i],
-      dd[title*="paypal" i],
-      dd[title*="patreon.com" i],
-      dd[title*="threads.net" i],
-      dd[title*="bsky.app" i],
-      dd[title*="bsky.social" i],
-      dd[title*="facebook.com" i],
-      dd[title*="fb.com" i],
-      dd[title*="bandcamp.com" i],
-      dd[title*="wordpress.com" i],
-      dd[title*="wordpress.org" i],
-      dd[title*="/@" i]
+      dd[title*='github.com' i],
+      dd[title*='youtube.com' i],
+      dd[title*='youtu.be' i],
+      dd[title*='twitch.tv' i],
+      dd[title*='twitter.com' i],
+      dd[title*='x.com' i],
+      dd[title*='discord' i],
+      dd[title*='linkedin.com' i],
+      dd[title*='instagram.com' i],
+      dd[title*='ko-fi.com' i],
+      dd[title*='kofi.com' i],
+      dd[title*='paypal' i],
+      dd[title*='patreon.com' i],
+      dd[title*='threads.net' i],
+      dd[title*='bsky.app' i],
+      dd[title*='bsky.social' i],
+      dd[title*='facebook.com' i],
+      dd[title*='fb.com' i],
+      dd[title*='bandcamp.com' i],
+      dd[title*='wordpress.com' i],
+      dd[title*='wordpress.org' i],
+      dd[title*='/@' i]
     ),
   .account__header__bio .account__header__fields dl:has(a):not(:first-of-type) {
     max-width: 50%;
@@ -2484,28 +2476,28 @@ html[data-contrast="high"] {
   .account__header__bio
     .account__header__fields
     dl:has(
-      dd[title*="github.com" i],
-      dd[title*="youtube.com" i],
-      dd[title*="youtu.be" i],
-      dd[title*="twitch.tv" i],
-      dd[title*="twitter.com" i],
-      dd[title*="x.com" i],
-      dd[title*="discord" i],
-      dd[title*="linkedin.com" i],
-      dd[title*="instagram.com" i],
-      dd[title*="ko-fi.com" i],
-      dd[title*="kofi.com" i],
-      dd[title*="paypal" i],
-      dd[title*="patreon.com" i],
-      dd[title*="threads.net" i],
-      dd[title*="bsky.app" i],
-      dd[title*="bsky.social" i],
-      dd[title*="bandcamp.com" i],
-      dd[title*="facebook.com" i],
-      dd[title*="fb.com" i],
-      dd[title*="wordpress.com" i],
-      dd[title*="wordpress.org" i],
-      dd[title*="/@" i]
+      dd[title*='github.com' i],
+      dd[title*='youtube.com' i],
+      dd[title*='youtu.be' i],
+      dd[title*='twitch.tv' i],
+      dd[title*='twitter.com' i],
+      dd[title*='x.com' i],
+      dd[title*='discord' i],
+      dd[title*='linkedin.com' i],
+      dd[title*='instagram.com' i],
+      dd[title*='ko-fi.com' i],
+      dd[title*='kofi.com' i],
+      dd[title*='paypal' i],
+      dd[title*='patreon.com' i],
+      dd[title*='threads.net' i],
+      dd[title*='bsky.app' i],
+      dd[title*='bsky.social' i],
+      dd[title*='bandcamp.com' i],
+      dd[title*='facebook.com' i],
+      dd[title*='fb.com' i],
+      dd[title*='wordpress.com' i],
+      dd[title*='wordpress.org' i],
+      dd[title*='/@' i]
     )
     dt,
   .account__header__bio
@@ -2520,9 +2512,9 @@ html[data-contrast="high"] {
   // GitHub
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="github.com" i])::after {
+    dl:has(dd[title*='github.com' i])::after {
     background-image: var(--icon-github);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2530,9 +2522,9 @@ html[data-contrast="high"] {
   // Discord
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="discord" i])::after {
+    dl:has(dd[title*='discord' i])::after {
     background-image: var(--icon-discord);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2540,9 +2532,9 @@ html[data-contrast="high"] {
   // LinkedIn
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="linkedin.com" i])::after {
+    dl:has(dd[title*='linkedin.com' i])::after {
     background-image: var(--icon-linkedin);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2550,9 +2542,9 @@ html[data-contrast="high"] {
   // Instagram
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="instagram.com" i])::after {
+    dl:has(dd[title*='instagram.com' i])::after {
     background-image: var(--icon-instagram);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2560,12 +2552,12 @@ html[data-contrast="high"] {
   // YouTube
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="youtube.com" i])::after,
+    dl:has(dd[title*='youtube.com' i])::after,
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="youtu.be" i])::after {
+    dl:has(dd[title*='youtu.be' i])::after {
     background-image: var(--icon-youtube);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2573,9 +2565,9 @@ html[data-contrast="high"] {
   // Twitch
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="twitch.tv" i])::after {
+    dl:has(dd[title*='twitch.tv' i])::after {
     background-image: var(--icon-twitch);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2583,12 +2575,12 @@ html[data-contrast="high"] {
   // Twitter/X
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="twitter.com" i])::after,
+    dl:has(dd[title*='twitter.com' i])::after,
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="x.com" i])::after {
+    dl:has(dd[title*='x.com' i])::after {
     background-image: var(--icon-twitter);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2596,9 +2588,9 @@ html[data-contrast="high"] {
   // Patreon
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="patreon.com" i])::after {
+    dl:has(dd[title*='patreon.com' i])::after {
     background-image: var(--icon-patreon);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2606,9 +2598,9 @@ html[data-contrast="high"] {
   // PayPal
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="paypal" i])::after {
+    dl:has(dd[title*='paypal' i])::after {
     background-image: var(--icon-paypal);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2616,12 +2608,12 @@ html[data-contrast="high"] {
   // Ko-fi
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="kofi.com" i])::after,
+    dl:has(dd[title*='kofi.com' i])::after,
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="ko-fi.com" i])::after {
+    dl:has(dd[title*='ko-fi.com' i])::after {
     background-image: var(--icon-kofi);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2629,9 +2621,9 @@ html[data-contrast="high"] {
   // Bandcamp
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="bandcamp.com" i])::after {
+    dl:has(dd[title*='bandcamp.com' i])::after {
     background-image: var(--icon-bandcamp);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2639,12 +2631,12 @@ html[data-contrast="high"] {
   // Facebook
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="facebook.com" i])::after,
+    dl:has(dd[title*='facebook.com' i])::after,
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="fb.com" i])::after {
+    dl:has(dd[title*='fb.com' i])::after {
     background-image: var(--icon-facebook);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2652,9 +2644,9 @@ html[data-contrast="high"] {
   // Friendica
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="friendica" i])::after {
+    dl:has(dd[title*='friendica' i])::after {
     background-image: var(--icon-friendica);
-    content: "";
+    content: '';
     height: 18.5px;
     transform: scale(0.9);
     width: 18.5px;
@@ -2663,12 +2655,12 @@ html[data-contrast="high"] {
   // WordPress
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="wordpress.com" i])::after,
+    dl:has(dd[title*='wordpress.com' i])::after,
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="wordpress.org" i])::after {
+    dl:has(dd[title*='wordpress.org' i])::after {
     background-image: var(--icon-wordpress);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2676,18 +2668,18 @@ html[data-contrast="high"] {
   // Mastodon instances - detect by @ in URL or common instance domains
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="/@" i])::after,
+    dl:has(dd[title*='/@' i])::after,
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="mastodon.social" i])::after,
+    dl:has(dd[title*='mastodon.social' i])::after,
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="mastodon.online" i])::after,
+    dl:has(dd[title*='mastodon.online' i])::after,
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="masto.host" i])::after {
+    dl:has(dd[title*='masto.host' i])::after {
     background-image: var(--icon-mastodon);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2695,9 +2687,9 @@ html[data-contrast="high"] {
   // Threads
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="threads.net" i])::after {
+    dl:has(dd[title*='threads.net' i])::after {
     background-image: var(--icon-threads);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2705,12 +2697,12 @@ html[data-contrast="high"] {
   // Bluesky
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="bsky.app" i])::after,
+    dl:has(dd[title*='bsky.app' i])::after,
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="bsky.social" i])::after {
+    dl:has(dd[title*='bsky.social' i])::after {
     background-image: var(--icon-bluesky);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2718,12 +2710,12 @@ html[data-contrast="high"] {
   // Nostr - typically npub or other nostr formats
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="npub" i])::after,
+    dl:has(dd[title*='npub' i])::after,
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title*="nostr:" i])::after {
+    dl:has(dd[title*='nostr:' i])::after {
     background-image: var(--icon-nostr);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2731,40 +2723,40 @@ html[data-contrast="high"] {
   // Default link icon for all other links (that don't have platform-specific icons)
   .account__header__bio
     .account__header__fields
-    dl:has(dd[title^="http"]):not(
+    dl:has(dd[title^='http']):not(
       :has(
-        dd[title*="github.com" i],
-        dd[title*="youtube.com" i],
-        dd[title*="youtu.be" i],
-        dd[title*="twitch.tv" i],
-        dd[title*="twitter.com" i],
-        dd[title*="x.com" i],
-        dd[title*="discord" i],
-        dd[title*="linkedin.com" i],
-        dd[title*="instagram.com" i],
-        dd[title*="ko-fi.com" i],
-        dd[title*="kofi.com" i],
-        dd[title*="paypal" i],
-        dd[title*="patreon.com" i],
-        dd[title*="threads.net" i],
-        dd[title*="bsky.app" i],
-        dd[title*="bsky.social" i],
-        dd[title*="bandcamp.com" i],
-        dd[title*="facebook.com" i],
-        dd[title*="fb.com" i],
-        dd[title*="wordpress.com" i],
-        dd[title*="wordpress.org" i],
-        dd[title*="/@" i],
-        dd[title*="mastodon.social" i],
-        dd[title*="mastodon.online" i],
-        dd[title*="masto.host" i],
-        dd[title*="friendica" i],
-        dd[title*="npub" i],
-        dd[title*="nostr:" i]
+        dd[title*='github.com' i],
+        dd[title*='youtube.com' i],
+        dd[title*='youtu.be' i],
+        dd[title*='twitch.tv' i],
+        dd[title*='twitter.com' i],
+        dd[title*='x.com' i],
+        dd[title*='discord' i],
+        dd[title*='linkedin.com' i],
+        dd[title*='instagram.com' i],
+        dd[title*='ko-fi.com' i],
+        dd[title*='kofi.com' i],
+        dd[title*='paypal' i],
+        dd[title*='patreon.com' i],
+        dd[title*='threads.net' i],
+        dd[title*='bsky.app' i],
+        dd[title*='bsky.social' i],
+        dd[title*='bandcamp.com' i],
+        dd[title*='facebook.com' i],
+        dd[title*='fb.com' i],
+        dd[title*='wordpress.com' i],
+        dd[title*='wordpress.org' i],
+        dd[title*='/@' i],
+        dd[title*='mastodon.social' i],
+        dd[title*='mastodon.online' i],
+        dd[title*='masto.host' i],
+        dd[title*='friendica' i],
+        dd[title*='npub' i],
+        dd[title*='nostr:' i]
       )
     )::after {
     background-image: var(--icon-link);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2772,9 +2764,9 @@ html[data-contrast="high"] {
   // If the profile item has no link element, show just label icon
   .account__header__bio
     .account__header__fields
-    dl:not(:has(a)):not(:first-of-type)::after {
+    dl:not(:has(a), :first-of-type)::after {
     background-image: var(--icon-label);
-    content: "";
+    content: '';
     height: 18.5px;
     width: 18.5px;
   }
@@ -2827,7 +2819,7 @@ html[data-contrast="high"] {
     .verified__mark {
     background-image: var(--icon-verified-smaller);
     background-repeat: no-repeat;
-    content: "";
+    content: '';
     height: 15px;
     width: 15px;
   }
@@ -2891,7 +2883,7 @@ html[data-contrast="high"] {
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;
-    content: "";
+    content: '';
     display: inline-block;
     height: 18.5px;
     width: 18.5px;
@@ -3065,7 +3057,7 @@ html[data-contrast="high"] {
   .status__action-bar .icon-button::after {
     background-color: rgba(96, 105, 132, 15%);
     border-radius: 50%;
-    content: "";
+    content: '';
     height: 36px;
     left: 0;
     opacity: 0;
@@ -3164,7 +3156,7 @@ html[data-contrast="high"] {
     border-top: 20px solid var(--color-accent);
 
     // Add a ribbon to the corner
-    content: "";
+    content: '';
     height: 0;
     position: absolute;
     right: 0;
@@ -3479,6 +3471,7 @@ html[data-contrast="high"] {
   // Set size for the column link icons
   .column-link .icon {
     --size-icon: 22px;
+
     height: 22px;
     width: 22px;
   }
@@ -3528,9 +3521,9 @@ html[data-contrast="high"] {
   }
 
   // Hide the original icon from behind
-  .ui__navigation-bar__item[href="/home"] svg path,
-  .ui__navigation-bar__item[href="/notifications"] svg path,
-  .ui__navigation-bar__item[href="/explore"] svg path,
+  .ui__navigation-bar__item[href='/home'] svg path,
+  .ui__navigation-bar__item[href='/notifications'] svg path,
+  .ui__navigation-bar__item[href='/explore'] svg path,
   .list-adder__lists .icon-plus > path,
   .list-adder__lists .icon-times > path,
   .list-adder__lists .list__display-name svg > path,
@@ -3567,21 +3560,21 @@ html[data-contrast="high"] {
   .account__header__buttons .icon.icon-tasks path,
   .notification__filter-bar .icon.icon-tasks path,
   .icon.icon-wrapstodon-planet path,
-  .navigation-panel__legal .column-link[href="/about"] path {
+  .navigation-panel__legal .column-link[href='/about'] path {
     display: block;
   }
 
-  .navigation-panel__legal .column-link[href="/about"] svg {
+  .navigation-panel__legal .column-link[href='/about'] svg {
     background-image: none;
   }
 
   // Home icon
-  .ui__navigation-bar__item[href="/home"] .icon,
+  .ui__navigation-bar__item[href='/home'] .icon,
   .column-link .icon-home {
     background-image: var(--icon-home);
   }
 
-  .ui__navigation-bar__item[href="/home"].active .icon,
+  .ui__navigation-bar__item[href='/home'].active .icon,
   .column-link.active .icon-home {
     background-image: var(--icon-home-column-link-active);
   }
@@ -3596,11 +3589,13 @@ html[data-contrast="high"] {
 
   .list-adder__lists .icon-plus {
     --size-icon: 20px;
+
     background-image: var(--icon-plus);
   }
 
   .list-adder__lists .icon-times {
     --size-icon: 20px;
+
     background-image: var(--icon-checked-green);
   }
 
@@ -3613,25 +3608,25 @@ html[data-contrast="high"] {
   }
 
   // Notifications icon
-  .ui__navigation-bar__item[href="/notifications"] .icon,
+  .ui__navigation-bar__item[href='/notifications'] .icon,
   .icon.icon-bell-o,
   .column-link .icon-bell {
     background-image: var(--icon-bell);
   }
 
-  .ui__navigation-bar__item[href="/notifications"].active .icon,
+  .ui__navigation-bar__item[href='/notifications'].active .icon,
   .column-link.active .icon-bell {
     background-image: var(--icon-bell-active);
   }
 
   // Explore icon
-  .ui__navigation-bar__item[href="/explore"] .icon,
+  .ui__navigation-bar__item[href='/explore'] .icon,
   .column-link .icon-explore,
   .column-link .icon-hashtag {
     background-image: var(--icon-hashtag);
   }
 
-  .ui__navigation-bar__item[href="/explore"].active .icon,
+  .ui__navigation-bar__item[href='/explore'].active .icon,
   .column-link.active .icon-explore,
   .column-link.active .icon-hashtag {
     background-image: var(--icon-hashtag-active);
@@ -3668,12 +3663,14 @@ html[data-contrast="high"] {
   // Preferences icon
   .column-link .icon-cog {
     --size-icon: 22px;
+
     background-image: var(--icon-sliders-contrast);
   }
 
   // Settings icon
   .column-header__button .icon-sliders {
     --size-icon: 20px;
+
     background-image: var(--icon-sliders);
   }
 
@@ -3688,12 +3685,14 @@ html[data-contrast="high"] {
   // Administration icon
   .column-link .icon-tachometer {
     --size-icon: 22px;
+
     background-image: var(--icon-administration);
   }
 
   // Moderation icon
   .column-link .icon-flag {
     --size-icon: 22px;
+
     background-image: var(--icon-moderation);
   }
 
@@ -3727,6 +3726,7 @@ html[data-contrast="high"] {
 
   button.icon-button .icon-retweet {
     --size-icon: 20px;
+
     background-image: var(--icon-boost);
     background-position: center;
     background-repeat: no-repeat;
@@ -3781,6 +3781,7 @@ html[data-contrast="high"] {
   .notification__filter-bar .icon-reply,
   .notification__filter-bar .icon-reply-all {
     --size-icon: 19px;
+
     position: relative;
     top: 1px;
   }
@@ -3954,26 +3955,26 @@ html[data-contrast="high"] {
   }
 
   // Default lines when replying in real time
-  div[tabindex="-1"]:has(.status--in-thread)
+  div[tabindex='-1']:has(.status--in-thread)
     .status--in-thread:not(.status--first-in-thread)
     > .status__line:not(.status__line--full) {
     height: 0;
   }
 
   // Hide line before first in thread
-  div[tabindex="-1"]:has(.status--in-thread)
-    + div[tabindex="-1"]
+  div[tabindex='-1']:has(.status--in-thread)
+    + div[tabindex='-1']
     > .status--in-thread.status--first-in-thread
     > .status__line:not(.status__line--full),
-  div[tabindex="-1"]:has(.detailed-status__wrapper)
-    + div[tabindex="-1"]
+  div[tabindex='-1']:has(.detailed-status__wrapper)
+    + div[tabindex='-1']
     > .status__wrapper
     .status__line:not(.status__line--full) {
     height: 0;
   }
 
-  div[tabindex="-1"]
-    + div[tabindex="-1"]
+  div[tabindex='-1']
+    + div[tabindex='-1']
     > .status__wrapper
     > .status-reply.status--in-thread
     > .status__line.status__line--full,
@@ -3997,8 +3998,8 @@ html[data-contrast="high"] {
   }
 
   // Hide the "stub" from the first status line
-  div[tabindex="-1"]
-    + div[tabindex="-1"]
+  div[tabindex='-1']
+    + div[tabindex='-1']
     > .status__wrapper
     > .status-reply.status--in-thread
     > .status__line.status__line--full,
@@ -4139,12 +4140,12 @@ html[data-contrast="high"] {
   }
 
   // Hide search (can be found under Explore in the mobile
-  .ui__header__links .button.button-secondary[href="/search"] {
+  .ui__header__links .button.button-secondary[href='/search'] {
     display: none;
   }
 
   // More compact compose button on mobile
-  .ui__header__links .button.button-secondary[href="/publish"] {
+  .ui__header__links .button.button-secondary[href='/publish'] {
     background-color: var(--color-accent-dark);
     background-image: var(--icon-compose);
     background-position: center;
@@ -4158,12 +4159,12 @@ html[data-contrast="high"] {
   }
 
   .ui__header__links
-    .button.button-secondary[href="/publish"]:is(:hover, :focus, :active) {
+    .button.button-secondary[href='/publish']:is(:hover, :focus, :active) {
     background-color: var(--color-accent-dark-50);
     color: var(--color-light-purple);
   }
 
-  .ui__header__links .button.button-secondary[href="/publish"] span {
+  .ui__header__links .button.button-secondary[href='/publish'] span {
     color: transparent;
   }
 
@@ -4317,6 +4318,7 @@ html[data-contrast="high"] {
       .navigation-panel__list-panel__items
       .column-link {
       --gap-column-link: 8px;
+
       font-size: 16px;
     }
 
@@ -4336,66 +4338,66 @@ html[data-contrast="high"] {
 
     .list-panel:focus,
     .list-panel:hover,
-    .column-link[href="/lists"]:focus ~ .list-panel,
-    .column-link[href="/lists"]:hover ~ .list-panel {
+    .column-link[href='/lists']:focus ~ .list-panel,
+    .column-link[href='/lists']:hover ~ .list-panel {
       opacity: 1;
     }
 
     // Order of the side nav items
-    .column-link[href="/home"] {
+    .column-link[href='/home'] {
       order: 2;
     }
 
-    .column-link[href="/notifications"] {
+    .column-link[href='/notifications'] {
       order: 3;
     }
 
-    .column-link[href="/explore"] {
+    .column-link[href='/explore'] {
       order: 4;
     }
 
-    .column-link[href="/public/local"] {
+    .column-link[href='/public/local'] {
       order: 5;
     }
 
-    .column-link[href="/public"] {
+    .column-link[href='/public'] {
       order: 6;
     }
 
-    .column-link[href="/conversations"] {
+    .column-link[href='/conversations'] {
       order: 7;
     }
 
-    .column-link[href="/follow_requests"] {
+    .column-link[href='/follow_requests'] {
       order: 8;
     }
 
-    .column-link[href="/bookmarks"] {
+    .column-link[href='/bookmarks'] {
       order: 9;
     }
 
-    .column-link[href="/favourites"] {
+    .column-link[href='/favourites'] {
       order: 10;
     }
 
-    .column-link[href="/search"] {
+    .column-link[href='/search'] {
       order: 11;
     }
 
     .navigation-panel__list-panel,
-    .column-link[href="/lists"] {
+    .column-link[href='/lists'] {
       order: 16;
     }
 
-    .column-link[href="/admin/dashboard"] {
+    .column-link[href='/admin/dashboard'] {
       order: 11;
     }
 
-    .column-link[href="/admin/reports"] {
+    .column-link[href='/admin/reports'] {
       order: 12;
     }
 
-    .column-link[href="/settings/preferences"] {
+    .column-link[href='/settings/preferences'] {
       order: 11;
     }
 
@@ -4467,15 +4469,16 @@ html[data-contrast="high"] {
       margin-left: 3px;
     }
 
-    .app-body:not(.layout-multiple-columns):not(
-        :has(.ui .ui__header__links > .button[href="/auth/sign_in"])
+    .app-body:not(
+        .layout-multiple-columns,
+        :has(.ui .ui__header__links > .button[href='/auth/sign_in'])
       )
       .tabs-bar__wrapper {
       z-index: 3;
     }
 
     .app-body:not(.layout-multiple-columns):has(
-        .ui .ui__header__links > .button[href="/auth/sign_in"]
+        .ui .ui__header__links > .button[href='/auth/sign_in']
       )
       .tabs-bar__wrapper
       :is(.column-back-button, .column-header > *) {
@@ -4500,7 +4503,7 @@ html[data-contrast="high"] {
     .app-body:not(.layout-multiple-columns):has(.column-header)
       .tabs-bar__wrapper::after {
       background-color: var(--color-bg-90);
-      content: "";
+      content: '';
       height: 49px;
       left: 0;
       position: absolute;
@@ -4509,7 +4512,7 @@ html[data-contrast="high"] {
       z-index: 0;
     }
 
-    .ui:has([href="/auth/sign_in"]) .tabs-bar__wrapper::after,
+    .ui:has([href='/auth/sign_in']) .tabs-bar__wrapper::after,
     .ui:has(.compose-form__submit) .tabs-bar__wrapper::after {
       display: none;
     }
@@ -4571,7 +4574,7 @@ html[data-contrast="high"] {
       margin-left: calc(var(--size-avatar) + var(--gap-default));
     }
 
-    body.embed [data-component="Video"] > div {
+    body.embed [data-component='Video'] > div {
       aspect-ratio: unset !important;
     }
 
@@ -4632,19 +4635,19 @@ html[data-contrast="high"] {
 
     body.embed .detailed-status__link > .fa-reply + span::after {
       color: var(--color-dim);
-      content: "Replies";
+      content: 'Replies';
       font-weight: var(--font-weight-semibold);
     }
 
     body.embed .detailed-status__link > .fa-retweet + span::after {
       color: var(--color-dim);
-      content: "Boosts";
+      content: 'Boosts';
       font-weight: var(--font-weight-semibold);
     }
 
     body.embed .detailed-status__link > .fa-star + span::after {
       color: var(--color-dim);
-      content: "Favourites";
+      content: 'Favourites';
       font-weight: var(--font-weight-semibold);
     }
 

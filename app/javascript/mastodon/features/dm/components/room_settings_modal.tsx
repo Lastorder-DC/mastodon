@@ -2,6 +2,7 @@ import type React from 'react';
 import { useState, useCallback, useEffect, useRef } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
+
 import { useHistory } from 'react-router-dom';
 
 import { apiGetSearch } from 'mastodon/api/search';
@@ -85,18 +86,21 @@ const RoomSettingsModalContent: React.FC<{
   }, [onClose]);
 
   useEffect(() => {
+    let cancelled = false;
+
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
     if (searchTerm.trim().length === 0) {
-      setSearchResults([]);
       return;
     }
 
     debounceRef.current = setTimeout(() => {
       void apiGetSearch({ q: searchTerm, type: 'accounts', limit: 5 }).then(
         (results) => {
+          if (cancelled) return;
+
           setSearchResults(
             results.accounts.filter(
               (account) =>
@@ -110,6 +114,7 @@ const RoomSettingsModalContent: React.FC<{
     }, 300);
 
     return () => {
+      cancelled = true;
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
@@ -139,11 +144,7 @@ const RoomSettingsModalContent: React.FC<{
     if (!roomTitle.trim() || isSaving) return;
 
     setIsSaving(true);
-    void (
-      dispatch(
-        updateChatRoom(room.uuid, { title: roomTitle.trim() }),
-      ) as unknown as Promise<ApiDmChatRoomJSON>
-    )
+    void dispatch(updateChatRoom(room.uuid, { title: roomTitle.trim() }))
       .then(() => {
         setIsSaving(false);
       })
@@ -177,7 +178,9 @@ const RoomSettingsModalContent: React.FC<{
         });
       } else {
         // Filter out current user since CreateDmChatRoomService adds the caller as owner
-        const otherParticipantIds = room.participant_ids.filter(id => id !== me);
+        const otherParticipantIds = room.participant_ids.filter(
+          (id) => id !== me,
+        );
         const accountIds = [...otherParticipantIds, account.id];
         void (
           dispatch(
@@ -192,9 +195,21 @@ const RoomSettingsModalContent: React.FC<{
     [isGroupChat, dispatch, room.uuid, room.participant_ids, onClose, history],
   );
 
+  const handleAddMemberClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      const account = searchResults.find(
+        ({ id }) => id === event.currentTarget.dataset.accountId,
+      );
+      if (account) {
+        handleAddMember(account);
+      }
+    },
+    [handleAddMember, searchResults],
+  );
+
   const handleLeave = useCallback(() => {
     if (window.confirm(intl.formatMessage(messages.leaveConfirm))) {
-      void (dispatch(leaveChatRoom(room.uuid)) as unknown as Promise<void>).then(() => {
+      void dispatch(leaveChatRoom(room.uuid)).then(() => {
         onClose();
         history.push('/direct_message');
       });
@@ -317,7 +332,8 @@ const RoomSettingsModalContent: React.FC<{
                     key={account.id}
                     className='dm-room-settings-modal__add-result-item'
                     type='button'
-                    onClick={() => handleAddMember(account)}
+                    data-account-id={account.id}
+                    onClick={handleAddMemberClick}
                   >
                     <img
                       className='dm-room-settings-modal__add-result-avatar'

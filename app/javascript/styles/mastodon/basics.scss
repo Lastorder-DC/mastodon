@@ -9,7 +9,7 @@ html {
   }
 
   --font-body: mastodon-font-sans-serif, sans-serif;
-  --font-heading: Syne, sans-serif;
+  --font-heading: Cal Sans UI, sans-serif;
   --font-monospace: mastodon-font-monospace, monospace;
 
   &[data-redesign='true'] {
@@ -335,8 +335,7 @@ article {
   }
 }
 
-
-@media screen and (min-width: 890px) {
+@media screen and (width >= 890px) {
   body.custom-background::before {
     z-index: -1;
     content: '';

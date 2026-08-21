@@ -414,35 +414,6 @@ export const AccountSwitcher: FC<AccountSwitcherProps> = ({
     void ensureAccountStored();
   }, [ensureAccountStored]);
 
-  // Sync Redux state to persisted accounts
-  useEffect(() => {
-    if (!accounts?.toList) return;
-
-    const list = accounts.toList();
-    const updated: MultiAccountEntry[] = [];
-    list.forEach((rawEntry: unknown) => {
-      const immEntry = rawEntry as ImmutableLike | null;
-      const normalized = (immEntry?.toJS?.() ??
-        rawEntry) as MultiAccountEntry | null;
-      if (normalized?.id) {
-        updated.push(normalized);
-      }
-    });
-
-    if (updated.length === 0) return;
-
-    setPersistedAccounts((prev) => {
-      const map = new Map<string, MultiAccountEntry>();
-      prev.forEach((e) => {
-        if (e.id) map.set(e.id, e);
-      });
-      updated.forEach((e) => {
-        map.set(e.id, e);
-      });
-      return Array.from(map.values());
-    });
-  }, [accounts]);
-
   const handleOpenManageFromTrigger = useCallback(() => {
     setIsManageOpen(true);
   }, []);
@@ -478,7 +449,10 @@ export const AccountSwitcher: FC<AccountSwitcherProps> = ({
         setPersistedAccounts(Object.values(entries));
       })
       .catch((error: unknown) => {
-        console.error('Failed to reload persisted multi-account entries:', error);
+        console.error(
+          'Failed to reload persisted multi-account entries:',
+          error,
+        );
       });
   }, [isManageOpen]);
 
@@ -740,9 +714,15 @@ export const AccountSwitcher: FC<AccountSwitcherProps> = ({
             ) : (
               managedAccounts.map((entry) => {
                 const isActive = entry.id === activeAccountId;
-                const isCurrentLoggedIn = entry.id === (currentAccount?.get?.('id') as string | undefined);
+                const isCurrentLoggedIn =
+                  entry.id === (currentAccount.get('id') as string | undefined);
                 const isDeleting = deletingAccountId === entry.id;
-                const canSwitch = !(isActive || isCurrentLoggedIn || isDeleting || isProcessing);
+                const canSwitch = !(
+                  isActive ||
+                  isCurrentLoggedIn ||
+                  isDeleting ||
+                  isProcessing
+                );
 
                 const handleItemClick = () => {
                   if (!canSwitch) return;

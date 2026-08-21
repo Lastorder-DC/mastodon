@@ -1,48 +1,10 @@
 import { profileEdit, fetchProfile, selectImageInfo } from './profile_edit';
-
 import type { ProfileEditState } from './profile_edit';
 
 describe('profile_edit slice', () => {
   describe('transformProfile (via fetchProfile.fulfilled)', () => {
     test('maps custom_logo snake_case API fields to camelCase ProfileData keys', () => {
-      const apiResponse = {
-        id: '123',
-        display_name: 'Test User',
-        note: 'Hello world',
-        fields: [],
-        avatar: 'https://example.com/avatar.png',
-        avatar_static: 'https://example.com/avatar_static.png',
-        avatar_description: 'My avatar',
-        header: 'https://example.com/header.png',
-        header_static: 'https://example.com/header_static.png',
-        header_description: 'My header',
-        custom_logo: 'https://example.com/custom_logo.png',
-        custom_logo_static: 'https://example.com/custom_logo_static.png',
-        custom_logo_description: 'My custom logo',
-        custom_logo_enabled: true,
-        background_image: 'https://example.com/bg.jpg',
-        background_image_static: 'https://example.com/bg_static.jpg',
-        background_image_enabled: true,
-        locked: false,
-        bot: false,
-        hide_collections: false,
-        discoverable: true,
-        indexable: true,
-        show_media: true,
-        show_media_replies: true,
-        show_featured: true,
-        attribution_domains: [],
-        featured_tags: [],
-        protected_account: false,
-      };
-
       const initialState: ProfileEditState = { isPending: false };
-
-      const action = {
-        type: fetchProfile.fulfilled.type,
-        payload: undefined,
-        meta: { arg: undefined },
-      };
 
       // The slice reducer receives the transformed payload via the thunk.
       // Since transformProfile is called inside createDataLoadingThunk's onData,
@@ -95,9 +57,7 @@ describe('profile_edit slice', () => {
       );
       expect(state.profile?.customLogoDescription).toBe('My custom logo');
       expect(state.profile?.customLogoEnabled).toBe(true);
-      expect(state.profile?.backgroundImage).toBe(
-        'https://example.com/bg.jpg',
-      );
+      expect(state.profile?.backgroundImage).toBe('https://example.com/bg.jpg');
       expect(state.profile?.backgroundImageStatic).toBe(
         'https://example.com/bg_static.jpg',
       );

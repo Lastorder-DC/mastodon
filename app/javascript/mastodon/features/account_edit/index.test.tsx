@@ -1,12 +1,17 @@
-import '@testing-library/jest-dom';
-import { render, screen, fireEvent } from '@testing-library/react';
 import { IntlProvider } from 'react-intl';
+
+import { render, screen, fireEvent } from '@testing-library/react';
 
 import { AccountEdit } from './index';
 
+import '@testing-library/jest-dom';
+
 // Mock dispatch and selector
 const mockDispatch = vi.fn(() => Promise.resolve());
-const mockProfileState: { profile: Record<string, unknown> | null; isPending: boolean } = {
+const mockProfileState: {
+  profile: Record<string, unknown> | null;
+  isPending: boolean;
+} = {
   profile: null,
   isPending: false,
 };
@@ -104,8 +109,16 @@ vi.mock('@/mastodon/components/avatar', () => ({
 }));
 
 vi.mock('@/mastodon/components/button', () => ({
-  Button: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
-    <button onClick={onClick}>{children}</button>
+  Button: ({
+    children,
+    onClick,
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+  }) => (
+    <button type='button' onClick={onClick}>
+      {children}
+    </button>
   ),
 }));
 
@@ -116,9 +129,8 @@ vi.mock('@/mastodon/components/callout/dismissible', () => ({
 }));
 
 vi.mock('@/mastodon/components/emoji/context', () => ({
-  CustomEmojiProvider: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
+  CustomEmojiProvider: ({ children }: { children: React.ReactNode }) =>
+    children,
 }));
 
 vi.mock('@/mastodon/components/emoji/html', () => ({
@@ -128,7 +140,11 @@ vi.mock('@/mastodon/components/emoji/html', () => ({
 }));
 
 vi.mock('./components/edit_button', () => ({
-  EditButton: () => <button data-testid='edit-button'>Edit</button>,
+  EditButton: () => (
+    <button type='button' data-testid='edit-button'>
+      Edit
+    </button>
+  ),
 }));
 
 vi.mock('./components/field', () => ({
@@ -196,6 +212,14 @@ function renderWithIntl(ui: React.ReactElement) {
   );
 }
 
+function getMockProfile(): Record<string, unknown> {
+  if (!mockProfileState.profile) {
+    throw new Error('Mock profile is not initialized');
+  }
+
+  return mockProfileState.profile;
+}
+
 describe('AccountEdit page - Custom Logo and Background Image sections', () => {
   beforeEach(() => {
     mockDispatch.mockClear();
@@ -235,7 +259,9 @@ describe('AccountEdit page - Custom Logo and Background Image sections', () => {
   describe('Custom Logo section (Req 9.1, 9.3, 9.4, 9.7)', () => {
     it('renders the Custom Logo section with title', () => {
       renderWithIntl(<AccountEdit />);
-      const section = screen.getByTestId('section-account_edit.custom_logo.title');
+      const section = screen.getByTestId(
+        'section-account_edit.custom_logo.title',
+      );
       expect(section).toBeInTheDocument();
       expect(section).toHaveTextContent('Custom logo');
     });
@@ -248,18 +274,24 @@ describe('AccountEdit page - Custom Logo and Background Image sections', () => {
 
     it('renders a ToggleField for Custom Logo Enabled', () => {
       renderWithIntl(<AccountEdit />);
-      const section = screen.getByTestId('section-account_edit.custom_logo.title');
+      const section = screen.getByTestId(
+        'section-account_edit.custom_logo.title',
+      );
       const toggle = section.querySelector('[data-testid="toggle-input"]');
       expect(toggle).toBeInTheDocument();
     });
 
     it('toggling Custom Logo dispatches patchProfile with custom_logo_enabled', () => {
-      mockProfileState.profile!.customLogoEnabled = false;
+      getMockProfile().customLogoEnabled = false;
       renderWithIntl(<AccountEdit />);
       mockDispatch.mockClear();
 
-      const section = screen.getByTestId('section-account_edit.custom_logo.title');
-      const toggle = section.querySelector('[data-testid="toggle-input"]') as HTMLInputElement;
+      const section = screen.getByTestId(
+        'section-account_edit.custom_logo.title',
+      );
+      const toggle = section.querySelector(
+        '[data-testid="toggle-input"]',
+      ) as HTMLInputElement;
       fireEvent.click(toggle);
 
       expect(mockDispatch).toHaveBeenCalledWith(
@@ -271,18 +303,22 @@ describe('AccountEdit page - Custom Logo and Background Image sections', () => {
     });
 
     it('renders a preview <img> when profile.customLogo is set', () => {
-      mockProfileState.profile!.customLogo = 'https://example.com/logo.png';
+      getMockProfile().customLogo = 'https://example.com/logo.png';
       renderWithIntl(<AccountEdit />);
-      const section = screen.getByTestId('section-account_edit.custom_logo.title');
+      const section = screen.getByTestId(
+        'section-account_edit.custom_logo.title',
+      );
       const img = section.querySelector('img');
       expect(img).toBeInTheDocument();
       expect(img).toHaveAttribute('src', 'https://example.com/logo.png');
     });
 
     it('does not render a preview <img> when profile.customLogo is null', () => {
-      mockProfileState.profile!.customLogo = null;
+      getMockProfile().customLogo = null;
       renderWithIntl(<AccountEdit />);
-      const section = screen.getByTestId('section-account_edit.custom_logo.title');
+      const section = screen.getByTestId(
+        'section-account_edit.custom_logo.title',
+      );
       const img = section.querySelector('img');
       expect(img).not.toBeInTheDocument();
     });
@@ -291,7 +327,9 @@ describe('AccountEdit page - Custom Logo and Background Image sections', () => {
   describe('Background Image section (Req 9.2, 9.5, 9.6, 9.8)', () => {
     it('renders the Background Image section with title', () => {
       renderWithIntl(<AccountEdit />);
-      const section = screen.getByTestId('section-account_edit.background_image.title');
+      const section = screen.getByTestId(
+        'section-account_edit.background_image.title',
+      );
       expect(section).toBeInTheDocument();
       expect(section).toHaveTextContent('Background image');
     });
@@ -304,18 +342,24 @@ describe('AccountEdit page - Custom Logo and Background Image sections', () => {
 
     it('renders a ToggleField for Background Image Enabled', () => {
       renderWithIntl(<AccountEdit />);
-      const section = screen.getByTestId('section-account_edit.background_image.title');
+      const section = screen.getByTestId(
+        'section-account_edit.background_image.title',
+      );
       const toggle = section.querySelector('[data-testid="toggle-input"]');
       expect(toggle).toBeInTheDocument();
     });
 
     it('toggling Background Image dispatches patchProfile with background_image_enabled', () => {
-      mockProfileState.profile!.backgroundImageEnabled = false;
+      getMockProfile().backgroundImageEnabled = false;
       renderWithIntl(<AccountEdit />);
       mockDispatch.mockClear();
 
-      const section = screen.getByTestId('section-account_edit.background_image.title');
-      const toggle = section.querySelector('[data-testid="toggle-input"]') as HTMLInputElement;
+      const section = screen.getByTestId(
+        'section-account_edit.background_image.title',
+      );
+      const toggle = section.querySelector(
+        '[data-testid="toggle-input"]',
+      ) as HTMLInputElement;
       fireEvent.click(toggle);
 
       expect(mockDispatch).toHaveBeenCalledWith(
@@ -327,18 +371,22 @@ describe('AccountEdit page - Custom Logo and Background Image sections', () => {
     });
 
     it('renders a preview <img> when profile.backgroundImage is set', () => {
-      mockProfileState.profile!.backgroundImage = 'https://example.com/bg.jpg';
+      getMockProfile().backgroundImage = 'https://example.com/bg.jpg';
       renderWithIntl(<AccountEdit />);
-      const section = screen.getByTestId('section-account_edit.background_image.title');
+      const section = screen.getByTestId(
+        'section-account_edit.background_image.title',
+      );
       const img = section.querySelector('img');
       expect(img).toBeInTheDocument();
       expect(img).toHaveAttribute('src', 'https://example.com/bg.jpg');
     });
 
     it('does not render a preview <img> when profile.backgroundImage is null', () => {
-      mockProfileState.profile!.backgroundImage = null;
+      getMockProfile().backgroundImage = null;
       renderWithIntl(<AccountEdit />);
-      const section = screen.getByTestId('section-account_edit.background_image.title');
+      const section = screen.getByTestId(
+        'section-account_edit.background_image.title',
+      );
       const img = section.querySelector('img');
       expect(img).not.toBeInTheDocument();
     });

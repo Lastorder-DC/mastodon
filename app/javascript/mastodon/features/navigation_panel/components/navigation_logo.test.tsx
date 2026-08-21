@@ -1,15 +1,16 @@
 // Feature: custom-logo-and-background, Property 2: Logo render decision
 // Feature: custom-logo-and-background, Property 3: Logo alternative-text default
 
-import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 
 import { NavigationLogo } from './navigation_logo';
 
+import '@testing-library/jest-dom';
+
 // Mock the useAccount hook
-const mockUseAccount = vi.fn();
+const { mockUseAccount } = vi.hoisted(() => ({ mockUseAccount: vi.fn() }));
 vi.mock('@/mastodon/hooks/useAccount', () => ({
-  useAccount: (...args: unknown[]) => mockUseAccount(...args),
+  useAccount: mockUseAccount,
 }));
 
 // Mock initial_state
@@ -36,18 +37,18 @@ describe('Property 2: Logo render decision', () => {
   const logoUrls = [
     'https://files.mastodon.social/accounts/custom_logo/000/001/logo.png',
     'https://cdn.example.org/random-logo-12345.webp',
-  ];
+  ] as const;
 
-  const cases: Array<{
+  const cases: {
     label: string;
     custom_logo_enabled: boolean;
     custom_logo: string;
     shouldRenderCustom: boolean;
-  }> = [
+  }[] = [
     {
       label: 'enabled=true, url=present',
       custom_logo_enabled: true,
-      custom_logo: logoUrls[0]!,
+      custom_logo: logoUrls[0],
       shouldRenderCustom: true,
     },
     {
@@ -59,7 +60,7 @@ describe('Property 2: Logo render decision', () => {
     {
       label: 'enabled=false, url=present',
       custom_logo_enabled: false,
-      custom_logo: logoUrls[1]!,
+      custom_logo: logoUrls[1],
       shouldRenderCustom: false,
     },
     {
@@ -123,11 +124,11 @@ describe('Property 3: Logo alternative-text default', () => {
   // activates for falsy values (empty string). Whitespace-only strings are
   // truthy and get used as the alt attribute; the accessible name computation
   // trims them, yielding an empty accessible name in the DOM.
-  const descriptionCases: Array<{
+  const descriptionCases: {
     label: string;
     description: string;
     expectedAlt: string;
-  }> = [
+  }[] = [
     {
       label: 'non-empty description',
       description: 'My Custom Brand',

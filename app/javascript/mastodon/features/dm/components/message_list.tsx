@@ -1,10 +1,7 @@
 import type React from 'react';
 import { useCallback, useEffect, useRef } from 'react';
 
-import {
-  DM_MESSAGE_REMOVE_FAILED,
-  sendMessage,
-} from 'mastodon/actions/dm';
+import { DM_MESSAGE_REMOVE_FAILED, sendMessage } from 'mastodon/actions/dm';
 import type { DmMessage } from 'mastodon/reducers/dm';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
@@ -35,7 +32,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   const messagesState = useAppSelector((state) => state.dm.messages[roomId]);
   const room = useAppSelector((state) => state.dm.chatRooms.items[roomId]);
   const accounts = useAppSelector((state) => state.dm.accounts);
-  const readReceipts = room?.readReceipts || {};
+  const readReceipts = room?.readReceipts ?? {};
   const scrollRef = useRef<HTMLDivElement>(null);
   const wasAtBottomRef = useRef(true);
   const dispatch = useAppDispatch();
@@ -62,7 +59,11 @@ export const MessageList: React.FC<MessageListProps> = ({
   const handleRetry = useCallback(
     (message: DmMessage) => {
       // Remove the failed message, then re-dispatch send with the original content
-      dispatch({ type: DM_MESSAGE_REMOVE_FAILED, roomId, tempId: message.tempId });
+      dispatch({
+        type: DM_MESSAGE_REMOVE_FAILED,
+        roomId,
+        tempId: message.tempId,
+      });
       dispatch(sendMessage(roomId, { content: message.content_plain }));
     },
     [dispatch, roomId],
@@ -85,7 +86,7 @@ export const MessageList: React.FC<MessageListProps> = ({
           /^\d+$/.test(message.id) &&
           room
         ) {
-          const totalOtherMembers = (room.participant_ids?.length ?? 1) - 1;
+          const totalOtherMembers = room.participant_ids.length - 1;
           const readCount = Object.entries(readReceipts).filter(
             ([accountId, lastReadId]) =>
               accountId !== message.account_id &&

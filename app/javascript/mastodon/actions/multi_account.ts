@@ -1,12 +1,6 @@
 import type { AppDispatch, GetState } from '../store';
-import type {
-  EncryptedPayload,
-  MultiAccountEntry,
-} from '../types/multi_account';
-import {
-  decryptToken,
-  encryptToken,
-} from '../utils/multi_account_crypto';
+import type { MultiAccountEntry } from '../types/multi_account';
+import { decryptToken, encryptToken } from '../utils/multi_account_crypto';
 import {
   deleteEncryptedToken,
   loadEncryptedToken,
@@ -25,7 +19,6 @@ interface ImmutableLike {
   has?: (key: string) => boolean;
   toJS?: () => unknown;
 }
-
 
 // Action types
 export const MULTI_ACCOUNT_HYDRATE = 'MULTI_ACCOUNT_HYDRATE';

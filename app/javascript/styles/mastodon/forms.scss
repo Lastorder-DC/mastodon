@@ -707,6 +707,7 @@ code {
 
     // Fix dropdown options being white-on-white in dark mode (issue #37332)
     color-scheme: inherit;
+
     &:focus-visible {
       outline: var(--outline-focus-default);
       outline-offset: 2px;

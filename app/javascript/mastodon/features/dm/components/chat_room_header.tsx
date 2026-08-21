@@ -10,9 +10,18 @@ import { RoomSettingsModal } from './room_settings_modal';
 
 const messages = defineMessages({
   back: { id: 'dm.chat_room_header.back', defaultMessage: 'Back' },
-  settings: { id: 'dm.chat_room_header.settings', defaultMessage: 'Room settings' },
-  membersCount: { id: 'dm.chat_room_header.members_count', defaultMessage: '{count, plural, one {# member} other {# members}}' },
-  roomFallback: { id: 'dm.chat_room_header.room_fallback', defaultMessage: 'Chat {id}' },
+  settings: {
+    id: 'dm.chat_room_header.settings',
+    defaultMessage: 'Room settings',
+  },
+  membersCount: {
+    id: 'dm.chat_room_header.members_count',
+    defaultMessage: '{count, plural, one {# member} other {# members}}',
+  },
+  roomFallback: {
+    id: 'dm.chat_room_header.room_fallback',
+    defaultMessage: 'Chat {id}',
+  },
 });
 
 interface ChatRoomHeaderProps {
@@ -20,18 +29,34 @@ interface ChatRoomHeaderProps {
   onBack?: () => void;
 }
 
+const firstNonBlank = (
+  ...values: (string | null | undefined)[]
+): string | undefined =>
+  values.find((value): value is string => Boolean(value?.trim()));
+
 export const ChatRoomHeader: React.FC<ChatRoomHeaderProps> = ({
   room,
   onBack,
 }) => {
   const intl = useIntl();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const otherParticipant = room.participants.find(p => p.id !== me);
-  const roomName = room.room_type === 'direct'
-    ? (otherParticipant?.display_name || otherParticipant?.username || room.title || intl.formatMessage(messages.roomFallback, { id: room.id }))
-    : (room.title || intl.formatMessage(messages.roomFallback, { id: room.id }));
+  const otherParticipant = room.participants.find((p) => p.id !== me);
+  const fallbackName = intl.formatMessage(messages.roomFallback, {
+    id: room.id,
+  });
+  const roomName =
+    room.room_type === 'direct'
+      ? (firstNonBlank(
+          otherParticipant?.display_name,
+          otherParticipant?.username,
+          room.title,
+        ) ?? fallbackName)
+      : (firstNonBlank(room.title) ?? fallbackName);
   const participantCount = room.participant_ids.length;
-  const avatarUrl = otherParticipant?.avatar_static || (room.participants[0]?.avatar_static);
+  const avatarUrl = firstNonBlank(
+    otherParticipant?.avatar_static,
+    room.participants[0]?.avatar_static,
+  );
 
   const handleOpenSettings = useCallback(() => {
     setIsSettingsOpen(true);
@@ -81,7 +106,9 @@ export const ChatRoomHeader: React.FC<ChatRoomHeaderProps> = ({
         <div className='dm-chat-room-header__info'>
           <span className='dm-chat-room-header__name'>{roomName}</span>
           <span className='dm-chat-room-header__members'>
-            {intl.formatMessage(messages.membersCount, { count: participantCount })}
+            {intl.formatMessage(messages.membersCount, {
+              count: participantCount,
+            })}
           </span>
         </div>
       </div>

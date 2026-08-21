@@ -1,8 +1,12 @@
 // Task 10.5: Logo link-target test
 // Validates: Requirements 4.4
 
-import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
+
+// Now import the component
+import { NavigationPanel } from './index';
+
+import '@testing-library/jest-dom';
 
 // Mock react-router-dom: Link renders an <a> with href from `to` prop
 vi.mock('react-router-dom', () => ({
@@ -27,12 +31,11 @@ vi.mock('react-intl', () => ({
   defineMessages: (msgs: Record<string, unknown>) => msgs,
   useIntl: () => ({
     formatMessage: (msg: { defaultMessage?: string; id?: string }) =>
-      msg.defaultMessage || msg.id || '',
+      msg.defaultMessage ?? msg.id ?? '',
   }),
 }));
 
 // Mock initial_state
-const mockMe = 'user-1';
 vi.mock('mastodon/initial_state', () => ({
   me: 'user-1',
   autoPlayGif: false,
@@ -56,9 +59,9 @@ vi.mock('mastodon/identity_context', () => ({
 }));
 
 // Mock the hooks/useAccount
-const mockUseAccount = vi.fn();
+const { mockUseAccount } = vi.hoisted(() => ({ mockUseAccount: vi.fn() }));
 vi.mock('@/mastodon/hooks/useAccount', () => ({
-  useAccount: (...args: unknown[]) => mockUseAccount(...args),
+  useAccount: mockUseAccount,
 }));
 
 // Mock useBreakpoint
@@ -97,7 +100,13 @@ let navigationLogoMode: 'custom' | 'default' = 'default';
 vi.mock('./components/navigation_logo', () => ({
   NavigationLogo: () => {
     if (navigationLogoMode === 'custom') {
-      return <img src='https://example.com/logo.png' alt='Custom Logo' className='logo logo--custom' />;
+      return (
+        <img
+          src='https://example.com/logo.png'
+          alt='Custom Logo'
+          className='logo logo--custom'
+        />
+      );
     }
     return <div data-testid='wordmark-logo'>WordmarkLogo</div>;
   },
@@ -161,30 +170,74 @@ vi.mock('./components/trends', () => ({
 }));
 
 // Mock SVG imports
-vi.mock('@/material-icons/400-24px/add.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/alternate_email.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/bookmarks-fill.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/bookmarks.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/category-fill.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/category.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/chat_bubble-fill.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/chat_bubble.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/home-fill.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/home.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/info.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/notifications-fill.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/notifications.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/person_add-fill.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/person_add.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/public.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/settings.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/star-fill.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/star.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/swap_horiz.svg?react', () => ({ default: () => null }));
-vi.mock('@/material-icons/400-24px/trending_up.svg?react', () => ({ default: () => null }));
+vi.mock('@/material-icons/400-24px/add.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/alternate_email.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/bookmarks-fill.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/bookmarks.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/category-fill.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/category.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/chat_bubble-fill.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/chat_bubble.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/home-fill.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/home.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/info.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/notifications-fill.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/notifications.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/person_add-fill.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/person_add.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/public.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/settings.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/star-fill.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/star.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/swap_horiz.svg?react', () => ({
+  default: () => null,
+}));
+vi.mock('@/material-icons/400-24px/trending_up.svg?react', () => ({
+  default: () => null,
+}));
 
 // Mock classnames and spring/gesture libs
-vi.mock('classnames', () => ({ default: (...args: unknown[]) => args.filter(Boolean).join(' ') }));
+vi.mock('classnames', () => ({
+  default: (...args: unknown[]) => args.filter(Boolean).join(' '),
+}));
 vi.mock('@react-spring/web', () => ({
   animated: { div: 'div' },
   useSpring: () => [{ x: 0 }, { start: vi.fn() }],
@@ -192,9 +245,6 @@ vi.mock('@react-spring/web', () => ({
 vi.mock('@use-gesture/react', () => ({
   useDrag: () => () => ({}),
 }));
-
-// Now import the component
-import { NavigationPanel } from './index';
 
 describe('Task 10.5: Logo link targets "/" in both custom and default logo modes', () => {
   beforeEach(() => {

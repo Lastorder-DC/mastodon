@@ -24,16 +24,23 @@ const pendingRequests = new Map<string, PendingRequest>();
  * port differences in development).
  */
 const handleMessage = (event: MessageEvent) => {
-  const data = event.data as CallbackMessage;
+  const data: unknown = event.data;
 
-  if (!data || typeof data !== 'object' || !data.type) {
+  if (
+    !data ||
+    typeof data !== 'object' ||
+    !('type' in data) ||
+    typeof data.type !== 'string'
+  ) {
     return;
   }
 
+  const callbackMessage = data as CallbackMessage;
+
   // Only handle our multi-account message types
   if (
-    data.type !== 'multi-account-callback' &&
-    data.type !== 'multi-account-error'
+    callbackMessage.type !== 'multi-account-callback' &&
+    callbackMessage.type !== 'multi-account-error'
   ) {
     return;
   }
@@ -57,11 +64,11 @@ const handleMessage = (event: MessageEvent) => {
     return;
   }
 
-  if (data.type === 'multi-account-callback') {
-    const { state, code } = data;
+  if (callbackMessage.type === 'multi-account-callback') {
+    const { state, code } = callbackMessage;
 
     if (!state || !code) {
-      console.error('[MultiAccount] Invalid callback data:', data);
+      console.error('[MultiAccount] Invalid callback data:', callbackMessage);
       return;
     }
 
@@ -83,8 +90,8 @@ const handleMessage = (event: MessageEvent) => {
 
       pendingRequests.delete(state);
     }
-  } else if (data.type === 'multi-account-error') {
-    const { error, state } = data;
+  } else {
+    const { error, state } = callbackMessage;
 
     if (state) {
       const pending = pendingRequests.get(state);
@@ -192,5 +199,3 @@ export const openOAuthPopup = (
     });
   });
 };
-
-

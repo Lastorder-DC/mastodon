@@ -133,7 +133,7 @@ describe('ImageUploadModal', () => {
 
   describe('CROP_ASPECT values', () => {
     // We test this through the Cropper component's aspect prop
-    it('uses aspect 261/66 for custom_logo location', async () => {
+    it('uses aspect 3/2 for custom_logo location', async () => {
       // Mock FileReader before rendering
       const originalFileReader = globalThis.FileReader;
       class MockFileReader {
@@ -171,10 +171,7 @@ describe('ImageUploadModal', () => {
       // Now the Cropper should be rendered with the correct aspect
       const cropper = screen.getByTestId('mock-cropper');
       expect(cropper).toBeInTheDocument();
-      expect(Number(cropper.getAttribute('data-aspect'))).toBeCloseTo(
-        261 / 66,
-        5,
-      );
+      expect(Number(cropper.getAttribute('data-aspect'))).toBeCloseTo(3 / 2, 5);
 
       globalThis.FileReader = originalFileReader;
     });

@@ -7,9 +7,17 @@ import { EmojiHTML } from 'mastodon/components/emoji/html';
 import type { DmChatRoomParticipant, DmMessage } from 'mastodon/reducers/dm';
 
 const messages = defineMessages({
-  retry: { id: 'dm.message_item.retry', defaultMessage: 'Failed to send. Tap to retry' },
+  retry: {
+    id: 'dm.message_item.retry',
+    defaultMessage: 'Failed to send. Tap to retry',
+  },
   read_status: { id: 'dm.message_item.read', defaultMessage: 'Read' },
 });
+
+const firstNonBlank = (
+  ...values: (string | null | undefined)[]
+): string | undefined =>
+  values.find((value): value is string => Boolean(value?.trim()));
 
 interface MessageItemProps {
   message: DmMessage;
@@ -52,8 +60,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     <div className={classNames}>
       {!isOwn && (
         <div className='dm-message-item__avatar'>
-          {showAvatar && (
-            account?.avatar_static ? (
+          {showAvatar &&
+            (account?.avatar_static ? (
               <img
                 className='dm-message-item__avatar-img'
                 src={account.avatar_static}
@@ -63,14 +71,14 @@ export const MessageItem: React.FC<MessageItemProps> = ({
               />
             ) : (
               <div className='dm-message-item__avatar-placeholder' />
-            )
-          )}
+            ))}
         </div>
       )}
       <div className='dm-message-item__bubble-wrapper'>
         {showName && !isOwn && (
           <span className='dm-message-item__sender-name'>
-            {account?.display_name || account?.username || message.account_id}
+            {firstNonBlank(account?.display_name, account?.username) ??
+              message.account_id}
           </span>
         )}
         {/* Safety: message.content is HTML-escaped server-side in
@@ -84,33 +92,49 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         <div
           className={`dm-message-bubble ${isOwn ? 'dm-message-bubble--own' : 'dm-message-bubble--other'}`}
         >
-          {message.attachments && message.attachments.length > 0 && (
+          {message.attachments.length > 0 && (
             <div className='dm-message-bubble__attachments'>
-              {(message.attachments as Array<{ id: string; preview_url?: string; url?: string; type?: string }>).map((attachment) => (
+              {(
+                message.attachments as {
+                  id: string;
+                  preview_url?: string;
+                  url?: string;
+                  type?: string;
+                }[]
+              ).map((attachment) => (
                 <img
                   key={attachment.id}
                   className='dm-message-bubble__attachment-img'
-                  src={attachment.preview_url || attachment.url}
+                  src={firstNonBlank(attachment.preview_url, attachment.url)}
                   alt=''
                 />
               ))}
             </div>
           )}
           {message.content && (
-            <EmojiHTML htmlString={message.content} extraEmojis={message.emojis} />
+            <EmojiHTML
+              htmlString={message.content}
+              extraEmojis={message.emojis}
+            />
           )}
         </div>
         <span className='dm-message-item__time'>{time}</span>
-        {isOwn && isGroupChat && unreadCount !== undefined && unreadCount > 0 && (
-          <span className='dm-message-item__read-status dm-message-item__unread-count'>
-            {unreadCount}
-          </span>
-        )}
-        {isOwn && !isGroupChat && unreadCount !== undefined && unreadCount === 0 && (
-          <span className='dm-message-item__read-status'>
-            {intl.formatMessage(messages.read_status)}
-          </span>
-        )}
+        {isOwn &&
+          isGroupChat &&
+          unreadCount !== undefined &&
+          unreadCount > 0 && (
+            <span className='dm-message-item__read-status dm-message-item__unread-count'>
+              {unreadCount}
+            </span>
+          )}
+        {isOwn &&
+          !isGroupChat &&
+          unreadCount !== undefined &&
+          unreadCount === 0 && (
+            <span className='dm-message-item__read-status'>
+              {intl.formatMessage(messages.read_status)}
+            </span>
+          )}
         {message.failed && (
           <FailedMessageRetry message={message} onRetry={onRetry} />
         )}

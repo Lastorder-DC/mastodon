@@ -10,20 +10,21 @@ if (typeof globalThis.CSS === 'undefined') {
   (globalThis as unknown as Record<string, unknown>).CSS = {};
 }
 if (typeof CSS.escape !== 'function') {
-  CSS.escape = (value: string) =>
-    value.replace(/([^\w*-])/g, '\\$1');
+  CSS.escape = (value: string) => value.replace(/([^\w*-])/g, '\\$1');
 }
 
 // Mock useAccount and useCurrentAccountId
-const mockUseAccount = vi.fn();
-const mockUseCurrentAccountId = vi.fn();
+const { mockUseAccount, mockUseCurrentAccountId } = vi.hoisted(() => ({
+  mockUseAccount: vi.fn(),
+  mockUseCurrentAccountId: vi.fn(),
+}));
 
 vi.mock('@/mastodon/hooks/useAccount', () => ({
-  useAccount: (...args: unknown[]) => mockUseAccount(...args),
+  useAccount: mockUseAccount,
 }));
 
 vi.mock('@/mastodon/hooks/useAccountId', () => ({
-  useCurrentAccountId: () => mockUseCurrentAccountId(),
+  useCurrentAccountId: mockUseCurrentAccountId,
 }));
 
 function makeAccount(overrides: Record<string, unknown> = {}) {
@@ -58,21 +59,51 @@ describe('useBackgroundImage – Property 4: Background activation decision', ()
   const testUrls = [
     'https://files.mastodon.social/media_attachments/bg_abc123.jpg',
     'https://cdn.example.org/images/user-bg-9f3e.png',
-  ];
+  ] as const;
 
-  const combinations: Array<{
+  const combinations: {
     enabled: boolean;
     url: string;
     expectedActive: boolean;
     label: string;
-  }> = [
+  }[] = [
     // Core boolean x empty/non-empty combinations
-    { enabled: true, url: testUrls[0]!, expectedActive: true, label: 'enabled=true, url=present(1)' },
-    { enabled: true, url: testUrls[1]!, expectedActive: true, label: 'enabled=true, url=present(2)' },
-    { enabled: true, url: '', expectedActive: false, label: 'enabled=true, url=empty' },
-    { enabled: false, url: testUrls[0]!, expectedActive: false, label: 'enabled=false, url=present(1)' },
-    { enabled: false, url: testUrls[1]!, expectedActive: false, label: 'enabled=false, url=present(2)' },
-    { enabled: false, url: '', expectedActive: false, label: 'enabled=false, url=empty' },
+    {
+      enabled: true,
+      url: testUrls[0],
+      expectedActive: true,
+      label: 'enabled=true, url=present(1)',
+    },
+    {
+      enabled: true,
+      url: testUrls[1],
+      expectedActive: true,
+      label: 'enabled=true, url=present(2)',
+    },
+    {
+      enabled: true,
+      url: '',
+      expectedActive: false,
+      label: 'enabled=true, url=empty',
+    },
+    {
+      enabled: false,
+      url: testUrls[0],
+      expectedActive: false,
+      label: 'enabled=false, url=present(1)',
+    },
+    {
+      enabled: false,
+      url: testUrls[1],
+      expectedActive: false,
+      label: 'enabled=false, url=present(2)',
+    },
+    {
+      enabled: false,
+      url: '',
+      expectedActive: false,
+      label: 'enabled=false, url=empty',
+    },
   ];
 
   describe.each(combinations)(
@@ -86,7 +117,9 @@ describe('useBackgroundImage – Property 4: Background activation decision', ()
           }),
         );
 
-        renderHook(() => useBackgroundImage());
+        renderHook(() => {
+          useBackgroundImage();
+        });
 
         expect(document.body.classList.contains('custom-background')).toBe(
           expectedActive,
@@ -101,10 +134,13 @@ describe('useBackgroundImage – Property 4: Background activation decision', ()
           }),
         );
 
-        renderHook(() => useBackgroundImage());
+        renderHook(() => {
+          useBackgroundImage();
+        });
 
-        const cssValue =
-          document.body.style.getPropertyValue('--custom-background-image');
+        const cssValue = document.body.style.getPropertyValue(
+          '--custom-background-image',
+        );
 
         if (expectedActive) {
           expect(cssValue).toContain('url(');
@@ -124,7 +160,9 @@ describe('useBackgroundImage – Property 4: Background activation decision', ()
       }),
     );
 
-    const { unmount } = renderHook(() => useBackgroundImage());
+    const { unmount } = renderHook(() => {
+      useBackgroundImage();
+    });
 
     // Should be active
     expect(document.body.classList.contains('custom-background')).toBe(true);
