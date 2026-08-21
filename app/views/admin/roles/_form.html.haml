@@ -36,6 +36,10 @@
   = form.input :collection_limit,
                wrapper: :with_label
 
+.fields-group
+  = form.input :api_rate_limit_boost,
+               wrapper: :with_label
+
 %hr.spacer/
 
 - unless current_user.role == form.object

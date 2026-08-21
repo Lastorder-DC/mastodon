@@ -133,6 +133,12 @@ RSpec.describe 'Admin Roles' do
     before { sign_in Fabricate(:admin_user) }
 
     describe 'POST /admin/roles' do
+      it 'persists the API rate limit boost setting' do
+        post admin_roles_path, params: { user_role: { name: 'Boosted', api_rate_limit_boost: true } }
+
+        expect(UserRole.find_by(name: 'Boosted')).to be_api_rate_limit_boost
+      end
+
       it 'gracefully handles invalid nested params' do
         post admin_roles_path(user_role: 'invalid')
 

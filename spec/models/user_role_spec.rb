@@ -134,6 +134,26 @@ RSpec.describe UserRole do
     end
   end
 
+  describe '#api_rate_limit_multiplier' do
+    subject { Fabricate.build(:user_role, api_rate_limit_boost: api_rate_limit_boost) }
+
+    context 'when the API rate limit boost is disabled' do
+      let(:api_rate_limit_boost) { false }
+
+      it 'uses the standard rate limit multiplier' do
+        expect(subject.api_rate_limit_multiplier).to eq(1)
+      end
+    end
+
+    context 'when the API rate limit boost is enabled' do
+      let(:api_rate_limit_boost) { true }
+
+      it 'uses the boosted rate limit multiplier' do
+        expect(subject.api_rate_limit_multiplier).to eq(described_class::API_RATE_LIMIT_MULTIPLIER)
+      end
+    end
+  end
+
   describe '#permissions_as_keys' do
     before do
       subject.permissions = described_class::FLAGS[:invite_users] | described_class::FLAGS[:view_dashboard] | described_class::FLAGS[:manage_reports]

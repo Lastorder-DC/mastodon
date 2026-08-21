@@ -71,6 +71,54 @@ RSpec.describe Rack::Attack, type: :request do
   let(:remote_ip) { '1.2.3.5' }
   let(:discriminator) { remote_ip }
 
+  describe Rack::Attack::Request do
+    let(:user) { Fabricate(:user, role: role) }
+    let(:access_token) { Fabricate(:access_token, resource_owner_id: user.id) }
+    let(:role_aware_throttle_names) do
+      %w(
+        throttle_authenticated_api
+        throttle_per_token_api
+        throttle_api_media
+        throttle_authenticated_paging
+        throttle_api_delete
+        throttle_email_confirmations/email
+      )
+    end
+    let(:role_aware_throttle_limits) do
+      Rack::Attack.configuration.throttles
+        .slice(*role_aware_throttle_names)
+        .transform_values(&:limit)
+    end
+
+    before { allow(Doorkeeper::OAuth::Token).to receive(:authenticate).and_return(access_token) }
+
+    context 'when the user role has the API rate limit boost disabled' do
+      let(:role) { Fabricate(:user_role, api_rate_limit_boost: false) }
+
+      it 'keeps the configured standard limit' do
+        standard_limit = 100
+        request = described_class.new(Rack::MockRequest.env_for('/api/v1/timelines/home'))
+
+        expect(request.api_rate_limit(standard_limit)).to eq(standard_limit)
+      end
+    end
+
+    context 'when the user role has the API rate limit boost enabled' do
+      let(:role) { Fabricate(:user_role, api_rate_limit_boost: true) }
+
+      it 'dynamically multiplies each configured authenticated API limit' do
+        role.update!(api_rate_limit_boost: false)
+        normal_request = described_class.new(Rack::MockRequest.env_for('/api/v1/timelines/home'))
+        normal_limits = role_aware_throttle_limits.transform_values { |limit| limit.call(normal_request) }
+        role.update!(api_rate_limit_boost: true)
+        boosted_request = described_class.new(Rack::MockRequest.env_for('/api/v1/timelines/home'))
+        boosted_limits = role_aware_throttle_limits.transform_values { |limit| limit.call(boosted_request) }
+
+        expect(boosted_limits).to eq(normal_limits.transform_values { |limit| limit * UserRole::API_RATE_LIMIT_MULTIPLIER })
+      end
+    end
+  end
+
   describe 'throttle excessive sign-up requests by IP address' do
     context 'when accessed through the website' do
       let(:throttle) { 'throttle_sign_up_attempts/ip' }

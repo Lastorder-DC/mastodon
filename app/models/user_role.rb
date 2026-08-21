@@ -4,16 +4,17 @@
 #
 # Table name: user_roles
 #
-#  id               :bigint(8)        not null, primary key
-#  collection_limit :integer          default(10), not null
-#  color            :string           default(""), not null
-#  highlighted      :boolean          default(FALSE), not null
-#  name             :string           default(""), not null
-#  permissions      :bigint(8)        default(0), not null
-#  position         :integer          default(0), not null
-#  require_2fa      :boolean          default(FALSE), not null
-#  created_at       :datetime         not null
-#  updated_at       :datetime         not null
+#  id                   :bigint(8)        not null, primary key
+#  api_rate_limit_boost :boolean          default(FALSE), not null
+#  collection_limit     :integer          default(10), not null
+#  color                :string           default(""), not null
+#  highlighted          :boolean          default(FALSE), not null
+#  name                 :string           default(""), not null
+#  permissions          :bigint(8)        default(0), not null
+#  position             :integer          default(0), not null
+#  require_2fa          :boolean          default(FALSE), not null
+#  created_at           :datetime         not null
+#  updated_at           :datetime         not null
 #
 
 class UserRole < ApplicationRecord
@@ -45,6 +46,7 @@ class UserRole < ApplicationRecord
 
   EVERYONE_ROLE_ID = -99
   NOBODY_POSITION = -1
+  API_RATE_LIMIT_MULTIPLIER = 5
 
   POSITION_LIMIT = (2**31) - 1
   CSS_COLORS = /\A#?(?:[A-F0-9]{3}){1,2}\z/i # CSS-style hex colors
@@ -158,6 +160,10 @@ class UserRole < ApplicationRecord
 
   def bypass_block?(role)
     overrides?(role) && highlighted? && can?(*Flags::CATEGORIES[:moderation])
+  end
+
+  def api_rate_limit_multiplier
+    api_rate_limit_boost? ? API_RATE_LIMIT_MULTIPLIER : 1
   end
 
   def computed_permissions

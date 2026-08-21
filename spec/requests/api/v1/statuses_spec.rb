@@ -154,6 +154,32 @@ RSpec.describe '/api/v1/statuses' do
         end
       end
 
+      %w(public unlisted).each do |requested_visibility|
+        context "when a protected account requests #{requested_visibility} visibility" do
+          let(:params) do
+            {
+              status: 'Protected post',
+              visibility: requested_visibility,
+            }
+          end
+
+          before { user.account.update!(protected_account: true) }
+
+          it 'forces the status to followers-only on the server', :aggregate_failures do
+            expect { subject }.to change(user.account.statuses, :count).by(1)
+
+            created_status = user.account.statuses.order(:id).last
+
+            expect(response).to have_http_status(200)
+            expect(response.parsed_body[:visibility]).to eq('private')
+            expect(created_status.visibility).to eq('private')
+            expect(
+              created_status.visibility_before_protection
+            ).to eq(Status.visibilities.fetch(requested_visibility))
+          end
+        end
+      end
+
       context 'without a quote policy' do
         let(:user) do
           Fabricate(:user, settings: { default_quote_policy: 'followers' })

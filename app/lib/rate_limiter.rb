@@ -28,7 +28,7 @@ class RateLimiter
   def initialize(by, options = {})
     @by     = by
     @family = options[:family]
-    @limit  = FAMILIES[@family][:limit]
+    @limit  = FAMILIES[@family][:limit] * api_rate_limit_multiplier
     @period = FAMILIES[@family][:period].to_i
   end
 
@@ -58,6 +58,10 @@ class RateLimiter
   end
 
   private
+
+  def api_rate_limit_multiplier
+    @by.user&.role&.api_rate_limit_multiplier || 1
+  end
 
   def key
     @key ||= "rate_limit:#{@by.id}:#{@family}:#{(last_epoch_time / @period).to_i}"

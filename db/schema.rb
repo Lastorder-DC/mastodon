@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_12_154114) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1388,6 +1388,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_154114) do
   end
 
   create_table "user_roles", force: :cascade do |t|
+    t.boolean "api_rate_limit_boost", default: false, null: false
     t.integer "collection_limit", default: 10, null: false
     t.string "color", default: "", null: false
     t.datetime "created_at", null: false

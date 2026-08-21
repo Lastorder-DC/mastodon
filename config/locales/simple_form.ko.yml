@@ -162,6 +162,7 @@ ko:
           other: "%{domain}을 이용하려면 %{count}세 이상임을 확인해야 합니다. 이 정보는 저장되지 않습니다."
         role: 역할은 사용자가 어떤 권한을 가지게 될 지 결정합니다.
       user_role:
+        api_rate_limit_boost: 이 역할을 가진 사용자의 모든 API 호출 한도를 각 일반 계정의 현재 한도를 기준으로 5배 늘립니다.
         collection_limit: 이 역할을 가진 사용자가 생성할 수 있는 컬렉션 개수의 한도를 지정합니다. 이 값을 줄이는 경우 이미 그 값을 초과한 사용자가 컬렉션을 잃어버리지는 않습니다. 하지만 새 컬렉션을 추가할 수는 없게 됩니다.
         color: 색상은 사용자 인터페이스에서 역할을 나타내기 위해 사용되며, RGB 16진수 형식입니다
         highlighted: 이 역할이 공개적으로 보이도록 설정합니다
@@ -396,6 +397,7 @@ ko:
         role: 역할
         time_zone: 시간대
       user_role:
+        api_rate_limit_boost: API 호출 한도를 5배로 상향
         collection_limit: 사용자당 최대 컬렉션 개수
         color: 배지 색상
         highlighted: 역할 배지를 사용자 프로필에 표시
