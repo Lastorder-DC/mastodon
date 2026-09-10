@@ -17,6 +17,7 @@ import {
 import { openModal } from '@/mastodon/actions/modal';
 import type { ApiQuotePolicy } from '@/mastodon/api_types/quotes';
 import type { StatusVisibility } from '@/mastodon/api_types/statuses';
+import { CaretIcon } from '@/mastodon/components/button/redesign';
 import { DisplayNameSimple } from '@/mastodon/components/display_name/simple';
 import {
   Menu,
@@ -46,7 +47,7 @@ export const ComposeVisibility: React.FC<{ className?: string }> = ({
         description='Before button that indicates who a post is for (Public, Followers, mentioned people)'
       />
       <Menu>
-        <MenuTrigger size='sm'>
+        <MenuTrigger size='sm' trailingIcon={CaretIcon}>
           <ComposeVisibilityButtonText privacy={privacy} />
         </MenuTrigger>
 
@@ -111,6 +112,8 @@ const ComposeVisibilityMenu: React.FC = () => {
   );
   const quotePolicy = currentQuotePolicy ?? defaultQuotePolicy;
 
+  const isReply = useAppSelector((state) => !!state.compose.get('in_reply_to'));
+
   const dispatch = useAppDispatch();
   const handlePrivacyChange = useCallback(
     ({ value }: { value: string }) => {
@@ -130,6 +133,7 @@ const ComposeVisibilityMenu: React.FC = () => {
     },
     [defaultPrivacy, dispatch, privacy],
   );
+
   const handleQuotePolicyChange = useCallback(
     ({ value, checked }: { value: string; checked?: boolean }) => {
       let newQuotePolicy: ApiQuotePolicy = 'nobody';
@@ -263,11 +267,18 @@ const ComposeVisibilityMenu: React.FC = () => {
       <MenuItemDivider />
 
       <MenuItem icon={ChatCircleIcon} onClick={handleSwitchToMessage}>
-        <FormattedMessage
-          id='compose.post.to_message'
-          defaultMessage='Compose a message instead'
-          description='Message refers to a direct message. For languages where this is confusing, "chat" or "direct message" can be used.'
-        />
+        {isReply ? (
+          <FormattedMessage
+            id='compose.post.to_private_reply'
+            defaultMessage='Reply privately instead'
+          />
+        ) : (
+          <FormattedMessage
+            id='compose.post.to_message'
+            defaultMessage='Compose a message instead'
+            description='Message refers to a direct message. For languages where this is confusing, "chat" or "direct message" can be used.'
+          />
+        )}
       </MenuItem>
     </MenuList>
   );
@@ -281,6 +292,8 @@ const ComposeDirectMenu: React.FC = () => {
         openModal({ modalType: 'COMPOSER_SWITCH_TO_POST', modalProps: {} }),
       );
     }, [dispatch]);
+
+  const isReply = useAppSelector((state) => !!state.compose.get('in_reply_to'));
 
   return (
     <MenuList placement='bottom-start' offset={4} maxWidth={280}>
@@ -303,10 +316,17 @@ const ComposeDirectMenu: React.FC = () => {
       <MenuItemDivider />
 
       <MenuItem icon={NewspaperIcon} onClick={handleSwitchToPost}>
-        <FormattedMessage
-          id='compose.visibility.to_post'
-          defaultMessage='Compose a post instead'
-        />
+        {isReply ? (
+          <FormattedMessage
+            id='compose.visibility.to_reply'
+            defaultMessage='Reply publicly instead'
+          />
+        ) : (
+          <FormattedMessage
+            id='compose.visibility.to_post'
+            defaultMessage='Compose a post instead'
+          />
+        )}
       </MenuItem>
     </MenuList>
   );

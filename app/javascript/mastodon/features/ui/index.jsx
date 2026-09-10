@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { lazy, PureComponent, Suspense } from 'react';
+import { PureComponent } from 'react';
 
 import { defineMessages } from 'react-intl';
 
@@ -283,10 +283,6 @@ function BackgroundImageEffect() {
   useBackgroundImage();
   return null;
 }
-const LazyRedesignComposeButton = lazy(
-  () => import('@/mastodon/features/compose/redesign/trigger')
-    .then(({ ComposeRedesignButton }) => ({ default: ComposeRedesignButton }))
-);
 
 class UI extends PureComponent {
   static propTypes = {
@@ -673,7 +669,7 @@ class UI extends PureComponent {
             {children}
           </SwitchingColumnsArea>
 
-          {!minimalShell && <NavigationBar />}
+          {!minimalShell && !isRedesignEnabled() && <NavigationBar />}
           {layout !== 'mobile' && <PictureInPicture />}
           <BackgroundImageEffect />
           <AlertsController />
@@ -682,12 +678,6 @@ class UI extends PureComponent {
           <LoadingBarContainer className='loading-bar' />
           <ModalContainer />
           <UploadArea active={draggingOver} onClose={this.closeUploadModal} />
-
-          {isRedesignEnabled() && (
-            <Suspense>
-              <LazyRedesignComposeButton />
-            </Suspense>
-          )}
         </div>
       </Hotkeys>
     );
